@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{title}}</title>
+{{head}}
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="{{css}}">
+</head>
+<body>
+<a class="skip" href="#brief">본문으로 건너뛰기</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="{{home}}">{{brand}}</a>
+    <nav class="toplinks" aria-label="사이트 메뉴">{{toplinks}}</nav>
+  </div>
+</header>
+{{sectionnav}}
+{{content}}
+<footer>
+  <div class="wrap">
+{{footer}}
+  </div>
+</footer>
+{{script}}
+</body>
+</html>

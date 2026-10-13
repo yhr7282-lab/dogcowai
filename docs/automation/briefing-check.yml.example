@@ -1,0 +1,24 @@
+# 예시 파일이다. 쓰려면 .github/workflows/briefing-check.yml 로 옮긴다.
+# 옮겨서 올리려면 GitHub 로그인에 workflow 권한이 있어야 한다.
+# 이 워크플로는 검사만 한다. 게시하지 않는다.
+name: briefing-check
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 tools/test_build.py
+      - run: python3 tools/test_pipeline.py
+      - run: python3 tools/build.py --check
+      - name: 생성 결과가 커밋된 파일과 같은지 확인
+        run: |
+          python3 tools/build.py
+          git diff --exit-code

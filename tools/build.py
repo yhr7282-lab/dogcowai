@@ -354,6 +354,28 @@ def render_sources(sources, perma=""):
     return '<p class="src">%s%s%s</p>' % (label, links, tail)
 
 
+_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+
+
+def render_chart(rows):
+    """등락률 막대. 가운데 선에서 오른 것은 오른쪽, 내린 것은 왼쪽으로 뻗는다. 가장 큰 움직임이 반 칸을 채운다.
+    수치는 아래 표에 그대로 있으므로 화면 낭독기에는 숨긴다."""
+    moves = []
+    for r in rows:
+        m = _PERCENT.search(r.get("change") or "")
+        if m and r.get("dir") in ("up", "down"):
+            moves.append((r, float(m.group(1))))
+    if len(moves) < 2:
+        return ""
+    top = max(pct for _, pct in moves) or 1.0
+    lis = "".join(
+        '<li><span class="n">%s</span><span class="track"><span class="bar %s" style="width:%.1f%%"></span></span>'
+        '<span class="p %s">%s%.2f%%</span></li>'
+        % (inline(r["name"]), r["dir"], pct / top * 50, r["dir"], "+" if r["dir"] == "up" else "-", pct)
+        for r, pct in moves)
+    return '<ul class="chart" aria-hidden="true">%s</ul>' % lis
+
+
 def render_market(day):
     market = day.get("market")
     if not market:
@@ -372,6 +394,7 @@ def render_market(day):
     parts = ['<aside class="market" aria-labelledby="market-title">',
              '<h2 id="market-title">시장 요약</h2>']
     rows = market.get("rows") or []
+    parts.append(render_chart(rows))
     if rows:
         parts.append("<table><tbody>%s</tbody></table>" % "".join(row(r) for r in rows))
     forecast = market.get("forecast") or {}

@@ -248,6 +248,21 @@ class BuildOutputTests(SiteCase):
         self.assertIn('class="c down"', ticker)
         self.assertNotIn("<a ", ticker)
 
+    def test_market_chart_draws_one_bar_per_row_scaled_to_the_largest_move(self):
+        day = make_day()
+        day["market"]["rows"] = [
+            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "종가", "asof": day["date"]},
+            {"name": "나", "value": "200", "change": "▲ 1.00%", "dir": "up", "basis": "종가", "asof": day["date"]},
+        ]
+        page = self.day_page(day)
+        chart = page[page.index('class="chart"'):page.index("</ul>", page.index('class="chart"'))]
+        self.assertEqual(chart.count("<li>"), 2)
+        self.assertIn('class="bar down" style="width:50.0%"', chart)
+        self.assertIn('class="bar up" style="width:25.0%"', chart)
+
+    def test_market_chart_is_left_out_when_fewer_than_two_rows_have_a_change(self):
+        self.assertNotIn('class="chart"', self.day_page(make_day()))
+
     def test_page_without_market_has_no_ticker(self):
         day = make_day()
         del day["market"]

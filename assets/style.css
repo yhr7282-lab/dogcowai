@@ -269,3 +269,15 @@ footer p + p { margin-top: 6px; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* 등락 막대: 가운데 선에서 오른쪽이 상승, 왼쪽이 하락 */
+.chart { margin-top: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.chart li { display: grid; grid-template-columns: 5.2em 1fr 4.6em; align-items: center; gap: 10px; padding: 5px 0; font-size: 14.5px; }
+.chart .n { color: var(--ink-2); }
+.chart .track { position: relative; height: 14px; background: linear-gradient(var(--ink-3), var(--ink-3)) center / 1px 100% no-repeat; }
+.chart .bar { position: absolute; top: 2px; bottom: 2px; min-width: 2px; }
+.chart .bar.up { left: 50%; background: var(--up); border-radius: 0 2px 2px 0; }
+.chart .bar.down { right: 50%; background: var(--down); border-radius: 2px 0 0 2px; }
+.chart .p { text-align: right; font-weight: 600; }
+.chart .p.up { color: var(--up); }
+.chart .p.down { color: var(--down); }

@@ -16,5 +16,16 @@
   ],
   "base_url": "http://dogcowai.com",
   "require_sources_from": "2026-10-13",
-  "market_max_age_days": 4
+  "market_max_age_days": 4,
+  "intro": {
+    "heading": "확인된 것만 짧게 정리하는 경제 브리핑",
+    "paragraphs": [
+      "dogcowai 경제브리핑은 하루의 경제·주식·AI·반도체·자동차 뉴스를 한 페이지로 정리합니다. 많이 싣는 것보다 틀리지 않는 것을 먼저 둡니다."
+    ],
+    "items": [
+      "출처에서 확인한 내용만 싣습니다. 확인하지 못한 내용은 뺍니다.",
+      "사실과 해석을 나눠 적습니다.",
+      "틀린 내용은 고친 날짜와 함께 밝힙니다."
+    ]
+  }
 }

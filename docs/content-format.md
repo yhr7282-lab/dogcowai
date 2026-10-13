@@ -44,7 +44,7 @@
 - `id`: 영문 소문자·숫자·하이픈. 한 페이지 안에서 유일해야 한다. 주소의 `#id`가 된다.
 - `date`: 사건이나 발표 날짜. 브리핑 날짜보다 뒤일 수 없다.
 - `sources`: 하나 이상 필수 (`_site.json`의 `require_sources_from` 날짜부터). 같은 주소를 두 번 쓰면 실패다.
-- `featured`: 홈의 "주요 기사"에 제목과 첫 문장이 나온다 (최대 5건).
+- `featured`: 홈의 "오늘의 주요 뉴스"에 제목과 첫 문장이 나온다 (최대 5건). 분야에서는 이 기사가 대표 기사로 바로 보이고 나머지는 "더 보기" 안에 접힌다. 없으면 첫 기사가 대표다.
 - `so`, `recheck`는 없으면 화면에서 그 구역이 빠진다.
 
 ## 핵심 1분 (quick)
@@ -73,6 +73,7 @@
 |---|---|
 | `brand`, `title`, `description` | 이름, 탭 제목, 홈 설명 |
 | `base_url` | 대표 주소. `https://dogcowai.com` 형식, 끝에 `/` 없음 |
+| `intro` | 홈 맨 위 소개글 `{heading, paragraphs[], items[]}`. 없으면 소개 구역이 빠진다 |
 | `footer_meta`, `disclaimer` | 맨 아래 문구 |
 | `require_sources_from` | 이 날짜부터 기사 출처가 필수 |
 | `market_max_age_days` | 시장 수치 기준일의 허용 범위 |

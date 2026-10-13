@@ -347,3 +347,58 @@ footer .meta { gap: 4px 20px; }
   .toplinks { width: 100%; gap: 22px; }
   .topics .t { font-size: 17px; }
 }
+
+/* ---- 4단계: 소개 → 오늘의 주요 뉴스 → 펼쳐 읽는 브리핑 ---- */
+/* 홈 맨 위: 이 사이트가 무엇인지 */
+.intro { padding-bottom: 40px; margin-bottom: 40px; border-bottom: 1px solid var(--line); }
+.intro h1 { font-size: clamp(26px, 6.4vw, 34px); line-height: 1.32; font-weight: 800; letter-spacing: -0.03em; text-wrap: balance; }
+.intro .summary { margin-top: 14px; font-size: 17px; line-height: 1.75; }
+.intro .points { margin-top: 14px; color: var(--ink); }
+.intro .more { margin-top: 16px; }
+
+/* 구역 이름표: 지금 읽는 덩어리가 무엇인지 */
+.kicker { margin-bottom: 10px; font-size: 16px; font-weight: 800; color: var(--ink); }
+.kicker + .dateline { margin-bottom: 10px; }
+.hero h2 { font-size: clamp(27px, 7vw, 40px); line-height: 1.3; font-weight: 800; letter-spacing: -0.035em; text-wrap: balance; }
+.today .hint { margin-top: 32px; }
+ul.featured { margin-top: 8px; padding-top: 0; border-bottom: 1px solid var(--line); }
+
+/* 펼침: 한 줄 전체가 누르는 곳이다 */
+details > summary {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 15px 16px; border: 1px solid var(--ink); border-radius: 8px;
+  font-size: 16.5px; font-weight: 700; line-height: 1.4; cursor: pointer; list-style: none;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "+"; flex: none; width: 1em; font-weight: 800; text-align: center; }
+details[open] > summary::before { content: "−"; }
+details > summary:hover { background: var(--wash); }
+details > summary .count { margin-left: auto; font-weight: 400; }
+.more-items { margin-top: 28px; }
+.more-items[open] > summary { margin-bottom: 8px; }
+.more-items > .points { margin-top: 20px; }
+.more-items > .item:first-of-type { border-top: 0; padding-top: 0; margin-top: 28px; }
+
+/* 홈의 브리핑 펼침 */
+.briefing > summary { background: var(--ink); color: #fff; }
+.briefing > summary:hover { background: #2b303a; }
+.briefing > summary .count { color: #d5d9e0; }
+.briefing[open] > summary { margin-bottom: 40px; }
+.briefing > .more { margin-top: 48px; }
+.home .recent { padding-top: 64px; }
+
+/* 분야 덩어리를 뚜렷하게 나눈다 */
+.sec { padding-top: 0; margin-top: 64px; padding-top: 28px; border-top: 2px solid var(--ink); }
+.briefing .quick + .sec, .body > .sec:first-child { margin-top: 48px; }
+.sec-head + .item, .lede + .item { margin-top: 24px; padding-top: 0; border-top: 0; }
+.sec .lede { font-size: 18px; color: var(--ink-2); font-weight: 600; }
+
+/* 좁은 화면: 뉴스가 먼저, 시장 수치와 일정은 그 뒤 */
+@media (max-width: 959px) {
+  .page { display: flex; flex-direction: column; }
+  .page > .lead, .page > .body { order: 1; }
+  .page > .market { order: 2; margin: 64px 0 0; }
+  .page > .side { order: 3; margin-top: 48px; }
+  .lead { padding-bottom: 8px; }
+  .home .lead { padding-bottom: 32px; }
+}

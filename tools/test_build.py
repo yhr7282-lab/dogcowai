@@ -158,15 +158,15 @@ class BuildOutputTests(SiteCase):
         self.write_day(make_day())
         self.build()
         home, archive = self.read("index.html"), self.read("news/index.html")
-        self.assertIn('href="index.html" aria-current="page">홈<', home)
-        self.assertNotIn('aria-current="page">날짜별 브리핑<', home)
-        self.assertIn('href="../news/index.html" aria-current="page">날짜별 브리핑<', archive)
+        self.assertIn('href="index.html" aria-current="page">오늘의 주요 뉴스<', home)
+        self.assertNotIn('aria-current="page">날짜별 뉴스 브리핑<', home)
+        self.assertIn('href="../news/index.html" aria-current="page">날짜별 뉴스 브리핑<', archive)
 
     def test_day_page_shows_where_it_sits_in_the_site(self):
         page = self.day_page(make_day())
         crumbs = page[page.index('class="crumbs"'):page.index("</nav>", page.index('class="crumbs"'))]
-        self.assertIn('<a href="../../index.html">홈</a>', crumbs)
-        self.assertIn('<a href="../index.html">날짜별 브리핑</a>', crumbs)
+        self.assertIn('<a href="../../index.html">오늘의 주요 뉴스</a>', crumbs)
+        self.assertIn('<a href="../index.html">날짜별 뉴스 브리핑</a>', crumbs)
         self.assertIn('<li aria-current="page">10월 13일 화요일</li>', crumbs)
 
     def test_home_has_no_location_line(self):
@@ -174,12 +174,49 @@ class BuildOutputTests(SiteCase):
         self.build()
         self.assertNotIn('class="crumbs"', self.read("index.html"))
 
-    def test_day_page_lists_every_article_in_its_contents(self):
+    def test_each_category_shows_one_article_and_folds_the_rest(self):
         page = self.day_page(make_day())
-        toc = page[page.index('class="toc"'):page.index("</nav>", page.index('class="toc"'))]
-        self.assertIn('href="#economy"', toc)
-        self.assertIn('href="#a-one"', toc)
-        self.assertIn('href="#a-two"', toc)
+        sec = page[page.index('<section class="sec" id="economy"'):]
+        fold = sec.index("<details")
+        self.assertLess(sec.index('id="a-one"'), fold)
+        self.assertGreater(sec.index('id="a-two"'), fold)
+        self.assertIn("<summary>경제 기사 1건 더 보기</summary>", sec)
+
+    def test_category_lead_is_the_featured_article(self):
+        day = make_day()
+        items = day["sections"][0]["items"]
+        del items[0]["featured"]
+        items[1]["featured"] = True
+        page = self.day_page(day)
+        sec = page[page.index('<section class="sec" id="economy"'):]
+        self.assertLess(sec.index('id="a-two"'), sec.index("<details"))
+        self.assertGreater(sec.index('id="a-one"'), sec.index("<details"))
+
+    def test_category_with_one_article_and_no_points_has_no_fold(self):
+        day = make_day()
+        day["sections"][0]["items"].pop()
+        del day["sections"][0]["points"]
+        day["quick"] = [{"text": "지수 {{down:-5.46%}} 하락", "ref": "a-one"}]
+        self.assertNotIn("<details", self.day_page(day))
+
+    def test_home_opens_with_the_site_introduction(self):
+        site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
+        self.write_site(site)
+        self.write_day(make_day())
+        self.build()
+        home = self.read("index.html")
+        self.assertIn('<h1 id="intro-title">소개 제목</h1>', home)
+        self.assertLess(home.index("소개 문단"), home.index("2026-10-13 헤드라인"))
+        self.assertIn("<li>원칙 하나</li>", home)
+
+    def test_home_folds_the_full_briefing_under_the_main_news(self):
+        self.write_day(make_day())
+        self.build()
+        home = self.read("index.html")
+        fold = home.index('<details class="briefing"')
+        self.assertLess(home.index('class="featured"'), fold)
+        self.assertGreater(home.index('id="economy"'), fold)
+        self.assertIn('href="news/2026-10-13/index.html">이 브리핑만 따로 보기', home)
 
     def test_article_parts_are_labelled_and_missing_parts_are_omitted(self):
         page = self.day_page(make_day())
@@ -195,7 +232,7 @@ class BuildOutputTests(SiteCase):
         day = make_day()
         day["sections"][0]["total"] = 5
         page = self.day_page(day)
-        self.assertIn(">2건<", page)
+        self.assertIn(">기사 2건<", page)
         self.assertNotIn("건 중", page)
 
     def test_sections_without_articles_are_not_shown(self):
@@ -214,16 +251,18 @@ class BuildOutputTests(SiteCase):
         self.write_day(make_day())
         self.build()
         self.assertIn('<a href="#a-one">', self.read("news/2026-10-13/index.html"))
-        self.assertIn('<a href="news/2026-10-13/index.html#a-one">', self.read("index.html"))
+        self.assertIn('<a href="#a-one">', self.read("index.html"))
 
     def test_home_previews_featured_articles_from_the_same_data(self):
         self.write_day(make_day())
         self.build()
         home = self.read("index.html")
-        self.assertIn("기사 하나", home)
-        self.assertIn("지수가 5.46% 내렸다.", home)
-        self.assertNotIn("둘째 문장", home)
-        self.assertNotIn("기사 둘", home)
+        featured = home[home.index('class="featured"'):home.index("</ul>", home.index('class="featured"'))]
+        self.assertIn('href="#a-one"', featured)
+        self.assertIn("기사 하나", featured)
+        self.assertIn("지수가 5.46% 내렸다.", featured)
+        self.assertNotIn("둘째 문장", featured)
+        self.assertNotIn("기사 둘", featured)
 
     def test_home_shows_latest_and_lists_previous_days(self):
         self.write_day(make_day("2026-10-12"))

@@ -41,7 +41,7 @@ CHECKED_AT = re.compile(r"^(\d{2}):(\d{2}) KST$")
 HOME_RECENT_LIMIT = 10
 HOME_FEATURED_LIMIT = 5
 RESERVED_IDS = {"brief", "top-title", "market-title", "quick-title", "recent-title", "featured-title",
-                "topics-title", "h-sched", "h-absent", "h-corrections"}
+                "topics-title", "toc-title", "h-sched", "h-absent", "h-corrections"}
 
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
 _DIRECTION = re.compile(r"\{\{(up|down):(.+?)\}\}")
@@ -381,7 +381,8 @@ def render_quick(day, href_prefix=""):
     lis = "".join('<li><a href="%s#%s">%s</a></li>' % (href_prefix, esc(q["ref"]), inline(q["text"]))
                   for q in items)
     return ('<section class="quick" aria-labelledby="quick-title">'
-            '<h2 id="quick-title">핵심 1분</h2><ul>%s</ul></section>' % lis)
+            '<h2 id="quick-title">핵심 1분</h2>'
+            '<p class="hint">줄을 누르면 해당 기사로 이동합니다.</p><ul>%s</ul></section>' % lis)
 
 
 def _part(cls, label, text):
@@ -461,7 +462,8 @@ def render_section_nav(sections):
         return ""
     links = "".join('<a href="#%s">%s</a>' % (esc(s["id"]), inline(s.get("nav") or s["title"]))
                     for s in sections)
-    return '<nav class="sections" aria-label="분야 바로가기"><div class="wrap">%s</div></nav>' % links
+    return ('<nav class="sections" aria-label="이 페이지의 분야 바로가기"><div class="wrap">'
+            '<span class="sections-label">이 페이지</span>%s</div></nav>' % links)
 
 
 def render_pager(older, newer):
@@ -507,8 +509,21 @@ def render_footer(site, links):
 
 # ---------------------------------------------------------------- 페이지
 
+def render_crumbs(crumbs):
+    """위치 줄. crumbs: [(이름, 주소 또는 None)]. 마지막 항목이 현재 페이지다."""
+    if not crumbs:
+        return ""
+    lis = []
+    for label, href in crumbs:
+        if href:
+            lis.append('<li><a href="%s">%s</a></li>' % (href, inline(label)))
+        else:
+            lis.append('<li aria-current="page">%s</li>' % inline(label))
+    return '<nav class="crumbs" aria-label="현재 위치"><ol class="wrap">%s</ol></nav>' % "".join(lis)
+
+
 def wrap_page(site, pages, *, title, description, prefix, path, content,
-              section_nav="", og_type="website", noindex=False, script=""):
+              section_nav="", og_type="website", noindex=False, script="", current="", crumbs=None):
     """prefix: 이 페이지에서 사이트 루트까지의 상대 경로. path: 대표 주소의 경로 부분."""
     url = site["base_url"] + path
     head = []
@@ -531,16 +546,21 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
     head.append('<link rel="icon" href="%sassets/favicon.svg" type="image/svg+xml">' % prefix)
     head.append('<link rel="alternate" type="application/atom+xml" title="%s" href="%sfeed.xml">'
                 % (esc(site["title"]), prefix))
-    links = [("지난 브리핑", prefix + "news/index.html")]
-    links += [(p.get("nav") or p["title"], "%s%s/index.html" % (prefix, p["slug"])) for p in pages]
+    menu = [("home", "홈", prefix + "index.html"), ("news", "날짜별 브리핑", prefix + "news/index.html")]
+    menu += [(p["slug"], p.get("nav") or p["title"], "%s%s/index.html" % (prefix, p["slug"])) for p in pages]
+    links = [(label, href) for _, label, href in menu]
+
+    def toplink(key, label, href):
+        mark = ' aria-current="page"' if key == current else ""
+        return '<a class="toplink" href="%s"%s>%s</a>' % (href, mark, inline(label))
     values = {
         "title": esc(title),
         "head": "\n".join(head),
         "css": prefix + "assets/style.css",
         "home": prefix + "index.html",
         "brand": inline(site["brand"]),
-        "toplinks": "".join('<a class="toplink" href="%s">%s</a>' % (href, inline(label)) for label, href in links),
-        "sectionnav": section_nav,
+        "toplinks": "".join(toplink(*m) for m in menu),
+        "sectionnav": render_crumbs(crumbs) + section_nav,
         "content": content,
         "footer": render_footer(site, links),
         "script": script,
@@ -549,13 +569,26 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
     return re.sub(r"\{\{(\w+)\}\}", lambda m: values[m.group(1)], template)
 
 
+def render_toc(sections):
+    """이 페이지에 실린 분야와 기사 제목. 누르면 같은 페이지의 그 기사로 간다."""
+    if not sections:
+        return ""
+    groups = []
+    for s in sections:
+        lis = "".join('<li><a href="#%s">%s</a></li>' % (esc(i["id"]), inline(i["title"])) for i in s["items"])
+        groups.append('<li><a class="toc-sec" href="#%s">%s <span class="count">%d건</span></a><ol>%s</ol></li>'
+                      % (esc(s["id"]), inline(s["title"]), len(s["items"]), lis))
+    return ('<nav class="toc" aria-labelledby="toc-title"><h2 id="toc-title">이 브리핑의 차례</h2>'
+            '<p class="hint">제목을 누르면 아래의 해당 기사로 이동합니다.</p><ol>%s</ol></nav>' % "".join(groups))
+
+
 def render_day(day, older, newer, site, pages):
     sections = visible_sections(day)
     content = (
         '<main class="page" id="brief">'
         '<div class="lead">%s%s</div>%s'
-        '<div class="body">%s%s<p class="totop"><a href="#brief">맨 위로</a></p>%s</div>%s</main>'
-        % (_hero(day), render_quick(day), render_market(day),
+        '<div class="body">%s%s%s<p class="totop"><a href="#brief">이 페이지 맨 위로</a></p>%s</div>%s</main>'
+        % (_hero(day), render_quick(day), render_market(day), render_toc(sections),
            "\n".join(render_section(s) for s in sections), render_corrections(day),
            render_pager(older, newer), render_side(day)))
     edition = " " + plain(day["edition"]) if day.get("edition") else ""
@@ -564,7 +597,9 @@ def render_day(day, older, newer, site, pages):
         title="%s%s | %s" % (long_date(day["date"]), edition, site["title"]),
         description=plain(day["summary"]), prefix="../../", path="/news/%s/" % day["date"],
         content=content, section_nav=render_section_nav(sections), og_type="article",
-        script=NAV_SCRIPT if sections else "")
+        script=NAV_SCRIPT if sections else "", current="news",
+        crumbs=[("홈", "../../index.html"), ("날짜별 브리핑", "../index.html"),
+                ("%s %s" % (short_date(day["date"]), weekday_ko(day["date"])), None)])
 
 
 def _day_list(days, href_prefix):
@@ -578,7 +613,9 @@ def _day_list(days, href_prefix):
 def render_home(days, site, pages):
     latest = days[0]
     day_href = "news/%s/index.html" % latest["date"]
-    readmore = ('<p class="readmore"><a href="%s">%s 브리핑 전체 보기</a></p>' % (day_href, long_date(latest["date"])))
+    count = sum(len(s["items"]) for s in visible_sections(latest))
+    readmore = ('<p class="readmore"><a class="go" href="%s">%s 브리핑 전체 읽기<span class="go-sub">기사 %d건</span></a></p>'
+                % (day_href, short_date(latest["date"]), count))
 
     featured = [(s, it) for s, it in all_items(latest) if it.get("featured")][:HOME_FEATURED_LIMIT]
     featured_html = ""
@@ -590,20 +627,24 @@ def render_home(days, site, pages):
                inline(first_sentence(it["facts"])), esc(it["date"]), short_date(it["date"]))
             for s, it in featured)
         featured_html = ('<section class="featured" aria-labelledby="featured-title">'
-                         '<h2 id="featured-title">주요 기사</h2><ul>%s</ul></section>' % lis)
+                         '<h2 id="featured-title">주요 기사</h2>'
+                         '<p class="hint">제목을 누르면 오늘 브리핑의 해당 기사로 이동합니다.</p>'
+                         '<ul>%s</ul></section>' % lis)
 
-    topics = "".join('<li><a href="%s#%s">%s <span class="count">%d건</span></a></li>'
+    topics = "".join('<li><a href="%s#%s"><span class="t">%s</span><span class="count">기사 %d건</span></a></li>'
                      % (day_href, esc(s["id"]), inline(s["title"]), len(s["items"]))
                      for s in visible_sections(latest))
     topics_html = ('<section class="topics" aria-labelledby="topics-title">'
-                   '<h2 id="topics-title">분야별 보기</h2><ul>%s</ul></section>' % topics) if topics else ""
+                   '<h2 id="topics-title">분야별로 읽기</h2>'
+                   '<p class="hint">분야를 누르면 오늘 브리핑의 그 분야로 이동합니다.</p>'
+                   '<ul>%s</ul></section>' % topics) if topics else ""
 
     recent = days[1:1 + HOME_RECENT_LIMIT]
     recent_html = ""
     if recent:
         recent_html = ('<section class="recent" aria-labelledby="recent-title">'
                        '<h2 id="recent-title">지난 브리핑</h2>%s'
-                       '<p class="more"><a href="news/index.html">전체 목록 보기</a></p></section>'
+                       '<p class="more"><a href="news/index.html">날짜별 브리핑 전체 목록</a></p></section>'
                        % _day_list(recent, "news/"))
     content = ('<main class="page" id="brief"><div class="lead">%s%s</div>%s'
                '<div class="body">%s%s%s</div></main>'
@@ -611,7 +652,7 @@ def render_home(days, site, pages):
                   featured_html, topics_html, recent_html))
     return wrap_page(site, pages, title=site["title"],
                      description=site.get("description") or plain(latest["summary"]),
-                     prefix="", path="/", content=content)
+                     prefix="", path="/", content=content, current="home")
 
 
 def render_archive(days, site, pages):
@@ -621,12 +662,13 @@ def render_archive(days, site, pages):
     months = "".join('<section class="month"><h2>%s</h2>%s</section>' % (label, _day_list(ds, ""))
                      for label, ds in groups.items())
     content = ('<main class="page" id="brief"><div class="lead"><section class="hero" aria-labelledby="top-title">'
-               '<h1 id="top-title">지난 브리핑</h1>'
+               '<h1 id="top-title">날짜별 브리핑</h1>'
                '<p class="summary">날짜별로 쌓이는 브리핑입니다. 날짜를 누르면 그날의 전체 내용을 볼 수 있습니다.</p>'
                '</section></div><div class="body">%s</div></main>' % months)
-    return wrap_page(site, pages, title="지난 브리핑 | %s" % site["title"],
+    return wrap_page(site, pages, title="날짜별 브리핑 | %s" % site["title"],
                      description="%s의 날짜별 브리핑 목록" % site["title"],
-                     prefix="../", path="/news/", content=content)
+                     prefix="../", path="/news/", content=content, current="news",
+                     crumbs=[("홈", "../index.html"), ("날짜별 브리핑", None)])
 
 
 def render_static(page, site, pages):
@@ -645,14 +687,15 @@ def render_static(page, site, pages):
                % (inline(page["title"]), lead, "\n".join(blocks)))
     return wrap_page(site, pages, title="%s | %s" % (page["title"], site["title"]),
                      description=page.get("description", ""), prefix="../", path="/%s/" % page["slug"],
-                     content=content)
+                     content=content, current=page["slug"],
+                     crumbs=[("홈", "../index.html"), (page.get("nav") or page["title"], None)])
 
 
 def render_404(site, pages):
     content = ('<main class="page" id="brief"><div class="lead"><section class="hero" aria-labelledby="top-title">'
                '<h1 id="top-title">페이지를 찾을 수 없습니다</h1>'
                '<p class="summary">주소가 바뀌었거나 없는 페이지입니다.</p>'
-               '<p class="readmore"><a href="/index.html">홈으로 가기</a></p>'
+               '<p class="readmore"><a class="go" href="/index.html">홈으로 가기</a></p>'
                '</section></div></main>')
     return wrap_page(site, pages, title="페이지를 찾을 수 없습니다 | %s" % site["title"], description="",
                      prefix="/", path="/404.html", content=content, noindex=True)

@@ -154,6 +154,33 @@ class BuildOutputTests(SiteCase):
         self.assertIn('rel="noopener"', page)
         self.assertIn("<strong>강조</strong>", page)
 
+    def test_menu_marks_the_page_the_reader_is_on(self):
+        self.write_day(make_day())
+        self.build()
+        home, archive = self.read("index.html"), self.read("news/index.html")
+        self.assertIn('href="index.html" aria-current="page">홈<', home)
+        self.assertNotIn('aria-current="page">날짜별 브리핑<', home)
+        self.assertIn('href="../news/index.html" aria-current="page">날짜별 브리핑<', archive)
+
+    def test_day_page_shows_where_it_sits_in_the_site(self):
+        page = self.day_page(make_day())
+        crumbs = page[page.index('class="crumbs"'):page.index("</nav>", page.index('class="crumbs"'))]
+        self.assertIn('<a href="../../index.html">홈</a>', crumbs)
+        self.assertIn('<a href="../index.html">날짜별 브리핑</a>', crumbs)
+        self.assertIn('<li aria-current="page">10월 13일 화요일</li>', crumbs)
+
+    def test_home_has_no_location_line(self):
+        self.write_day(make_day())
+        self.build()
+        self.assertNotIn('class="crumbs"', self.read("index.html"))
+
+    def test_day_page_lists_every_article_in_its_contents(self):
+        page = self.day_page(make_day())
+        toc = page[page.index('class="toc"'):page.index("</nav>", page.index('class="toc"'))]
+        self.assertIn('href="#economy"', toc)
+        self.assertIn('href="#a-one"', toc)
+        self.assertIn('href="#a-two"', toc)
+
     def test_article_parts_are_labelled_and_missing_parts_are_omitted(self):
         page = self.day_page(make_day())
         first = page[page.index('id="a-one"'):page.index('id="a-two"')]

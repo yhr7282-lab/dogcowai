@@ -344,12 +344,14 @@ def load_pages(root):
 
 # ---------------------------------------------------------------- 구성요소
 
-def render_sources(sources):
-    if not sources:
+def render_sources(sources, perma=""):
+    if not sources and not perma:
         return ""
     links = " ".join('<a href="%s" target="_blank" rel="noopener">%s</a>'
-                     % (esc(s["url"]), inline(s["name"])) for s in sources)
-    return '<p class="src"><span>출처<span class="sr"> (새 창에서 열림)</span></span> %s</p>' % links
+                     % (esc(s["url"]), inline(s["name"])) for s in sources or [])
+    label = '<span>출처<span class="sr"> (새 창에서 열림)</span></span> ' if links else ""
+    tail = ' <a class="perma" href="%s">기사 주소</a>' % perma if perma else ""
+    return '<p class="src">%s%s%s</p>' % (label, links, tail)
 
 
 def render_market(day):
@@ -388,11 +390,9 @@ def render_quick(day, href_prefix=""):
     items = day.get("quick") or []
     if not items:
         return ""
-    lis = "".join('<li><a href="%s#%s">%s</a></li>' % (href_prefix, esc(q["ref"]), inline(q["text"]))
-                  for q in items)
+    lis = "".join("<li>%s</li>" % inline(q["text"]) for q in items)
     return ('<section class="quick" aria-labelledby="quick-title">'
-            '<h2 id="quick-title">핵심 1분</h2>'
-            '<p class="hint">줄을 누르면 해당 기사로 이동합니다.</p><ul>%s</ul></section>' % lis)
+            '<h2 id="quick-title">핵심 1분</h2><ul>%s</ul></section>' % lis)
 
 
 def _part(cls, label, text):
@@ -408,15 +408,18 @@ def fold(cls, closed, opened, body, attrs=""):
 def render_item(item, day_href=""):
     parts = ['<article class="item" id="%s">' % esc(item["id"]),
              '<time datetime="%s">%s</time>' % (esc(item["date"]), short_date(item["date"])),
-             "<h3>%s</h3>" % inline(item["title"]),
-             _part("fact", "무슨 일이 있었나", item["facts"])]
+             "<h3>%s</h3>" % inline(item["title"])]
+    recheck = item.get("recheck")
+    has_more = bool(item.get("so") or (recheck and recheck.get("text")))
+    if has_more:
+        parts.append(_part("fact", "무슨 일이 있었나", item["facts"]))
+    else:
+        parts.append('<div class="part fact"><p>%s</p></div>' % inline(item["facts"]))
     if item.get("so"):
         parts.append(_part("why", "왜 중요한가", item["so"]))
-    recheck = item.get("recheck")
     if recheck and recheck.get("text"):
         parts.append(_part("recheck", recheck.get("label", "다시 볼 조건"), recheck["text"]))
-    parts.append(render_sources(item.get("sources")))
-    parts.append('<p class="perma"><a href="%s#%s">이 기사의 주소</a></p>' % (day_href, esc(item["id"])))
+    parts.append(render_sources(item.get("sources"), "%s#%s" % (day_href, esc(item["id"]))))
     parts.append("</article>")
     return "\n".join(p for p in parts if p)
 
@@ -447,7 +450,7 @@ def render_section(sec, root="", day_href=""):
     if rest:
         parts.append(fold("more-items", "%s 기사 %d건 더 보기" % (name, len(rest)), "%s 기사 접기" % name,
                           "\n".join(render_item(i, day_href) for i in rest)))
-    parts.append('<p class="sec-more"><a href="%stopic/%s/index.html">지난 %s 기사 모아 보기</a></p>'
+    parts.append('<p class="sec-more"><a href="%stopic/%s/index.html">%s 기사 전체</a></p>'
                  % (root, sid, name))
     parts.append("</section>")
     return "\n".join(parts)
@@ -456,9 +459,7 @@ def render_section(sec, root="", day_href=""):
 def render_sections(sections, root="", day_href=""):
     if not sections:
         return ""
-    head = ('<div class="block-head"><p class="kicker">분야별 뉴스</p>'
-            '<p class="hint">분야마다 대표 기사 하나를 먼저 보여 줍니다. 나머지는 \'더 보기\'로 엽니다.</p></div>')
-    return head + "\n".join(render_section(s, root, day_href) for s in sections)
+    return "\n".join(render_section(s, root, day_href) for s in sections)
 
 
 def render_ticker(day):
@@ -475,7 +476,7 @@ def render_ticker(day):
         value = ' <span class="v">%s</span>' % inline(r["value"]) if r.get("value") else ""
         cells.append('<li><span class="n">%s</span>%s%s</li>' % (inline(r["name"]), value, change))
     return ('<div class="ticker" role="group" aria-label="시장 수치 한 줄 요약"><div class="wrap"><ul>%s</ul>'
-            '<a href="#market-title">기준일과 출처</a></div></div>' % "".join(cells))
+            '</div></div>' % "".join(cells))
 
 
 def render_side(day):
@@ -522,7 +523,7 @@ def render_section_nav(sections):
     links = "".join('<a href="#%s">%s</a>' % (esc(s["id"]), inline(s.get("nav") or s["title"]))
                     for s in sections)
     return ('<nav class="sections" aria-label="이 페이지의 분야 바로가기"><div class="wrap">'
-            '<span class="sections-label">이 페이지</span>%s</div></nav>' % links)
+            '%s</div></nav>' % links)
 
 
 def render_pager(older, newer):
@@ -636,7 +637,7 @@ def render_day(day, older, newer, site, pages):
         '<main class="page" id="brief">'
         '<div class="lead">%s%s</div>%s'
         '<div class="body">%s%s<p class="totop"><a href="#brief">이 페이지 맨 위로</a></p>%s</div>%s</main>'
-        % (_hero(day, label="이날의 가장 중요한 뉴스"), render_quick(day), render_market(day),
+        % (_hero(day), render_quick(day), render_market(day),
            render_sections(sections, "../../"), render_corrections(day),
            render_pager(older, newer), render_side(day)))
     edition = " " + plain(day["edition"]) if day.get("edition") else ""
@@ -670,7 +671,7 @@ def render_intro(site, about_href):
     if items:
         parts.append('<ul class="points">%s</ul>' % "".join("<li>%s</li>" % inline(i) for i in items))
     if about_href:
-        parts.append('<p class="more"><a href="%s">소개와 편집 기준 자세히 보기</a></p>' % about_href)
+        parts.append('<p class="more"><a href="%s">편집 기준</a></p>' % about_href)
     parts.append("</section>")
     return "\n".join(parts)
 
@@ -691,8 +692,7 @@ def render_home(days, site, pages):
             '<span class="lead-line">%s</span></a></li>'
             % (esc(it["id"]), inline(s["title"]), inline(it["title"]), inline(first_sentence(it["facts"])))
             for s, it in featured)
-        featured_html = ('<p class="hint">제목을 누르면 아래 브리핑이 열리고 그 기사로 이동합니다.</p>'
-                         '<ul class="featured">%s</ul>' % lis)
+        featured_html = '<ul class="featured">%s</ul>' % lis
 
     hero_tag = "h2" if intro_html else "h1"
     today = ('<section class="today" aria-labelledby="today-title">'
@@ -705,7 +705,7 @@ def render_home(days, site, pages):
             "briefing",
             '%s 브리핑 전체 더 보기 <span class="count">기사 %d건</span>' % (label, count),
             "%s 브리핑 접기" % label,
-            '%s%s<p class="more"><a href="%s">%s 브리핑 페이지로 이동</a></p>'
+            '%s%s<p class="more"><a href="%s">%s 브리핑 페이지</a></p>'
             % (render_quick(latest), render_sections(sections, "", day_href), day_href, label),
             ' id="briefing"')
 
@@ -713,9 +713,8 @@ def render_home(days, site, pages):
     recent_html = ""
     if recent:
         recent_html = ('<section class="recent" aria-labelledby="recent-title">'
-                       '<h2 id="recent-title">지난 브리핑</h2>'
-                       '<p class="hint">날짜를 누르면 그날 브리핑으로 이동합니다.</p>%s'
-                       '<p class="more"><a href="news/index.html">%s 전체 목록</a></p></section>'
+                       '<h2 id="recent-title">지난 브리핑</h2>%s'
+                       '<p class="more"><a href="news/index.html">%s 전체</a></p></section>'
                        % (_day_list(recent, "news/"), NEWS_LABEL))
     content = ('<main class="page home" id="brief"><div class="lead">%s%s</div>%s'
                '<div class="body">%s%s</div></main>'
@@ -734,12 +733,10 @@ def render_archive(days, site, pages, topics=()):
                      for label, ds in groups.items())
     topics_html = ""
     if topics:
-        topics_html = ('<section class="month" aria-labelledby="topics-title"><h2 id="topics-title">분야별 모아 보기</h2>'
-                       '<p class="hint">분야를 누르면 그 분야 기사만 날짜순으로 볼 수 있습니다.</p>%s</section>'
+        topics_html = ('<section class="month" aria-labelledby="topics-title"><h2 id="topics-title">분야별</h2>%s</section>'
                        % topic_links(topics, "../"))
     content = ('<main class="page" id="brief"><div class="lead"><section class="hero" aria-labelledby="top-title">'
                '<h1 id="top-title">%s</h1>'
-               '<p class="summary">날짜별로 쌓이는 브리핑입니다. 날짜를 누르면 그날의 전체 내용을 볼 수 있습니다.</p>'
                '</section></div><div class="body">%%s%%s</div></main>' % NEWS_LABEL % (months, topics_html))
     return wrap_page(site, pages, title="%s | %s" % (NEWS_LABEL, site["title"]),
                      description="%s의 날짜별 브리핑 목록" % site["title"],
@@ -772,13 +769,11 @@ def render_topic(topic, site, pages):
         % (day["date"], esc(item["id"]), day["date"], short_date(day["date"]),
            inline(item["title"]), inline(first_sentence(item["facts"])))
         for day, item in topic["rows"])
-    label = "%s 기사 모아 보기" % plain(topic["title"])
+    label = "%s 기사" % plain(topic["title"])
     content = ('<main class="page" id="brief"><div class="lead"><section class="hero" aria-labelledby="top-title">'
-               '<h1 id="top-title">%s 기사 모아 보기</h1>'
-               '<p class="summary">날짜별 브리핑에 실린 %s 기사를 최근 것부터 모았습니다. '
-               '제목을 누르면 그날 브리핑의 해당 기사로 이동합니다.</p>'
+               '<h1 id="top-title">%s 기사</h1>'
                '</section></div><div class="body"><ul class="featured topic-list">%s</ul></div></main>'
-               % (name, name, lis))
+               % (name, lis))
     return wrap_page(site, pages, title="%s | %s" % (label, site["title"]),
                      description="%s에 실린 %s 기사 목록" % (site["title"], plain(topic["title"])),
                      prefix="../../", path="/topic/%s/" % topic["id"], content=content, current="news",

@@ -206,8 +206,16 @@ class BuildOutputTests(SiteCase):
             {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "사실.",
              "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
         page = self.day_page(day)
-        self.assertIn('<a href="../../topic/economy/index.html">지난 경제 기사 모아 보기</a>', page)
-        self.assertIn('<a href="../../topic/auto/index.html">지난 자동차 기사 모아 보기</a>', page)
+        self.assertIn('<a href="../../topic/economy/index.html">경제 기사 전체</a>', page)
+        self.assertIn('<a href="../../topic/auto/index.html">자동차 기사 전체</a>', page)
+
+    def test_pages_carry_no_instruction_sentences(self):
+        self.write_day(make_day())
+        self.build()
+        for rel in ("index.html", "news/index.html", "news/2026-10-13/index.html", "topic/economy/index.html"):
+            html = self.read(rel)
+            self.assertNotIn('class="hint"', html, rel)
+            self.assertNotIn("누르면", html, rel)
 
     def test_fold_labels_use_one_vocabulary(self):
         self.write_day(make_day())
@@ -226,19 +234,19 @@ class BuildOutputTests(SiteCase):
         self.write_day(make_day("2026-10-13"))
         self.build()
         topic = self.read("topic/economy/index.html")
-        self.assertIn("경제 기사 모아 보기", topic)
+        self.assertIn("<h1 id=\"top-title\">경제 기사</h1>", topic)
         new, old = topic.index("news/2026-10-13/index.html#a-one"), topic.index("news/2026-10-12/index.html#a-one")
         self.assertLess(new, old)
         self.assertIn("/topic/economy/", self.read("sitemap.xml"))
         self.assertIn('href="../topic/economy/index.html"', self.read("news/index.html"))
 
-    def test_ticker_repeats_the_market_rows_and_points_to_the_full_table(self):
+    def test_ticker_repeats_the_market_rows_as_plain_text(self):
         page = self.day_page(make_day())
         ticker = page[page.index('class="ticker"'):page.index("</div></div>", page.index('class="ticker"'))]
         self.assertIn("KOSPI", ticker)
         self.assertIn("6,035.35", ticker)
         self.assertIn('class="c down"', ticker)
-        self.assertIn('href="#market-title"', ticker)
+        self.assertNotIn("<a ", ticker)
 
     def test_page_without_market_has_no_ticker(self):
         day = make_day()
@@ -248,8 +256,8 @@ class BuildOutputTests(SiteCase):
     def test_each_article_shows_its_own_address(self):
         self.write_day(make_day())
         self.build()
-        self.assertIn('<a href="#a-two">이 기사의 주소</a>', self.read("news/2026-10-13/index.html"))
-        self.assertIn('<a href="news/2026-10-13/index.html#a-two">이 기사의 주소</a>', self.read("index.html"))
+        self.assertIn('<a class="perma" href="#a-two">기사 주소</a>', self.read("news/2026-10-13/index.html"))
+        self.assertIn('<a class="perma" href="news/2026-10-13/index.html#a-two">기사 주소</a>', self.read("index.html"))
 
     def test_home_opens_with_the_site_introduction(self):
         site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
@@ -268,7 +276,7 @@ class BuildOutputTests(SiteCase):
         fold = home.index('<details class="fold briefing"')
         self.assertLess(home.index('class="featured"'), fold)
         self.assertGreater(home.index('id="economy"'), fold)
-        self.assertIn('href="news/2026-10-13/index.html">10월 13일 브리핑 페이지로 이동', home)
+        self.assertIn('href="news/2026-10-13/index.html">10월 13일 브리핑 페이지<', home)
 
     def test_article_parts_are_labelled_and_missing_parts_are_omitted(self):
         page = self.day_page(make_day())
@@ -276,7 +284,8 @@ class BuildOutputTests(SiteCase):
         second = page[page.index('id="a-two"'):]
         for label in ("무슨 일이 있었나", "왜 중요한가", "다시 볼 조건", "출처"):
             self.assertIn(label, first)
-        self.assertIn("무슨 일이 있었나", second)
+        self.assertNotIn("무슨 일이 있었나", second)
+        self.assertIn("두 번째 사실.", second)
         self.assertNotIn("왜 중요한가", second)
         self.assertNotIn("다시 볼 조건", second)
 
@@ -299,11 +308,11 @@ class BuildOutputTests(SiteCase):
         self.assertIn('class="brand" href="../../index.html">dogcowai 경제브리핑</a>', page)
         self.assertIn("| dogcowai 경제브리핑</title>", page)
 
-    def test_quick_points_link_to_their_articles(self):
-        self.write_day(make_day())
-        self.build()
-        self.assertIn('<a href="#a-one">', self.read("news/2026-10-13/index.html"))
-        self.assertIn('<a href="#a-one">', self.read("index.html"))
+    def test_quick_points_are_plain_text_not_links(self):
+        page = self.day_page(make_day())
+        quick = page[page.index('class="quick"'):page.index("</section>", page.index('class="quick"'))]
+        self.assertIn("하락", quick)
+        self.assertNotIn("<a ", quick)
 
     def test_home_previews_featured_articles_from_the_same_data(self):
         self.write_day(make_day())

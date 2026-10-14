@@ -635,10 +635,21 @@ class SeoTests(SiteCase):
         head = feed[:feed.index("<entry>")]
         self.assertIn("<updated>2026-10-14T09:30:00+09:00</updated>", head)
 
-    def test_feed_turns_a_date_only_update_into_the_start_of_that_day(self):
+    def test_feed_does_not_invent_a_time_when_only_the_update_date_is_known(self):
         self.write_day(make_day(updated_at="2026-10-14"))
         self.build()
-        self.assertIn("<updated>2026-10-14T00:00:00+09:00</updated>", self.read("feed.xml"))
+        feed = self.read("feed.xml")
+        self.assertNotIn("T00:00:00", feed)
+        entry = feed[feed.index("<entry>"):feed.index("</entry>")]
+        self.assertIn("<updated>2026-10-13T17:02:00+09:00</updated>", entry)
+        self.assertIn("<summary>요약 문장입니다. (수정 10월 14일, 정확한 시각 미상)</summary>", entry)
+
+    def test_feed_summary_is_plain_when_the_update_time_is_known(self):
+        self.write_day(make_day(updated_at="2026-10-14T09:30:00+09:00"))
+        self.build()
+        feed = self.read("feed.xml")
+        self.assertIn("<summary>요약 문장입니다.</summary>", feed)
+        self.assertNotIn("시각 미상", feed)
 
     def test_feed_has_one_entry_per_day(self):
         self.write_day(make_day("2026-10-12"))

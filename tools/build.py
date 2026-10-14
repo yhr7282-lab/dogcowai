@@ -909,9 +909,18 @@ def render_sitemap(site, rels):
 
 
 def entry_updated(day):
-    """피드의 갱신 시각: 고친 시각이 있으면 그것(날짜만 있으면 그날 0시), 없으면 브리핑 기준 시각."""
-    at, _ = parse_updated(day)
-    return at or briefing_time(day)
+    """피드의 갱신 시각: 정확한 수정 시각이 있으면 그것, 없으면 브리핑 기준 시각.
+    수정 날짜만 알 때는 시각을 만들지 않는다 (요약에 '정확한 시각 미상'을 적는다, entry_summary)."""
+    at, date_only = parse_updated(day)
+    return at if at and not date_only else briefing_time(day)
+
+
+def entry_summary(day):
+    text = plain(day["summary"])
+    at, date_only = parse_updated(day)
+    if at and date_only:
+        text += " (수정 %d월 %d일, 정확한 시각 미상)" % (at.month, at.day)
+    return text
 
 
 def render_feed(site, days):
@@ -919,7 +928,7 @@ def render_feed(site, days):
         url = "%s/news/%s/" % (site["base_url"], d["date"])
         return ("<entry><title>%s</title><link href=\"%s\"/><id>%s</id><updated>%s</updated>"
                 "<summary>%s</summary></entry>\n"
-                % (esc(plain(d["headline"])), url, url, entry_updated(d).isoformat(), esc(plain(d["summary"]))))
+                % (esc(plain(d["headline"])), url, url, entry_updated(d).isoformat(), esc(entry_summary(d))))
     updated = max(entry_updated(d) for d in days[:30]).isoformat()
     return ('<?xml version="1.0" encoding="UTF-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom">\n'
             "<title>%s</title><link href=\"%s/\"/><link rel=\"self\" href=\"%s/feed.xml\"/>"

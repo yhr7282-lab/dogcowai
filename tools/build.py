@@ -263,6 +263,16 @@ def validate_day(day, name_date, filename, site):
                 raise BuildError("%s: id '%s' 가 중복됩니다" % (where, iid))
             ids.add(iid)
             items_by_id[iid] = item
+            if "teaser" in item:
+                teaser = item["teaser"]
+                if not isinstance(teaser, str) or not teaser.strip():
+                    raise BuildError("%s: teaser 는 비어 있지 않은 문장이어야 합니다" % where)
+                recheck = item.get("recheck") if isinstance(item.get("recheck"), dict) else {}
+                body = plain(" ".join(str(v) for v in (item["title"], item["facts"], item.get("so", ""),
+                                                        recheck.get("text", ""))))
+                for num in _NUMBER.findall(plain(teaser)):
+                    if num not in body:
+                        raise BuildError("%s: teaser — 숫자 '%s' 가 기사 본문에 없습니다" % (where, num))
             if _check_date(item["date"], where) > date:
                 raise BuildError("%s: 기사 날짜가 브리핑 날짜보다 뒤입니다" % where)
             sources = item.get("sources") or []
@@ -477,6 +487,11 @@ def topic_rows(topics, href_prefix):
                      count="기사 %d건" % len(t["rows"])) for t in topics], "topics")
 
 
+def list_line(item):
+    """목록에서 제목 아래에 붙는 한 줄. 편집자가 쓴 teaser 가 있으면 그것, 없으면 본문의 첫 문장."""
+    return item.get("teaser") or first_sentence(item["facts"])
+
+
 def lead_item(sec):
     """분야의 대표 기사. featured 가 있으면 그 기사, 없으면 첫 기사."""
     for item in sec["items"]:
@@ -513,7 +528,7 @@ def render_day_section(sec, root):
     name = inline(sec["title"])
 
     def item_row(i):
-        return row("%s/index.html" % esc(i["id"]), i["title"], line=first_sentence(i["facts"]), rid=i["id"])
+        return row("%s/index.html" % esc(i["id"]), i["title"], line=list_line(i), rid=i["id"])
 
     parts = ['<section class="sec" id="%s" aria-labelledby="h-%s">' % (sid, sid),
              '<div class="sec-head"><h2 id="h-%s">%s</h2><span class="count">기사 %d건</span></div>'
@@ -676,12 +691,13 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
     return re.sub(r"\{\{(\w+)\}\}", lambda m: values[m.group(1)], template)
 
 
-def render_intro(site, about_href):
+def render_intro(site, about_href, go=""):
+    """홈 맨 위 소개. go 는 최신 브리핑으로 가는 버튼이고 소개 제목 바로 아래에 둔다."""
     intro = site.get("intro")
     if not intro:
         return ""
     parts = ['<section class="intro" aria-labelledby="intro-title">',
-             '<h1 id="intro-title">%s</h1>' % inline(intro["heading"])]
+             '<h1 id="intro-title">%s</h1>' % inline(intro["heading"]), go]
     parts += ['<p class="summary">%s</p>' % inline(p) for p in intro.get("paragraphs") or []]
     items = intro.get("items") or []
     if items:
@@ -689,7 +705,7 @@ def render_intro(site, about_href):
     if about_href:
         parts.append('<p class="more"><a href="%s">편집 기준</a></p>' % about_href)
     parts.append("</section>")
-    return "\n".join(parts)
+    return "\n".join(p for p in parts if p)
 
 
 def render_home(days, site, pages, topics):
@@ -698,7 +714,13 @@ def render_home(days, site, pages, topics):
     day_href = "news/%s/index.html" % latest["date"]
     sections = visible_sections(latest)
     about = next((p for p in pages if p["slug"] == "about"), None)
-    intro_html = render_intro(site, "about/index.html" if about else "")
+    go = ""
+    if sections:
+        edition = " " + inline(latest["edition"]) if latest.get("edition") else ""
+        go = ('<p class="readmore"><a class="go" href="%s">%s%s 브리핑 전체 보기 <span class="count">기사 %d건</span></a></p>'
+              % (day_href, short_date(latest["date"]), edition, sum(len(s["items"]) for s in sections)))
+    # 최신 브리핑으로 가는 버튼은 한 번만 둔다: 소개가 있으면 소개 제목 아래, 없으면 주요 뉴스 아래.
+    intro_html = render_intro(site, "about/index.html" if about else "", go)
 
     picks = [(s, it) for s, it in all_items(latest) if it.get("featured")]
     if not picks:
@@ -706,15 +728,11 @@ def render_home(days, site, pages, topics):
     picks_html = ""
     if picks:
         picks_html = rows([row("news/%s/%s/index.html" % (latest["date"], esc(it["id"])), it["title"],
-                               meta=inline(s["title"]), line=first_sentence(it["facts"]))
+                               meta=inline(s["title"]), line=list_line(it))
                            for s, it in picks[:HOME_FEATURED_LIMIT]])
-    go = ""
-    if sections:
-        go = ('<p class="readmore"><a class="go" href="%s">%s 브리핑 전체 보기 <span class="count">기사 %d건</span></a></p>'
-              % (day_href, short_date(latest["date"]), sum(len(s["items"]) for s in sections)))
     today = ('<section class="today" aria-labelledby="today-title">'
              '<p class="kicker" id="today-title">오늘의 주요 뉴스</p>%s%s%s</section>'
-             % (_hero(latest, tag="h2" if intro_html else "h1"), picks_html, go))
+             % (_hero(latest, tag="h2" if intro_html else "h1"), picks_html, "" if intro_html else go))
 
     side = []
     chart = render_chart((latest.get("market") or {}).get("rows") or [])
@@ -826,7 +844,7 @@ def render_topic_index(topics, site, pages):
 def render_topic(topic, site, pages):
     label = "%s 기사" % plain(topic["title"])
     body = rows([row("../../news/%s/%s/index.html" % (day["date"], esc(item["id"])), item["title"],
-                     meta=date_meta(day["date"]), line=first_sentence(item["facts"]))
+                     meta=date_meta(day["date"]), line=list_line(item))
                  for day, item in topic["rows"]])
     return wrap_page(site, pages, title="%s | %s" % (label, site["title"]),
                      description="%s에 실린 %s 기사 목록" % (site["title"], plain(topic["title"])),

@@ -188,6 +188,28 @@ class BuildOutputTests(SiteCase):
         self.assertLess(sec.index('id="a-two"'), sec.index("<details"))
         self.assertGreater(sec.index('id="a-one"'), sec.index("<details"))
 
+    def test_lists_use_the_teaser_when_an_article_has_one(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날 <b>&"
+        self.write_day(day)
+        self.build()
+        for rel in ("index.html", "news/2026-10-13/index.html", "topic/economy/index.html"):
+            page = self.read(rel)
+            self.assertIn('<span class="line">지수가 5.46% 내린 날 &lt;b&gt;&amp;</span>', page, rel)
+            self.assertNotIn('<span class="line">지수가 5.46% 내렸다.</span>', page, rel)
+
+    def test_lists_fall_back_to_the_first_sentence_without_a_teaser(self):
+        page = self.day_page(make_day())
+        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
+        self.assertIn('<span class="line">두 번째 사실.</span>', page)
+
+    def test_teaser_does_not_replace_the_article_text(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "목록에만 쓰는 문장"
+        page = self.article_page(day, "a-one")
+        self.assertIn("둘째 문장 <strong>강조</strong>.", page)
+        self.assertNotIn("목록에만 쓰는 문장", page)
+
     def test_category_with_one_article_has_no_fold(self):
         day = make_day()
         day["sections"][0]["items"].pop()
@@ -321,9 +343,32 @@ class BuildOutputTests(SiteCase):
         self.write_day(make_day())
         self.build()
         home = self.read("index.html")
-        self.assertIn('<a class="go" href="news/2026-10-13/index.html">10월 13일 브리핑 전체 보기', home)
+        self.assertIn('<a class="go" href="news/2026-10-13/index.html">10월 13일 오후판 브리핑 전체 보기 '
+                      '<span class="count">기사 2건</span></a>', home)
         for absent in ("<details", 'id="economy"', "두 번째 사실.", "둘째 문장", "핵심 1분"):
             self.assertNotIn(absent, home)
+
+    def test_home_puts_the_briefing_link_right_under_the_introduction_heading(self):
+        site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
+        self.write_site(site)
+        self.write_day(make_day())
+        self.build()
+        home = self.read("index.html")
+        heading, go, text = home.index("소개 제목</h1>"), home.index('class="go"'), home.index("소개 문단")
+        self.assertLess(heading, go)
+        self.assertLess(go, text)
+        self.assertEqual(home.count('class="go"'), 1)
+        self.assertIn("<li>원칙 하나</li>", home)
+
+    def test_home_briefing_link_follows_the_latest_day_and_edition(self):
+        self.write_day(make_day("2026-10-12"))
+        newest = make_day("2026-10-13")
+        del newest["edition"]
+        self.write_day(newest)
+        self.build()
+        home = self.read("index.html")
+        self.assertIn('<a class="go" href="news/2026-10-13/index.html">10월 13일 브리핑 전체 보기', home)
+        self.assertNotIn('class="go" href="news/2026-10-12/', home)
 
     def test_home_lists_featured_articles_and_links_to_their_pages(self):
         self.write_day(make_day())
@@ -645,6 +690,24 @@ class ContentRuleTests(SiteCase):
     def test_quick_point_numbers_must_appear_in_the_article(self):
         self.assert_rejected(make_day(quick=[{"text": "지수 9.99% 하락", "ref": "a-one"}]), "quick[0]", "9.99%")
 
+    def test_teaser_numbers_must_appear_in_the_article(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "지수가 9.99% 내렸다"
+        self.assert_rejected(day, "a-one", "teaser", "9.99%")
+
+    def test_teaser_may_use_numbers_from_any_part_of_the_article(self):
+        day = make_day()
+        item = day["sections"][0]["items"][0]
+        item["recheck"]["text"] = "15일 발표를 확인한다."
+        item["teaser"] = "15일 발표가 남았다"
+        self.day_page(day)
+
+    def test_teaser_must_be_a_non_empty_text(self):
+        for bad in ("", "   ", 7, ["문장"]):
+            day = make_day()
+            day["sections"][0]["items"][0]["teaser"] = bad
+            self.assert_rejected(day, "teaser")
+
     def test_checked_at_must_be_a_time(self):
         self.assert_rejected(make_day(checked_at="오후쯤"), "checked_at")
 
@@ -727,6 +790,11 @@ class PublicInputTests(SiteCase):
         day = make_day()
         day["memo"] = "렌더링되지 않는 필드의 매입가"
         self.assert_rejected(day, "memo", "공개 규칙 1번")
+
+    def test_blocklist_scans_the_teaser(self):
+        day = make_day()
+        day["sections"][0]["items"][1]["teaser"] = "목록 문장 속 매입가"
+        self.assert_rejected(day, "items[1].teaser", "공개 규칙 1번")
 
     def test_blocklist_scans_attribute_values(self):
         day = make_day()

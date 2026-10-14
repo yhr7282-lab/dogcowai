@@ -96,7 +96,8 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 /* 홈 맨 위 소개 */
 .intro { padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px solid var(--line); }
 .intro h1 { font-size: clamp(24px, 6vw, 30px); line-height: 1.35; font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; }
-.intro .summary { margin-top: 12px; font-size: 17px; line-height: 1.75; }
+.intro .readmore { margin-top: 16px; }
+.intro .summary { margin-top: 18px; font-size: 17px; line-height: 1.75; }
 .intro .points { margin-top: 12px; }
 .intro .more { margin-top: 14px; }
 
@@ -148,7 +149,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 /* 가장 중요한 이동 하나: 채운 버튼 */
 .readmore { margin-top: 24px; }
 a.go {
-  display: inline-flex; align-items: baseline; gap: 10px;
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px;
   padding: 13px 18px; border-radius: 6px; background: var(--link); color: #fff; font-size: 16.5px; font-weight: 700; line-height: 1.4;
 }
 a.go:hover { background: var(--link-strong); color: #fff; text-decoration: none; }

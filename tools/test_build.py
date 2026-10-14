@@ -143,110 +143,142 @@ class SiteCase(unittest.TestCase):
 
 
 class BuildOutputTests(SiteCase):
+    """페이지 구성. 페이지는 여섯 가지다: 홈(소개 + 최신 브리핑), 브리핑, 기사, 날짜별 목록, 분야 목록, 분야별 기사."""
+
+    PAGES = ("index.html", "news/index.html", "news/2026-10-13/index.html", "news/2026-10-13/a-one/index.html",
+             "topic/index.html", "topic/economy/index.html")
+
+    def two_sections(self):
+        day = make_day()
+        day["sections"].append({"id": "auto", "title": "자동차", "items": [
+            {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "차 사실.",
+             "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
+        return day
+
     def test_creates_all_pages_and_site_files(self):
         self.write_day(make_day())
         self.build()
-        for rel in ("index.html", "news/index.html", "news/2026-10-13/index.html",
-                    "news/2026-10-13/a-one/index.html", "news/2026-10-13/a-two/index.html",
-                    "topic/index.html", "topic/economy/index.html",
-                    "404.html", "sitemap.xml", "robots.txt", "feed.xml"):
+        for rel in self.PAGES + ("news/2026-10-13/a-two/index.html", "404.html", "sitemap.xml", "robots.txt",
+                                 "feed.xml"):
             self.assertTrue(self.exists(rel), rel)
 
-    # ---- 일별 브리핑: 그날 기사의 목록
+    # ---- 모든 페이지에 공통
 
-    def test_day_page_is_an_index_that_links_to_each_article(self):
+    def test_menu_marks_the_page_the_reader_is_on(self):
+        self.write_day(make_day())
+        self.build()
+        home, archive, topics = self.read("index.html"), self.read("news/index.html"), self.read("topic/index.html")
+        self.assertIn('href="index.html" aria-current="page">홈<', home)
+        self.assertNotIn('aria-current="page">날짜별<', home)
+        self.assertIn('href="../news/index.html" aria-current="page">날짜별<', archive)
+        self.assertIn('href="../topic/index.html" aria-current="page">분야별<', topics)
+        self.assertIn('aria-current="page">날짜별<', self.read("news/2026-10-13/index.html"))
+        self.assertIn('aria-current="page">날짜별<', self.read("news/2026-10-13/a-one/index.html"))
+        self.assertIn('aria-current="page">분야별<', self.read("topic/economy/index.html"))
+
+    def test_pages_carry_no_market_strip_location_line_folds_buttons_or_scripts(self):
+        self.write_day(make_day())
+        self.build()
+        for rel in self.PAGES:
+            html = self.read(rel)
+            for absent in ('class="ticker"', 'class="crumbs"', "<details", 'class="go"', 'class="hint"', "누르면"):
+                self.assertNotIn(absent, html, (rel, absent))
+            scripts = re.findall(r"<script\b[^>]*>", html)
+            self.assertTrue(all('type="application/ld+json"' in s for s in scripts), (rel, scripts))
+
+    def test_footer_links_the_fixed_pages_and_the_feed_but_not_the_menu_again(self):
+        self.write_page({"slug": "about", "title": "소개", "sections": [{"heading": "무엇인가", "paragraphs": ["문단"]}]})
         page = self.day_page(make_day())
-        self.assertIn("2026-10-13 헤드라인", page)
-        self.assertIn('id="economy"', page)
+        footer = page[page.index("<footer>"):]
+        self.assertIn('href="../../about/index.html">소개<', footer)
+        self.assertIn('href="../../feed.xml">RSS<', footer)
+        for absent in (">홈<", ">날짜별<", ">분야별<"):
+            self.assertNotIn(absent, footer)
+        self.assertIn("투자 권유가 아닙니다", footer)
+
+    def test_site_brand_is_used_in_masthead_title_and_footer(self):
+        page = self.day_page(make_day())
+        self.assertIn('class="brand" href="../../index.html">dogcowai 경제브리핑</a>', page)
+        self.assertIn("| dogcowai 경제브리핑</title>", page)
+
+    def test_internal_links_are_relative_index_files(self):
+        self.write_day(make_day())
+        self.build()
+        page = self.read("news/2026-10-13/index.html")
+        self.assertIn('href="../../index.html"', page)
+        self.assertIn('href="../../assets/style.css"', page)
+        self.assertIn('href="../../news/index.html"', page)
+        article = self.read("news/2026-10-13/a-one/index.html")
+        self.assertIn('href="../../../assets/style.css"', article)
+        self.assertIn('href="../../../news/index.html"', article)
+
+    # ---- 홈: 짧은 소개 다음에 최신 브리핑 전체
+
+    def test_home_opens_with_a_short_introduction_then_the_latest_briefing(self):
+        site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
+        self.write_site(site)
+        self.write_page({"slug": "about", "title": "소개", "sections": [{"heading": "무엇인가", "paragraphs": ["문단"]}]})
+        self.write_day(make_day())
+        self.build()
+        home = self.read("index.html")
+        intro = home[home.index('class="intro"'):home.index("</section>", home.index('class="intro"'))]
+        self.assertIn("소개 제목", intro)
+        self.assertIn("소개 문단", intro)
+        self.assertIn('href="about/index.html"', intro)
+        self.assertNotIn("원칙 하나", home)
+        self.assertLess(home.index('class="intro"'), home.index('<h1 id="top-title">2026-10-13 헤드라인</h1>'))
+
+    def test_home_carries_the_whole_latest_briefing(self):
+        self.write_day(make_day("2026-10-12"))
+        self.write_day(make_day("2026-10-13"))
+        self.build()
+        home = self.read("index.html")
+        for part in ('<h1 id="top-title">2026-10-13 헤드라인</h1>', 'id="quick-title"', 'id="economy"',
+                     'href="news/2026-10-13/a-one/index.html"', 'href="news/2026-10-13/a-two/index.html"',
+                     'id="market-title"', 'href="news/2026-10-12/index.html"'):
+            self.assertIn(part, home)
+        self.assertNotIn("2026-10-12 헤드라인</h1>", home)
+
+    # ---- 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록, 시장, 일정, 정정, 이전·다음
+
+    def test_briefing_reads_in_one_fixed_order(self):
+        self.write_day(make_day("2026-10-12"))
+        day = make_day("2026-10-13", corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}],
+                       side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]})
+        page = self.day_page(day)
+        order = [page.index(s) for s in (
+            'class="dateline"', '<h1 id="top-title">', 'class="summary"', "뉴스 재확인 17:02 KST",
+            'id="quick-title"', 'id="economy"', 'id="market-title"', 'id="h-sched"', 'id="h-corrections"',
+            'class="pager"')]
+        self.assertEqual(order, sorted(order))
         self.assertIn("2026년 10월 13일 화요일 오후판", page)
-        self.assertIn("뉴스 재확인 17:02 KST", page)
-        self.assertIn('href="a-one/index.html"', page)
-        self.assertIn('href="a-two/index.html"', page)
-        self.assertIn("지수가 5.46% 내렸다.", page)
 
-    def test_day_page_does_not_carry_article_bodies(self):
+    def test_briefing_lists_every_story_with_its_title_and_one_line_but_not_its_body(self):
         page = self.day_page(make_day())
+        self.assertIn('<li id="a-one"><a href="a-one/index.html">', page)
+        self.assertIn('<li id="a-two"><a href="a-two/index.html">', page)
+        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
+        self.assertIn('<span class="line">두 번째 사실.</span>', page)
         for absent in ("둘째 문장", "의미 문장.", "조건 문장.", "https://example.com/a", "무슨 일이 있었나"):
             self.assertNotIn(absent, page)
 
-    def test_each_category_shows_one_article_and_folds_the_rest(self):
-        page = self.day_page(make_day())
-        sec = page[page.index('<section class="sec" id="economy"'):]
-        fold = sec.index("<details")
-        self.assertLess(sec.index('id="a-one"'), fold)
-        self.assertGreater(sec.index('id="a-two"'), fold)
-        self.assertIn('<span class="when-closed">경제 기사 1건 더 보기</span>', sec)
-        self.assertIn('<span class="when-open">경제 기사 접기</span>', sec)
-
-    def test_category_lead_is_the_featured_article(self):
+    def test_featured_story_comes_first_in_its_section(self):
         day = make_day()
         items = day["sections"][0]["items"]
         del items[0]["featured"]
         items[1]["featured"] = True
         page = self.day_page(day)
-        sec = page[page.index('<section class="sec" id="economy"'):]
-        self.assertLess(sec.index('id="a-two"'), sec.index("<details"))
-        self.assertGreater(sec.index('id="a-one"'), sec.index("<details"))
+        self.assertLess(page.index('id="a-two"'), page.index('id="a-one"'))
 
-    def test_lists_use_the_teaser_when_an_article_has_one(self):
-        day = make_day()
-        day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날 <b>&"
-        self.write_day(day)
-        self.build()
-        for rel in ("index.html", "news/2026-10-13/index.html", "topic/economy/index.html"):
-            page = self.read(rel)
-            self.assertIn('<span class="line">지수가 5.46% 내린 날 &lt;b&gt;&amp;</span>', page, rel)
-            self.assertNotIn('<span class="line">지수가 5.46% 내렸다.</span>', page, rel)
+    def test_section_heading_is_the_link_to_its_category(self):
+        page = self.day_page(self.two_sections())
+        self.assertIn('<h2 id="h-economy"><a href="../../topic/economy/index.html">경제</a></h2>', page)
+        self.assertIn('<h2 id="h-auto"><a href="../../topic/auto/index.html">자동차</a></h2>', page)
 
-    def test_lists_fall_back_to_the_first_sentence_without_a_teaser(self):
+    def test_section_summary_points_and_counts_are_not_shown(self):
         page = self.day_page(make_day())
-        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
-        self.assertIn('<span class="line">두 번째 사실.</span>', page)
-
-    def test_teaser_does_not_replace_the_article_text(self):
-        day = make_day()
-        day["sections"][0]["items"][0]["teaser"] = "목록에만 쓰는 문장"
-        page = self.article_page(day, "a-one")
-        self.assertIn("둘째 문장 <strong>강조</strong>.", page)
-        self.assertNotIn("목록에만 쓰는 문장", page)
-
-    def test_category_with_one_article_has_no_fold(self):
-        day = make_day()
-        day["sections"][0]["items"].pop()
-        self.assertNotIn("<details", self.day_page(day))
-
-    def test_category_shows_its_one_line_summary_but_not_the_bullet_points(self):
-        page = self.day_page(make_day())
-        self.assertIn('<p class="lede">한 줄 요약</p>', page)
-        self.assertNotIn("포인트 하나", page)
-
-    def test_every_category_header_links_to_its_past_articles(self):
-        day = make_day()
-        day["sections"].append({"id": "auto", "title": "자동차", "items": [
-            {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "사실.",
-             "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
-        page = self.day_page(day)
-        for sid, name in (("economy", "경제"), ("auto", "자동차")):
-            head = page[page.index('<div class="sec-head"><h2 id="h-%s">' % sid):]
-            head = head[:head.index("</div>")]
-            self.assertIn('<a class="sec-more" href="../../topic/%s/index.html">지난 %s 기사</a>' % (sid, name), head)
-        self.assertEqual(page.count('class="sec-more"'), 2)
-
-    def test_fold_labels_use_one_vocabulary(self):
-        html = self.day_page(make_day())
-        closed = re.findall(r'<span class="when-closed">(.*?)</span>', html)
-        opened = re.findall(r'<span class="when-open">(.*?)</span>', html)
-        self.assertTrue(closed)
-        self.assertTrue(all(c.endswith("더 보기") for c in closed), closed)
-        self.assertTrue(all(o.endswith("접기") for o in opened), opened)
-        self.assertEqual(html.count("<details"), len(closed))
-
-    def test_count_label_shows_the_number_of_published_articles(self):
-        day = make_day()
-        day["sections"][0]["total"] = 5
-        page = self.day_page(day)
-        self.assertIn(">기사 2건<", page)
-        self.assertNotIn("건 중", page)
+        for absent in ("한 줄 요약", "포인트 하나", "기사 2건", 'class="lede"', 'class="count"'):
+            self.assertNotIn(absent, page)
 
     def test_sections_without_articles_are_not_shown(self):
         day = make_day()
@@ -269,7 +301,56 @@ class BuildOutputTests(SiteCase):
         self.assertIn('href="../2026-10-13/index.html"', self.read("news/2026-10-12/index.html"))
         self.assertIn('href="../2026-10-12/index.html"', self.read("news/2026-10-13/index.html"))
 
-    # ---- 기사 페이지: 기사 하나
+    # ---- 시장: 기준별로 묶은 한 곳
+
+    def market_of(self, page):
+        start = page.index('class="market"')
+        return page[start:page.index("</section>", start)]
+
+    def test_market_rows_are_grouped_under_their_basis(self):
+        day = make_day()
+        day["market"]["rows"] = [
+            {"name": "가", "value": "1", "change": "▼ 1.00%", "dir": "down", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
+            {"name": "나", "value": "2", "change": "▲ 1.00%", "dir": "up", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
+            {"name": "다", "value": "3", "basis": "10/12 선물 결제", "asof": "2026-10-12"},
+            {"name": "라", "value": "4"},
+        ]
+        market = self.market_of(self.day_page(day))
+        self.assertEqual(market.count("10/12 뉴욕 종가"), 1)
+        self.assertEqual(market.count("10/12 선물 결제"), 1)
+        self.assertLess(market.index("10/12 뉴욕 종가"), market.index("<b>가</b>"))
+        self.assertLess(market.index("<b>나</b>"), market.index("10/12 선물 결제"))
+        self.assertLess(market.index("10/12 선물 결제"), market.index("<b>다</b>"))
+        self.assertIn("<b>라</b>", market)
+
+    def test_market_bars_are_scaled_to_the_largest_move(self):
+        day = make_day()
+        day["market"]["rows"] = [
+            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "종가", "asof": day["date"]},
+            {"name": "나", "value": "200", "change": "▲ 1.00%", "dir": "up", "basis": "종가", "asof": day["date"]},
+            {"name": "다", "value": "300", "basis": "종가", "asof": day["date"]},
+        ]
+        market = self.market_of(self.day_page(day))
+        self.assertIn('class="bar down" style="width:50.0%"', market)
+        self.assertIn('class="bar up" style="width:25.0%"', market)
+        self.assertEqual(market.count('class="track"'), 2)
+
+    def test_market_has_no_bars_when_fewer_than_two_rows_move(self):
+        market = self.market_of(self.day_page(make_day()))
+        self.assertNotIn('class="track"', market)
+        self.assertIn('<span class="v">6,035.35</span>', market)
+
+    def test_market_forecast_is_listed_without_bars(self):
+        day = make_day()
+        day["market"]["forecast"] = {"title": "가상 전망", "rows": [
+            {"name": "세계", "basis": "7월 전망 3.0%", "value": "3.1%", "change": "▲ 0.1%p", "dir": "up"}]}
+        market = self.market_of(self.day_page(day))
+        self.assertIn("가상 전망", market)
+        self.assertIn("7월 전망 3.0%", market)
+        forecast = market[market.index("가상 전망"):]
+        self.assertNotIn('class="track"', forecast)
+
+    # ---- 기사: 분야와 실린 브리핑, 제목, 본문, 출처, 이 브리핑의 다른 기사
 
     def test_each_article_has_its_own_page_with_the_full_text(self):
         page = self.article_page(make_day(), "a-one")
@@ -295,24 +376,36 @@ class BuildOutputTests(SiteCase):
         for label in ("무슨 일이 있었나", "왜 중요한가", "다시 볼 조건"):
             self.assertNotIn(label, second)
 
-    def test_article_page_shows_the_way_back_to_its_briefing_and_category(self):
+    def test_article_top_line_links_its_category_and_its_briefing(self):
         page = self.article_page(make_day(), "a-one")
-        crumbs = page[page.index('class="crumbs"'):page.index("</nav>", page.index('class="crumbs"'))]
-        self.assertIn('<a href="../../../index.html">홈</a>', crumbs)
-        self.assertIn('<a href="../index.html">10월 13일 화요일</a>', crumbs)
-        self.assertIn('<a href="../../../topic/economy/index.html">경제</a>', page)
+        top = page[page.index('class="kicker"'):page.index("</p>", page.index('class="kicker"'))]
+        self.assertIn('<a href="../../../topic/economy/index.html">경제</a>', top)
+        self.assertIn('<a href="../index.html">10월 13일 화요일 오후판</a>', top)
+        self.assertLess(page.index('class="kicker"'), page.index('<h1 id="top-title">'))
+        stamps = page[page.index('class="checked"'):]
+        self.assertIn("뉴스 재확인 17:02 KST", stamps[:stamps.index("</p>")])
 
-    def test_day_page_puts_market_and_schedule_before_corrections_and_pager(self):
-        self.write_day(make_day("2026-10-12"))
-        day = make_day("2026-10-13", corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}],
-                       side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]})
-        page = self.day_page(day)
-        market, sched = page.index('class="market"'), page.index('class="sched"')
-        fixes, pager = page.index('class="corrections"'), page.index('class="pager"')
-        self.assertLess(page.index('id="economy"'), market)
-        self.assertLess(market, sched)
-        self.assertLess(sched, fixes)
-        self.assertLess(fixes, pager)
+    def test_article_page_lists_the_other_stories_of_its_briefing(self):
+        page = self.article_page(self.two_sections(), "a-one")
+        others = page[page.index('id="others-title"'):]
+        self.assertIn("이 브리핑의 다른 기사", others)
+        self.assertIn('href="../a-two/index.html"', others)
+        self.assertIn('href="../c-one/index.html"', others)
+        self.assertNotIn('href="../a-one/index.html"', others)
+
+    def test_article_page_has_one_list_and_no_other_navigation_blocks(self):
+        day = make_day(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}])
+        page = self.article_page(day, "a-one")
+        for absent in ('class="pager"', 'class="rail"', "h-corrections", "기사 전체", "다른 경제 기사"):
+            self.assertNotIn(absent, page)
+
+    def test_article_page_without_other_stories_has_no_list(self):
+        day = make_day()
+        day["sections"][0]["items"].pop()
+        day["quick"] = []
+        self.assertNotIn("others-title", self.article_page(day, "a-one"))
+
+    # ---- 확인·수정 시각
 
     def test_updated_at_is_shown_next_to_the_check_time(self):
         day = make_day(updated_at="2026-10-14T09:30:00+09:00")
@@ -339,183 +432,7 @@ class BuildOutputTests(SiteCase):
             self.assertNotIn("article:modified_time", page, rel)
             self.assertNotIn("dateModified", page, rel)
 
-    def test_article_page_says_which_edition_carried_it(self):
-        page = self.article_page(make_day(), "a-one")
-        byline = page[page.index('class="byline"'):]
-        byline = byline[:byline.index("</p>")]
-        self.assertIn("10월 13일 화요일 오후판", byline)
-        self.assertIn("뉴스 재확인 17:02 KST", byline)
-        self.assertLess(page.index('<h1 id="top-title">'), page.index('class="byline"'))
-
-    def test_article_page_lists_other_articles_of_the_category_from_every_day(self):
-        older = make_day("2026-10-12")
-        older["sections"][0]["items"][0]["title"] = "지난 기사 하나"
-        older["sections"][0]["items"][1]["title"] = "지난 기사 둘"
-        self.write_day(older)
-        self.write_day(make_day("2026-10-13"))
-        self.build()
-        page = self.read("news/2026-10-13/a-one/index.html")
-        rail = page[page.index('class="rail"'):]
-        same, past1, past2 = (rail.index('href="../a-two/index.html"'),
-                              rail.index('href="../../2026-10-12/a-one/index.html"'),
-                              rail.index('href="../../2026-10-12/a-two/index.html"'))
-        self.assertLess(same, past1)
-        self.assertLess(past1, past2)
-        self.assertNotIn('href="../a-one/index.html"', rail)
-        self.assertIn('href="../../../topic/economy/index.html"', rail)
-        self.assertIn('href="../index.html"', rail)
-
-    def test_article_page_related_list_is_capped(self):
-        for n in range(1, 8):
-            self.write_day(make_day("2026-10-%02d" % n))
-        self.build()
-        page = self.read("news/2026-10-07/a-one/index.html")
-        rail = page[page.index('class="rail"'):]
-        related = rail[:rail.index("</ul>")]
-        self.assertEqual(related.count("<li"), build.RELATED_LIMIT)
-
-    def test_article_page_links_the_previous_and_next_article_of_the_day(self):
-        self.write_day(make_day())
-        self.build()
-        first = self.read("news/2026-10-13/a-one/index.html")
-        second = self.read("news/2026-10-13/a-two/index.html")
-        self.assertIn('href="../a-two/index.html"><span>다음 기사</span><b>기사 둘</b>', first)
-        self.assertNotIn("<span>이전 기사</span>", first)
-        self.assertIn('href="../a-one/index.html"><span>이전 기사</span><b>기사 하나</b>', second)
-        self.assertNotIn("<span>다음 기사</span>", second)
-
-    def test_article_page_lists_the_other_articles_of_its_category(self):
-        page = self.article_page(make_day(), "a-one")
-        side = page[page.index('class="rail"'):]
-        self.assertIn('href="../a-two/index.html"', side)
-        self.assertIn("기사 둘", side)
-        self.assertNotIn('href="../a-one/index.html"', side)
-
-    def test_article_page_points_to_corrections_when_the_day_has_them(self):
-        day = make_day(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}])
-        self.assertIn('href="../index.html#h-corrections"', self.article_page(day, "a-one"))
-
-    def test_article_page_without_day_corrections_has_no_corrections_link(self):
-        self.assertNotIn("h-corrections", self.article_page(make_day(), "a-one"))
-
-    def test_old_anchor_links_still_land_on_the_article_row(self):
-        page = self.day_page(make_day())
-        self.assertIn('<li id="a-one"><a href="a-one/index.html">', page)
-
-    # ---- 홈
-
-    def test_home_opens_with_the_site_introduction(self):
-        site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
-        self.write_site(site)
-        self.write_day(make_day())
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('<h1 id="intro-title">소개 제목</h1>', home)
-        self.assertLess(home.index("소개 문단"), home.index("2026-10-13 헤드라인"))
-        self.assertIn("<li>원칙 하나</li>", home)
-
-    def test_home_links_to_the_briefing_instead_of_embedding_it(self):
-        self.write_day(make_day())
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('<a class="go" href="news/2026-10-13/index.html">10월 13일 오후판 브리핑 전체 보기 '
-                      '<span class="count">기사 2건</span></a>', home)
-        for absent in ("<details", 'id="economy"', "두 번째 사실.", "둘째 문장", "핵심 1분"):
-            self.assertNotIn(absent, home)
-
-    def test_home_puts_the_briefing_link_right_under_the_introduction_heading(self):
-        site = dict(SITE, intro={"heading": "소개 제목", "paragraphs": ["소개 문단"], "items": ["원칙 하나"]})
-        self.write_site(site)
-        self.write_day(make_day())
-        self.build()
-        home = self.read("index.html")
-        heading, go, text = home.index("소개 제목</h1>"), home.index('class="go"'), home.index("소개 문단")
-        self.assertLess(heading, go)
-        self.assertLess(go, text)
-        self.assertEqual(home.count('class="go"'), 1)
-        self.assertIn("<li>원칙 하나</li>", home)
-
-    def test_home_briefing_link_follows_the_latest_day_and_edition(self):
-        self.write_day(make_day("2026-10-12"))
-        newest = make_day("2026-10-13")
-        del newest["edition"]
-        self.write_day(newest)
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('<a class="go" href="news/2026-10-13/index.html">10월 13일 브리핑 전체 보기', home)
-        self.assertNotIn('class="go" href="news/2026-10-12/', home)
-
-    def test_home_lists_featured_articles_and_links_to_their_pages(self):
-        self.write_day(make_day())
-        self.build()
-        home = self.read("index.html")
-        today = home[home.index('class="today"'):home.index("</section>", home.index('class="rows"'))]
-        self.assertIn('href="news/2026-10-13/a-one/index.html"', today)
-        self.assertIn("기사 하나", today)
-        self.assertIn("지수가 5.46% 내렸다.", today)
-        self.assertNotIn("기사 둘", today)
-
-    def test_home_falls_back_to_category_leads_when_nothing_is_featured(self):
-        day = make_day()
-        del day["sections"][0]["items"][0]["featured"]
-        self.write_day(day)
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('href="news/2026-10-13/a-one/index.html"', home)
-        self.assertNotIn('href="news/2026-10-13/a-two/index.html"', home)
-
-    def test_home_shows_latest_and_lists_previous_days(self):
-        self.write_day(make_day("2026-10-12"))
-        self.write_day(make_day("2026-10-13"))
-        self.build()
-        home = self.read("index.html")
-        self.assertIn("2026-10-13 헤드라인", home)
-        self.assertIn("2026-10-12 헤드라인", home)
-        self.assertIn('href="news/2026-10-12/index.html"', home)
-
-    def test_home_lists_the_categories(self):
-        self.write_day(make_day())
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('href="topic/economy/index.html"', home)
-
-    def test_home_shows_market_bars_with_a_link_to_the_day_table(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "종가", "asof": day["date"]},
-            {"name": "나", "value": "200", "change": "▲ 1.00%", "dir": "up", "basis": "종가", "asof": day["date"]},
-        ]
-        self.write_day(day)
-        self.build()
-        home = self.read("index.html")
-        self.assertIn('class="chart"', home)
-        self.assertIn('href="news/2026-10-13/index.html#market-title"', home)
-        self.assertNotIn("<table", home)
-
-    def test_home_has_no_location_line(self):
-        self.write_day(make_day())
-        self.build()
-        self.assertNotIn('class="crumbs"', self.read("index.html"))
-
-    # ---- 메뉴, 위치, 목록 페이지
-
-    def test_menu_marks_the_page_the_reader_is_on(self):
-        self.write_day(make_day())
-        self.build()
-        home, archive, topics = self.read("index.html"), self.read("news/index.html"), self.read("topic/index.html")
-        self.assertIn('href="index.html" aria-current="page">홈<', home)
-        self.assertNotIn('aria-current="page">날짜별<', home)
-        self.assertIn('href="../news/index.html" aria-current="page">날짜별<', archive)
-        self.assertIn('href="../topic/index.html" aria-current="page">분야별<', topics)
-        self.assertIn('aria-current="page">날짜별<', self.read("news/2026-10-13/a-one/index.html"))
-        self.assertIn('aria-current="page">분야별<', self.read("topic/economy/index.html"))
-
-    def test_day_page_shows_where_it_sits_in_the_site(self):
-        page = self.day_page(make_day())
-        crumbs = page[page.index('class="crumbs"'):page.index("</nav>", page.index('class="crumbs"'))]
-        self.assertIn('<a href="../../index.html">홈</a>', crumbs)
-        self.assertIn('<a href="../index.html">날짜별</a>', crumbs)
-        self.assertIn('<li aria-current="page">10월 13일 화요일</li>', crumbs)
+    # ---- 목록: 날짜별, 분야, 분야별 기사
 
     def test_archive_groups_days_by_month(self):
         self.write_day(make_day("2026-09-30"))
@@ -523,36 +440,25 @@ class BuildOutputTests(SiteCase):
         self.build()
         archive = self.read("news/index.html")
         self.assertLess(archive.index("2026년 10월"), archive.index("2026년 9월"))
-        self.assertNotIn("topic/", archive.split("</header>")[1].split("<footer>")[0])
 
-    def test_archive_rows_show_the_day_summary_and_article_count(self):
-        day = make_day()
-        day["summary"] = "첫 문장이다. 둘째 문장이다."
-        self.write_day(day)
+    def test_archive_rows_show_the_day_and_its_headline_only(self):
+        self.write_day(make_day())
         self.build()
         archive = self.read("news/index.html")
-        self.assertIn('<span class="line">첫 문장이다.</span>', archive)
-        self.assertNotIn("둘째 문장이다.", archive)
-        self.assertIn('<span class="count">기사 2건</span>', archive)
+        self.assertIn('<a href="2026-10-13/index.html"><span class="meta">10월 13일 화요일 오후판</span>'
+                      '<span class="t">2026-10-13 헤드라인</span></a>', archive)
+        self.assertNotIn("요약 문장입니다.", archive)
+        self.assertNotIn("기사 2건", archive)
 
-    def test_topic_index_rows_show_the_latest_article(self):
-        older = make_day("2026-10-12")
-        older["sections"][0]["items"][0]["title"] = "예전 제목"
-        self.write_day(older)
-        self.write_day(make_day("2026-10-13"))
-        self.build()
-        topics = self.read("topic/index.html")
-        self.assertIn('<span class="line">기사 하나</span>', topics)
-        self.assertNotIn("예전 제목", topics)
-
-    def test_topic_index_lists_each_category_with_its_article_count(self):
+    def test_topic_index_rows_show_the_category_and_its_article_count(self):
         self.write_day(make_day("2026-10-12"))
         self.write_day(make_day("2026-10-13"))
         self.build()
         topics = self.read("topic/index.html")
         self.assertIn('<h1 id="top-title">분야별 기사</h1>', topics)
-        self.assertIn('href="economy/index.html"', topics)
-        self.assertIn("기사 4건", topics)
+        self.assertIn('<a href="economy/index.html"><span class="t">경제</span><span class="line">기사 4건</span></a>',
+                      topics)
+        self.assertNotIn("기사 하나", topics)
 
     def test_topic_page_collects_articles_across_days_newest_first(self):
         self.write_day(make_day("2026-10-12"))
@@ -565,43 +471,28 @@ class BuildOutputTests(SiteCase):
         self.assertLess(new, old)
         self.assertIn("/topic/economy/", self.read("sitemap.xml"))
 
-    def test_pages_carry_no_instruction_sentences(self):
-        self.write_day(make_day())
+    def test_lists_use_the_teaser_when_an_article_has_one(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날 <b>&"
+        self.write_day(day)
         self.build()
-        for rel in ("index.html", "news/index.html", "news/2026-10-13/index.html",
-                    "news/2026-10-13/a-one/index.html", "topic/index.html", "topic/economy/index.html"):
-            html = self.read(rel)
-            self.assertNotIn('class="hint"', html, rel)
-            self.assertNotIn("누르면", html, rel)
+        for rel in ("index.html", "news/2026-10-13/index.html", "topic/economy/index.html"):
+            page = self.read(rel)
+            self.assertIn('<span class="line">지수가 5.46% 내린 날 &lt;b&gt;&amp;</span>', page, rel)
+            self.assertNotIn('<span class="line">지수가 5.46% 내렸다.</span>', page, rel)
 
-    def test_site_brand_is_used_in_masthead_title_and_footer(self):
+    def test_lists_fall_back_to_the_first_sentence_without_a_teaser(self):
         page = self.day_page(make_day())
-        self.assertIn('class="brand" href="../../index.html">dogcowai 경제브리핑</a>', page)
-        self.assertIn("| dogcowai 경제브리핑</title>", page)
+        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
 
-    def test_internal_links_are_relative_index_files(self):
-        self.write_day(make_day())
-        self.build()
-        page = self.read("news/2026-10-13/index.html")
-        self.assertIn('href="../../index.html"', page)
-        self.assertIn('href="../../assets/style.css"', page)
-        self.assertIn('href="../../news/index.html"', page)
-        article = self.read("news/2026-10-13/a-one/index.html")
-        self.assertIn('href="../../../assets/style.css"', article)
-        self.assertIn('href="../../../news/index.html"', article)
+    def test_teaser_does_not_replace_the_article_text(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "목록에만 쓰는 문장"
+        page = self.article_page(day, "a-one")
+        self.assertIn("둘째 문장 <strong>강조</strong>.", page)
+        self.assertNotIn("목록에만 쓰는 문장", page)
 
-    def test_404_uses_root_absolute_links_and_is_not_indexed(self):
-        self.write_day(make_day())
-        self.build()
-        page = self.read("404.html")
-        self.assertIn('href="/assets/style.css"', page)
-        self.assertIn('content="noindex"', page)
-
-    def test_footer_links_the_feed(self):
-        page = self.day_page(make_day())
-        footer = page[page.index("<footer>"):]
-        self.assertIn('href="../../feed.xml"', footer)
-        self.assertIn(">RSS<", footer)
+    # ---- 고정 페이지, 404
 
     def test_static_page_is_built_and_linked(self):
         self.write_page({"slug": "about", "title": "소개", "description": "설명",
@@ -613,67 +504,13 @@ class BuildOutputTests(SiteCase):
         self.assertIn("문단 &lt;b&gt;", about)
         self.assertIn('href="about/index.html"', self.read("index.html"))
 
-    # ---- 시장 수치
-
-    def test_ticker_repeats_the_market_rows_as_plain_text(self):
-        page = self.day_page(make_day())
-        ticker = page[page.index('class="ticker"'):page.index("</div></div>", page.index('class="ticker"'))]
-        self.assertIn("KOSPI", ticker)
-        self.assertIn("6,035.35", ticker)
-        self.assertIn('class="c down"', ticker)
-        self.assertNotIn("<a ", ticker)
-
-    def test_ticker_states_the_basis_once_per_group(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "1", "change": "▼ 1.00%", "dir": "down", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
-            {"name": "나", "value": "2", "change": "▲ 1.00%", "dir": "up", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
-            {"name": "다", "value": "3", "basis": "10/12 선물 결제", "asof": "2026-10-12"},
-            {"name": "라", "value": "4"},
-        ]
-        page = self.day_page(day)
-        ticker = page[page.index('class="ticker"'):page.index("</div></div>", page.index('class="ticker"'))]
-        self.assertEqual(ticker.count("10/12 뉴욕 종가"), 1)
-        self.assertEqual(ticker.count("10/12 선물 결제"), 1)
-        self.assertLess(ticker.index("10/12 뉴욕 종가"), ticker.index('class="n">가'))
-        self.assertLess(ticker.index('class="n">나'), ticker.index("10/12 선물 결제"))
-        self.assertLess(ticker.index("10/12 선물 결제"), ticker.index('class="n">다'))
-        self.assertIn('class="n">라', ticker)
-
-    def test_home_market_bars_state_their_basis(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "10/13 뉴욕 종가", "asof": day["date"]},
-            {"name": "나", "value": "200", "change": "▲ 1.00%", "dir": "up", "basis": "10/13 선물 종가", "asof": day["date"]},
-        ]
-        self.write_day(day)
-        self.build()
-        home = self.read("index.html")
-        glance = home[home.index('class="glance"'):]
-        self.assertIn('<p class="asof">10/13 뉴욕 종가, 10/13 선물 종가</p>', glance[:glance.index('class="chart"')])
-
-    def test_market_chart_draws_one_bar_per_row_scaled_to_the_largest_move(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "종가", "asof": day["date"]},
-            {"name": "나", "value": "200", "change": "▲ 1.00%", "dir": "up", "basis": "종가", "asof": day["date"]},
-        ]
-        page = self.day_page(day)
-        chart = page[page.index('class="chart"'):page.index("</ul>", page.index('class="chart"'))]
-        self.assertEqual(chart.count("<li>"), 2)
-        self.assertIn('class="bar down" style="width:50.0%"', chart)
-        self.assertIn('class="bar up" style="width:25.0%"', chart)
-
-    def test_market_chart_is_left_out_when_fewer_than_two_rows_have_a_change(self):
+    def test_404_uses_root_absolute_links_and_is_not_indexed(self):
         self.write_day(make_day())
         self.build()
-        self.assertNotIn('class="chart"', self.read("news/2026-10-13/index.html"))
-        self.assertNotIn('class="chart"', self.read("index.html"))
-
-    def test_page_without_market_has_no_ticker(self):
-        day = make_day()
-        del day["market"]
-        self.assertNotIn('class="ticker"', self.day_page(day))
+        page = self.read("404.html")
+        self.assertIn('href="/assets/style.css"', page)
+        self.assertIn('href="/index.html"', page)
+        self.assertIn('content="noindex"', page)
 
     # ---- 쓰기와 정리
 
@@ -758,7 +595,7 @@ class SeoTests(SiteCase):
         self.assertEqual([c["url"] for c in art["citation"]], ["https://example.com/a"])
         self.assertIn('<meta property="article:published_time" content="2026-10-13T17:02:00+09:00">', page)
 
-    def test_breadcrumb_data_follows_the_location_line_and_ends_at_the_page(self):
+    def test_breadcrumb_data_lists_the_path_to_the_page(self):
         page = self.article_page(make_day(), "a-one")
         crumbs = {d["@type"]: d for d in self.ld(page)}["BreadcrumbList"]["itemListElement"]
         self.assertEqual([c["name"] for c in crumbs], ["홈", "날짜별", "10월 13일 화요일", "기사 하나"])
@@ -841,9 +678,12 @@ class ComponentTests(SiteCase):
             self.assertNotIn(absent, page)
 
     def test_anchor_ids_are_unique_in_a_page(self):
-        page = self.day_page(make_day())
-        ids = re.findall(r'\sid="([^"]+)"', page)
-        self.assertEqual(len(ids), len(set(ids)))
+        self.write_day(make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]},
+                                corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}]))
+        self.build()
+        for rel in ("index.html", "news/2026-10-13/index.html", "news/2026-10-13/a-one/index.html"):
+            ids = re.findall(r'\sid="([^"]+)"', self.read(rel))
+            self.assertEqual(len(ids), len(set(ids)), rel)
 
 
 class ContentRuleTests(SiteCase):

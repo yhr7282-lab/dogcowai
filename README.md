@@ -1,4 +1,4 @@
-# dogcowai 경제브리핑
+# 다섯 시 경제 (dogcowai.com)
 
 https://dogcowai.com
 

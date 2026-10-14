@@ -945,10 +945,14 @@ def load_blocklist(root, site):
     compiled = []
     for name, pattern in rules:
         try:
-            compiled.append((name, re.compile(pattern)))
-        except re.error as e:
-            # re.error 는 패턴 원문을 속성으로 들고 있다. 이어 붙이지 않고 끊는다.
-            raise BuildError("blocklist %s: 정규식 문법 오류 (%s)" % (name, e.msg)) from None
+            rx = re.compile(pattern)
+        except re.error:
+            rx = None
+        if rx is None:
+            # re.error 의 설명(msg)과 속성에는 규칙의 일부가 들어 있다. 설명을 옮기지 않고, except 밖에서 올려
+            # 원래 예외가 __context__ 로도 이어지지 않게 한다. 알리는 것은 규칙 번호와 고정된 말뿐이다.
+            raise BuildError("blocklist %s: 정규식 문법 오류" % name)
+        compiled.append((name, rx))
     return compiled
 
 

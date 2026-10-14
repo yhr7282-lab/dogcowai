@@ -912,6 +912,41 @@ class PublicInputTests(SiteCase):
         self.assertNotIn("가상표식B", printed)
         self.assertFalse(self.exists("index.html"))
 
+    def test_broken_rule_message_never_carries_the_rule_text(self):
+        """정규식 오류 설명(re.error.msg)에도 규칙 일부가 들어간다. 규칙 번호와 고정된 말만 내보내야 한다."""
+        broken = ("(?P=가상표식X)", "(?P<가상표식Y>a)(?P<가상표식Y>b)", "(?P<가상-표식Z>a)")
+        self.write_day(make_day())
+        self.build()
+
+        def generated():
+            return {k: v for k, v in self.snapshot().items() if not k.startswith("보관")}
+        before = generated()
+        for rule in broken:
+            self.local_rules("# 주석\n" + rule + "\n")
+            code, printed = self.run_main()
+            self.assertEqual(code, 1, rule)
+            self.assertIn("로컬 규칙 2번째 줄", printed)
+            self.assertIn("정규식 문법 오류", printed)
+            self.assertNotIn("가상", printed, rule)
+            self.assertNotIn("group", printed, rule)
+            with self.assertRaises(build.BuildError) as ctx:
+                self.build()
+            err = ctx.exception
+            self.assertIsNone(err.__context__, rule)
+            self.assertIsNone(err.__cause__, rule)
+            self.assertNotIn("가상", repr(err) + str(err.args), rule)
+            self.assertEqual(generated(), before, rule)
+
+    def test_normal_rules_still_work_after_a_broken_rule_is_fixed(self):
+        self.local_rules("(?P<가상그룹>a\n")
+        self.write_day(make_day())
+        with self.assertRaises(build.BuildError):
+            self.build()
+        self.local_rules("가상표식E\n")
+        day = make_day()
+        day["summary"] = "요약 속의 가상표식E"
+        self.assert_rejected(day, "로컬 규칙 1번째 줄")
+
     def test_error_object_does_not_carry_the_rule_text(self):
         self.local_rules("가상표식C\n")
         day = make_day()

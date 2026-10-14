@@ -923,6 +923,25 @@ class PublicInputTests(SiteCase):
         self.assertNotIn("가상표식B", printed)
         self.assertFalse(self.exists("index.html"))
 
+    def test_local_rules_reached_through_a_link_are_applied(self):
+        target = self.root / "rules-elsewhere.txt"
+        target.write_text("가상표식F\n", encoding="utf-8")
+        (self.root / "보관").mkdir(exist_ok=True)
+        (self.root / "보관" / "blocklist.local.txt").symlink_to(target)
+        day = make_day()
+        day["summary"] = "요약 속의 가상표식F"
+        self.assert_rejected(day, "로컬 규칙 1번째 줄")
+
+    def test_broken_link_to_local_rules_stops_the_build(self):
+        """규칙 파일이 다른 곳을 가리키는데 그 파일이 없으면, 규칙 없이 조용히 지나가지 않고 멈춘다."""
+        (self.root / "보관").mkdir(exist_ok=True)
+        (self.root / "보관" / "blocklist.local.txt").symlink_to(self.root / "없는-파일.txt")
+        self.write_day(make_day())
+        with self.assertRaises(build.BuildError) as ctx:
+            self.build()
+        self.assertIn("로컬 금지 규칙", str(ctx.exception))
+        self.assertFalse(self.exists("index.html"))
+
     def test_broken_rule_message_never_carries_the_rule_text(self):
         """정규식 오류 설명(re.error.msg)에도 규칙 일부가 들어간다. 규칙 번호와 고정된 말만 내보내야 한다."""
         broken = ("(?P=가상표식X)", "(?P<가상표식Y>a)(?P<가상표식Y>b)", "(?P<가상-표식Z>a)")

@@ -946,6 +946,9 @@ def load_blocklist(root, site):
     비공개일 수 있으므로 오류 메시지와 로그 어디에도 넣지 않는다."""
     rules = [("공개 규칙 %d번" % n, p) for n, p in enumerate(site["blocklist"], 1)]
     local = Path(root) / LOCAL_BLOCKLIST
+    if local.is_symlink() and not local.exists():
+        # 다른 곳의 규칙 파일을 가리키는데 그 파일이 없다. 규칙 없이 조용히 지나가면 안 된다.
+        raise BuildError("로컬 금지 규칙 파일(%s)의 연결 대상이 없습니다. 연결을 고치거나 파일을 되살리세요" % LOCAL_BLOCKLIST)
     if local.is_file():
         for n, line in enumerate(local.read_text(encoding="utf-8").splitlines(), 1):
             line = line.strip()

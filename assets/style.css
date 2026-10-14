@@ -199,6 +199,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .others .rows { margin-top: 8px; }
 
 /* ---- 날짜별, 분야별, 고정 페이지 ---- */
+.body > .rows:first-child { margin-top: 24px; }
 .month { margin-top: 32px; }
 .month .rows { margin-top: 8px; }
 .doc { margin-top: 40px; }

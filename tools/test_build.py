@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import re
+import shutil
 import sys
 import tempfile
 import unittest
@@ -536,34 +537,27 @@ class BuildOutputTests(SiteCase):
         self.assertIn("index.html", pages)
         self.assertFalse(self.exists("index.html"))
 
-    def test_removes_stale_day_pages_with_their_article_pages(self):
+    def test_refuses_to_drop_a_day_whose_article_pages_exist(self):
+        self.write_day(make_day("2026-10-12"))
+        self.write_day(make_day("2026-10-13"))
+        self.build()
+        before = self.snapshot()
+        (self.root / "content" / "2026-10-12.json").unlink()
+        with self.assertRaises(build.BuildError) as ctx:
+            self.build()
+        self.assertIn("news/2026-10-12/a-one/", str(ctx.exception))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_removes_a_day_page_once_its_content_and_article_pages_are_gone(self):
         self.write_day(make_day("2026-10-12"))
         self.write_day(make_day("2026-10-13"))
         self.build()
         (self.root / "content" / "2026-10-12.json").unlink()
+        for item_id in ("a-one", "a-two"):
+            shutil.rmtree(self.root / "news" / "2026-10-12" / item_id)
         self.build()
         self.assertFalse(self.exists("news/2026-10-12"))
         self.assertTrue(self.exists("news/2026-10-13/a-one/index.html"))
-
-    def test_removes_the_page_of_an_article_that_was_dropped(self):
-        day = make_day()
-        self.write_day(day)
-        self.build()
-        day["sections"][0]["items"].pop()
-        self.write_day(day)
-        self.build()
-        self.assertFalse(self.exists("news/2026-10-13/a-two"))
-        self.assertTrue(self.exists("news/2026-10-13/a-one/index.html"))
-
-    def test_cleanup_leaves_folders_holding_files_it_did_not_write(self):
-        self.write_day(make_day("2026-10-12"))
-        self.write_day(make_day("2026-10-13"))
-        self.build()
-        (self.root / "news" / "2026-10-12" / "a-one" / "note.txt").write_text("남긴 파일", encoding="utf-8")
-        (self.root / "content" / "2026-10-12.json").unlink()
-        self.build()
-        self.assertTrue(self.exists("news/2026-10-12/a-one/note.txt"))
-        self.assertFalse(self.exists("news/2026-10-12/a-two"))
 
     def test_building_twice_gives_identical_files(self):
         self.write_day(make_day())
@@ -571,6 +565,131 @@ class BuildOutputTests(SiteCase):
         first = self.snapshot()
         self.build()
         self.assertEqual(self.snapshot(), first)
+
+
+class PublishedAddressTests(SiteCase):
+    """게시한 기사 주소는 새 판이 나와도 남는다 (GROWTH-URL-01). 새 판에서 뺀 기사는 earlier 로 옮기고,
+    내리는 기사는 withdrawn 에 적는다. 그냥 빠지면 생성을 멈춘다."""
+
+    def morning(self):
+        return make_day(edition="오전판", checked_at="05:06 KST")
+
+    def afternoon(self, morning):
+        """오전판의 a-one 은 고쳐서 다시 싣고, a-two 는 빼서 earlier 로 옮기고, a-three 를 새로 싣는다."""
+        day = copy.deepcopy(morning)
+        sec = day["sections"][0]
+        one, two = sec["items"]
+        one["title"] = "기사 하나 오후 정정"
+        three = {"id": "a-three", "date": day["date"], "title": "새 기사 셋", "facts": "세 번째 사실.",
+                 "sources": [{"name": "AP", "url": "https://example.com/c"}]}
+        sec["items"] = [one, three]
+        day.update(edition="오후판", checked_at="17:02 KST",
+                   earlier=[{"edition": "오전판", "checked_at": "05:06 KST",
+                             "sections": [{"id": "economy", "title": "경제", "items": [two]}]}])
+        return day
+
+    def publish_morning_then(self, afternoon):
+        self.write_day(self.morning())
+        self.build()
+        self.write_day(afternoon)
+        self.build()
+
+    def test_article_moved_to_earlier_keeps_its_address_and_text(self):
+        self.publish_morning_then(self.afternoon(self.morning()))
+        page = self.read("news/2026-10-13/a-two/index.html")
+        self.assertIn("두 번째 사실.", page)
+        self.assertIn("화요일 오전판", page)
+        self.assertIn("뉴스 재확인 05:06 KST", page)
+        self.assertIn('"datePublished": "2026-10-13T05:06:00+09:00"', page)
+
+    def test_republished_article_is_corrected_at_the_same_address(self):
+        self.publish_morning_then(self.afternoon(self.morning()))
+        page = self.read("news/2026-10-13/a-one/index.html")
+        self.assertIn("기사 하나 오후 정정", page)
+        self.assertIn("화요일 오후판", page)
+        self.assertTrue(self.exists("news/2026-10-13/a-three/index.html"))
+
+    def test_briefing_lists_earlier_articles_under_their_edition(self):
+        self.publish_morning_then(self.afternoon(self.morning()))
+        for rel, href in (("news/2026-10-13/index.html", 'href="a-two/index.html"'),
+                          ("index.html", 'href="news/2026-10-13/a-two/index.html"')):
+            main, earlier = self.read(rel).split("오전판에 실린 기사", 1)
+            self.assertNotIn(href, main)
+            self.assertIn(href, earlier)
+
+    def test_topic_page_and_sitemap_keep_earlier_articles(self):
+        self.publish_morning_then(self.afternoon(self.morning()))
+        self.assertIn("news/2026-10-13/a-two/index.html", self.read("topic/economy/index.html"))
+        self.assertIn("/news/2026-10-13/a-two/", self.read("sitemap.xml"))
+
+    def test_clean_rebuild_gives_the_same_site(self):
+        self.publish_morning_then(self.afternoon(self.morning()))
+        with tempfile.TemporaryDirectory() as other:
+            build.build(self.root, out=Path(other))
+            fresh = {str(p.relative_to(other)): hashlib.sha256(p.read_bytes()).hexdigest()
+                     for p in sorted(Path(other).rglob("*")) if p.is_file()}
+        self.assertEqual(fresh, self.snapshot())
+
+    def test_dropping_a_published_article_stops_the_build(self):
+        self.write_day(self.morning())
+        self.build()
+        day = self.afternoon(self.morning())
+        del day["earlier"]
+        self.assert_rejected(day, "news/2026-10-13/a-two/", "earlier", "withdrawn")
+
+    def test_check_only_also_stops_on_a_dropped_article(self):
+        self.write_day(self.morning())
+        self.build()
+        day = self.afternoon(self.morning())
+        del day["earlier"]
+        self.write_day(day)
+        with self.assertRaises(build.BuildError):
+            self.build(check_only=True)
+
+    def test_withdrawn_article_page_is_removed_everywhere(self):
+        day = self.afternoon(self.morning())
+        del day["earlier"]
+        day["withdrawn"] = [{"id": "a-two", "reason": "가상 사유"}]
+        self.publish_morning_then(day)
+        self.assertFalse(self.exists("news/2026-10-13/a-two"))
+        for rel in ("sitemap.xml", "topic/economy/index.html", "news/2026-10-13/index.html", "index.html"):
+            self.assertNotIn("a-two", self.read(rel))
+            self.assertNotIn("가상 사유", self.read(rel))
+
+    def test_withdrawing_removes_only_the_page_it_wrote(self):
+        self.write_day(self.morning())
+        self.build()
+        (self.root / "news" / "2026-10-13" / "a-two" / "note.txt").write_text("남긴 파일", encoding="utf-8")
+        day = self.afternoon(self.morning())
+        del day["earlier"]
+        day["withdrawn"] = [{"id": "a-two", "reason": "가상 사유"}]
+        self.write_day(day)
+        self.build()
+        self.assertFalse(self.exists("news/2026-10-13/a-two/index.html"))
+        self.assertTrue(self.exists("news/2026-10-13/a-two/note.txt"))
+
+    def test_same_article_cannot_be_current_and_earlier(self):
+        day = self.afternoon(self.morning())
+        day["earlier"][0]["sections"][0]["items"].append(copy.deepcopy(day["sections"][0]["items"][0]))
+        self.assert_rejected(day, "earlier[0]", "a-one", "중복")
+
+    def test_withdrawn_article_must_be_gone_from_content(self):
+        day = self.afternoon(self.morning())
+        day["withdrawn"] = [{"id": "a-two", "reason": "가상 사유"}]
+        self.assert_rejected(day, "withdrawn[0]", "a-two")
+
+    def test_earlier_articles_are_checked_like_current_ones(self):
+        day = self.afternoon(self.morning())
+        del day["earlier"][0]["edition"]
+        self.assert_rejected(day, "earlier[0]", "edition")
+        day = self.afternoon(self.morning())
+        del day["earlier"][0]["sections"][0]["items"][0]["sources"]
+        self.assert_rejected(day, "earlier[0]", "sources")
+
+    def test_earlier_edition_cannot_be_later_than_this_one(self):
+        day = self.afternoon(self.morning())
+        day["earlier"][0]["checked_at"] = "18:00 KST"
+        self.assert_rejected(day, "earlier[0]", "checked_at")
 
 
 class SeoTests(SiteCase):

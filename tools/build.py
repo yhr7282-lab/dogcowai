@@ -6,7 +6,7 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 
     /                       홈: 소개, 오늘의 주요 뉴스
     /news/                  날짜별 브리핑 목록
-    /news/날짜/              하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록
+    /news/날짜/              하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록, 이전 판에 실린 기사
     /news/날짜/기사id/        기사 하나
     /topic/, /topic/분야id/   분야 목록, 분야별 기사 목록
     /소개 등                 고정 페이지
@@ -18,6 +18,8 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 규칙 (자세한 형식은 docs/content-format.md)
 - 공개 입력에는 개인 전용 내용을 둘 수 없다: 'actions', 'side.career', 'private' 표시는 오류.
 - 기사에는 고유 id 와 출처가 있어야 한다. 핵심 1분은 기사에 연결되고 숫자가 기사와 맞아야 한다.
+- 게시한 기사 주소는 지우지 않는다. 같은 날짜의 새 판에서 뺀 기사는 earlier(이전 판 기사)로 옮기고,
+  내리는 기사는 withdrawn 에 적는다. 이미 만든 기사 페이지가 둘 다에 없으면 생성을 멈춘다.
 - 날짜·기준 시각·일정·시장 수치의 기준일을 검사한다.
 - 금지 규칙은 입력 JSON 전체와 생성 결과 전체에서 검사한다. 오류에는 파일·필드·규칙 번호만 적는다 (규칙 원문은 적지 않는다).
 - 검증에 실패하면 아무 파일도 쓰지 않는다.
@@ -171,6 +173,29 @@ def all_items(day):
     return [(s, it) for s in visible_sections(day) for it in s["items"]]
 
 
+def earlier_items(day):
+    """이전 판 기사: [(판, 분야, 기사)]. 새 판에서 빠졌지만 주소는 남는다."""
+    return [(g, s, it) for g in day.get("earlier") or [] for s in g["sections"] for it in s["items"]]
+
+
+def edition_view(day, group):
+    """이전 판 기사 페이지에 쓰는 그날 정보. 판 이름과 확인 시각은 그 판의 것이고, 지금 판의 수정 시각은 붙이지 않는다."""
+    view = {k: v for k, v in day.items() if k not in ("edition", "checked_at", "updated_at")}
+    view["edition"] = group["edition"]
+    if group.get("checked_at"):
+        view["checked_at"] = group["checked_at"]
+    return view
+
+
+def published_ids(day):
+    """그날 주소가 있는 기사: 지금 판과 이전 판 기사."""
+    return {it["id"] for _, it in all_items(day)} | {it["id"] for _, _, it in earlier_items(day)}
+
+
+def withdrawn_ids(day):
+    return {w["id"] for w in day.get("withdrawn") or []}
+
+
 # ---------------------------------------------------------------- 읽기·검증
 
 def _read_json(path):
@@ -261,6 +286,92 @@ def _check_sources(sources, where):
         seen.add(src["url"])
 
 
+def _check_item(item, where, date, need_sources, ids):
+    """기사 하나를 검사하고 id 를 ids 에 더한다. 지금 판의 기사와 이전 판 기사(earlier)가 같은 검사를 받는다."""
+    for key in ("id", "date", "title", "facts"):
+        _need(item, key, where)
+    iid = item["id"]
+    where = "%s (%s)" % (where, iid)
+    if not SLUG.match(iid):
+        raise BuildError("%s: 기사 id 는 영문 소문자·숫자·하이픈만 쓸 수 있습니다" % where)
+    if iid in ids:
+        raise BuildError("%s: id '%s' 가 중복됩니다" % (where, iid))
+    ids.add(iid)
+    if "teaser" in item:
+        teaser = item["teaser"]
+        if not isinstance(teaser, str) or not teaser.strip():
+            raise BuildError("%s: teaser 는 비어 있지 않은 문장이어야 합니다" % where)
+        recheck = item.get("recheck") if isinstance(item.get("recheck"), dict) else {}
+        body = plain(" ".join(str(v) for v in (item["title"], item["facts"], item.get("so", ""),
+                                                recheck.get("text", ""))))
+        for num in _NUMBER.findall(plain(teaser)):
+            if num not in body:
+                raise BuildError("%s: teaser — 숫자 '%s' 가 기사 본문에 없습니다" % (where, num))
+    if _check_date(item["date"], where) > date:
+        raise BuildError("%s: 기사 날짜가 브리핑 날짜보다 뒤입니다" % where)
+    sources = item.get("sources") or []
+    if need_sources and not sources:
+        raise BuildError("%s: sources — 기사에는 출처가 하나 이상 있어야 합니다" % where)
+    _check_sources(sources, where)
+
+
+def _check_earlier(day, filename, date, need_sources, ids, now):
+    """이전 판 기사(earlier): 같은 날짜의 새 판에서 빠졌지만 주소를 남기는 기사.
+    [{"edition", "checked_at", "sections": [{"id", "title", "items"}]}]. 돌려주는 값: 기사 id 집합."""
+    groups = day.get("earlier")
+    if groups is None:
+        return set()
+    if not isinstance(groups, list):
+        raise BuildError("%s: earlier 는 목록이어야 합니다" % filename)
+    found = set()
+    for g, group in enumerate(groups):
+        where = "%s earlier[%d]" % (filename, g)
+        _need(group, "edition", where)
+        checked = group.get("checked_at")
+        if checked:
+            if not CHECKED_AT.match(checked):
+                raise BuildError("%s: checked_at 은 'HH:MM KST' 형식이어야 합니다" % where)
+            if day.get("checked_at") and briefing_time({"date": day["date"], "checked_at": checked}) > now:
+                raise BuildError("%s: 이전 판의 checked_at 이 지금 판보다 늦습니다" % where)
+        if not isinstance(group.get("sections"), list) or not group["sections"]:
+            raise BuildError("%s: 필수 항목 'sections' 가 없습니다" % where)
+        for sec in group["sections"]:
+            swhere = "%s 섹션" % where
+            for key in ("id", "title"):
+                _need(sec, key, swhere)
+            if not SLUG.match(sec["id"]):
+                raise BuildError("%s: 섹션 id '%s' 는 영문 소문자·숫자·하이픈만 쓸 수 있습니다" % (swhere, sec["id"]))
+            if not isinstance(sec.get("items"), list) or not sec["items"]:
+                raise BuildError("%s: 필수 항목 'items' 가 없습니다" % swhere)
+            for n, item in enumerate(sec["items"]):
+                _check_item(item, "%s %s.items[%d]" % (where, sec["id"], n), date, need_sources, ids)
+                found.add(item["id"])
+    return found
+
+
+def _check_withdrawn(day, filename, published):
+    """철회(withdrawn): 게시했다가 내린 기사. id 와 공개할 수 있는 짧은 사유만 둔다 (기사 내용은 남기지 않는다).
+    published: 그날 지금 판·이전 판 기사의 id."""
+    rows_ = day.get("withdrawn")
+    if rows_ is None:
+        return
+    if not isinstance(rows_, list):
+        raise BuildError("%s: withdrawn 은 목록이어야 합니다" % filename)
+    seen = set()
+    for n, w in enumerate(rows_):
+        where = "%s withdrawn[%d]" % (filename, n)
+        _need(w, "id", where)
+        _need(w, "reason", where)
+        wid = w["id"]
+        if not isinstance(wid, str) or not SLUG.match(wid):
+            raise BuildError("%s: 기사 id 는 영문 소문자·숫자·하이픈만 쓸 수 있습니다" % where)
+        if wid in published:
+            raise BuildError("%s: 철회한 기사 '%s' 가 아직 내용(sections 또는 earlier)에 있습니다" % (where, wid))
+        if wid in seen:
+            raise BuildError("%s: '%s' 를 두 번 철회했습니다" % (where, wid))
+        seen.add(wid)
+
+
 def validate_day(day, name_date, filename, site):
     reject_personal_only(day, filename)
     for key in ("date", "headline", "summary", "sections"):
@@ -292,33 +403,10 @@ def validate_day(day, name_date, filename, site):
             raise BuildError("%s: id '%s' 가 중복됩니다" % (where, sid))
         ids.add(sid)
         for n, item in enumerate(sec["items"]):
-            where = "%s %s.items[%d]" % (filename, sid, n)
-            for key in ("id", "date", "title", "facts"):
-                _need(item, key, where)
-            iid = item["id"]
-            where = "%s (%s)" % (where, iid)
-            if not SLUG.match(iid):
-                raise BuildError("%s: 기사 id 는 영문 소문자·숫자·하이픈만 쓸 수 있습니다" % where)
-            if iid in ids:
-                raise BuildError("%s: id '%s' 가 중복됩니다" % (where, iid))
-            ids.add(iid)
-            items_by_id[iid] = item
-            if "teaser" in item:
-                teaser = item["teaser"]
-                if not isinstance(teaser, str) or not teaser.strip():
-                    raise BuildError("%s: teaser 는 비어 있지 않은 문장이어야 합니다" % where)
-                recheck = item.get("recheck") if isinstance(item.get("recheck"), dict) else {}
-                body = plain(" ".join(str(v) for v in (item["title"], item["facts"], item.get("so", ""),
-                                                        recheck.get("text", ""))))
-                for num in _NUMBER.findall(plain(teaser)):
-                    if num not in body:
-                        raise BuildError("%s: teaser — 숫자 '%s' 가 기사 본문에 없습니다" % (where, num))
-            if _check_date(item["date"], where) > date:
-                raise BuildError("%s: 기사 날짜가 브리핑 날짜보다 뒤입니다" % where)
-            sources = item.get("sources") or []
-            if need_sources and not sources:
-                raise BuildError("%s: sources — 기사에는 출처가 하나 이상 있어야 합니다" % where)
-            _check_sources(sources, where)
+            _check_item(item, "%s %s.items[%d]" % (filename, sid, n), date, need_sources, ids)
+            items_by_id[item["id"]] = item
+    earlier = _check_earlier(day, filename, date, need_sources, ids, now)
+    _check_withdrawn(day, filename, set(items_by_id) | earlier)
 
     for n, q in enumerate(day.get("quick") or []):
         where = "%s quick[%d]" % (filename, n)
@@ -564,6 +652,18 @@ def render_sections(day, root, here):
     return "\n".join(out)
 
 
+def render_earlier(day, here):
+    """이전 판에만 실린 기사. 새 판에서 빠져도 주소는 남아 있으므로, 브리핑에서 찾을 수 있게 판마다 제목 줄만 둔다."""
+    out = []
+    for n, group in enumerate(day.get("earlier") or [], 1):
+        lines = [row("%s%s/index.html" % (here, esc(i["id"])), i["title"], meta=inline(s["title"]), rid=i["id"])
+                 for s in group["sections"] for i in ordered_items(s)]
+        out.append('<section class="sec earlier" aria-labelledby="h-earlier-%d">'
+                   '<h2 id="h-earlier-%d">%s에 실린 기사</h2>%s</section>'
+                   % (n, n, inline(group["edition"]), rows(lines)))
+    return "\n".join(out)
+
+
 def render_side(day):
     """다음 일정과 이번 판 부재 항목."""
     side = day.get("side") or {}
@@ -622,16 +722,17 @@ def _stamps(day):
 
 def render_briefing(day, older, newer, *, root, here, days_prefix, intro=""):
     """브리핑 본문. 홈(intro 가 붙는다)과 날짜 페이지가 함께 쓴다.
-    좁은 화면에서 읽는 순서: 소개, 날짜·헤드라인·요약, 핵심 1분, 분야별 기사, 시장·다음 일정, 정정, 이전·다음.
-    넓은 화면에서는 시장·다음 일정이 오른쪽 칸(rail)으로 간다."""
+    좁은 화면에서 읽는 순서: 소개, 날짜·헤드라인·요약, 핵심 1분, 분야별 기사, 이전 판에 실린 기사(있을 때),
+    시장·다음 일정, 정정, 이전·다음. 넓은 화면에서는 시장·다음 일정이 오른쪽 칸(rail)으로 간다."""
     edition = " " + inline(day["edition"]) if day.get("edition") else ""
     head = ('<header class="hero"><p class="dateline">%s%s</p><h1 id="top-title">%s</h1>'
             '<p class="summary">%s</p>%s</header>'
             % (long_date(day["date"]), edition, inline(day["headline"]), inline(day["summary"]), _stamps(day)))
     rail = render_market(day) + render_side(day)
     tail = render_corrections(day) + render_pager(older, newer, days_prefix)
+    body = "\n".join(p for p in (render_sections(day, root, here), render_earlier(day, here)) if p)
     return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s%s</div><div class="body">%s</div>%s%s</main>'
-            % (" has-rail" if rail else "", intro, head, render_quick(day), render_sections(day, root, here),
+            % (" has-rail" if rail else "", intro, head, render_quick(day), body,
                '<aside class="rail" aria-label="시장과 일정">%s</aside>' % rail if rail else "",
                '<div class="tail">%s</div>' % tail if tail else ""))
 
@@ -847,12 +948,15 @@ def render_archive(days, site, pages):
 
 
 def collect_topics(days):
-    """분야 id 별로 모든 날짜의 기사를 모은다. 이름은 가장 최근 날짜의 것을 쓴다. days 는 최신순."""
+    """분야 id 별로 모든 날짜의 기사를 모은다 (이전 판 기사 포함). 이름은 가장 최근 날짜의 것을 쓴다. days 는 최신순."""
     topics = {}
     for day in days:
         for sec in visible_sections(day):
             topic = topics.setdefault(sec["id"], {"id": sec["id"], "title": sec["title"], "rows": []})
             topic["rows"].extend((day, item) for item in ordered_items(sec))
+        for _, sec, item in earlier_items(day):
+            topic = topics.setdefault(sec["id"], {"id": sec["id"], "title": sec["title"], "rows": []})
+            topic["rows"].append((day, item))
     return list(topics.values())
 
 
@@ -1004,8 +1108,26 @@ def _only_generated(path):
     return {p.name for p in path.iterdir()} <= {"index.html"}
 
 
+def dropped_articles(out, days):
+    """이미 만든 기사 페이지 가운데 내용(지금 판·이전 판 기사)에도 철회 목록에도 없는 것.
+    게시한 주소가 소리 없이 사라지지 않도록, 이런 것이 있으면 생성을 멈춘다."""
+    news = out / "news"
+    if not news.is_dir():
+        return []
+    keep = {d["date"]: published_ids(d) | withdrawn_ids(d) for d in days}
+    found = []
+    for child in sorted(news.iterdir()):
+        if not (child.is_dir() and DAY_DIR.match(child.name)):
+            continue
+        for sub in sorted(child.iterdir()):
+            if sub.is_dir() and (sub / "index.html").is_file() and sub.name not in keep.get(child.name, set()):
+                found.append("news/%s/%s/" % (child.name, sub.name))
+    return found
+
+
 def remove_stale(out, days, topics):
-    """내용이 사라진 날짜·기사·분야의 폴더를 지운다. 이 프로그램이 만든 파일만 든 폴더만 지운다."""
+    """내용이 사라진 분야 폴더, 철회한 기사의 페이지, 기사 페이지가 남지 않은 지난 날짜 폴더를 지운다.
+    이 프로그램이 만든 파일만 지운다. 게시한 기사가 그냥 빠진 경우는 그 전에 생성을 멈춘다 (dropped_articles)."""
     topic_dir = out / "topic"
     keep_topics = {t["id"] for t in topics}
     if topic_dir.is_dir():
@@ -1013,15 +1135,17 @@ def remove_stale(out, days, topics):
             if child.is_dir() and child.name not in keep_topics and _only_generated(child):
                 shutil.rmtree(child)
 
-    keep = {d["date"]: {item["id"] for _, item in all_items(d)} for d in days}
+    gone = {d["date"]: withdrawn_ids(d) for d in days}
     for child in sorted((out / "news").iterdir()):
         if not (child.is_dir() and DAY_DIR.match(child.name)):
             continue
-        ids = keep.get(child.name, set())
-        for sub in sorted(child.iterdir()):
-            if sub.is_dir() and sub.name not in ids and _only_generated(sub):
-                shutil.rmtree(sub)
-        if child.name not in keep and _only_generated(child):
+        for wid in sorted(gone.get(child.name, ())):
+            sub = child / wid
+            if (sub / "index.html").is_file():
+                (sub / "index.html").unlink()
+            if sub.is_dir() and not any(sub.iterdir()):
+                sub.rmdir()
+        if child.name not in gone and _only_generated(child):
             shutil.rmtree(child)
 
 
@@ -1038,6 +1162,10 @@ def build(root, out=None, check_only=False):
     named += [("%s.json" % d["date"], d, ()) for d in days]
     named += [("pages/%s.json" % p["slug"], p, ()) for p in pages]
     check_sources_text(named, rules)
+    dropped = dropped_articles(out, days)
+    if dropped:
+        raise BuildError("게시한 기사 %d건의 주소가 내용에서 빠졌습니다: %s — 새 판에서 뺀 기사는 earlier(이전 판 기사)로 "
+                         "옮기고, 내려야 하는 기사만 withdrawn 에 적으세요" % (len(dropped), ", ".join(dropped)))
 
     topics = collect_topics(days)
     outputs = {"index.html": render_home(days, site, pages),
@@ -1051,6 +1179,9 @@ def build(root, out=None, check_only=False):
         outputs["news/%s/index.html" % day["date"]] = render_day(day, older, newer, site, pages)
         for sec, item in all_items(day):
             outputs["news/%s/%s/index.html" % (day["date"], item["id"])] = render_article(day, sec, item, site, pages)
+        for group, sec, item in earlier_items(day):
+            outputs["news/%s/%s/index.html" % (day["date"], item["id"])] = render_article(
+                edition_view(day, group), sec, item, site, pages)
     for page in pages:
         outputs["%s/index.html" % page["slug"]] = render_static(page, site, pages)
     public = [rel for rel in outputs]

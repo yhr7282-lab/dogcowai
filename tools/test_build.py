@@ -485,12 +485,28 @@ class BuildOutputTests(SiteCase):
         page = self.day_page(make_day())
         self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
 
-    def test_teaser_does_not_replace_the_article_text(self):
+    def test_article_page_shows_its_teaser_once_between_the_times_and_the_body(self):
         day = make_day()
-        day["sections"][0]["items"][0]["teaser"] = "목록에만 쓰는 문장"
+        day["sections"][0]["items"][0]["teaser"] = "요약 한 줄 <b>"
         page = self.article_page(day, "a-one")
+        self.assertEqual(page.count('<p class="deck">요약 한 줄 &lt;b&gt;</p>'), 1)
+        self.assertLess(page.index('class="checked"'), page.index('class="deck"'))
+        self.assertLess(page.index('class="deck"'), page.index('class="part fact"'))
         self.assertIn("둘째 문장 <strong>강조</strong>.", page)
-        self.assertNotIn("목록에만 쓰는 문장", page)
+
+    def test_article_without_teaser_has_no_empty_summary(self):
+        page = self.article_page(make_day(), "a-two")
+        self.assertNotIn('class="deck"', page)
+
+    def test_teaser_is_the_description_for_search_and_sharing(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날의 요약"
+        page = self.article_page(day, "a-one")
+        self.assertIn('<meta name="description" content="지수가 5.46% 내린 날의 요약">', page)
+        self.assertIn('<meta property="og:description" content="지수가 5.46% 내린 날의 요약">', page)
+        blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', page, re.S)
+        news = [json.loads(b) for b in blocks if '"NewsArticle"' in b][0]
+        self.assertEqual(news["description"], "지수가 5.46% 내린 날의 요약")
 
     # ---- 고정 페이지, 404
 

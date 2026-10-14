@@ -792,7 +792,8 @@ def render_day(day, older, newer, site, pages):
 
 
 def render_article(day, sec, item, site, pages):
-    """기사 하나. 맨 위에 분야와 실린 브리핑(둘 다 링크), 제목, 확인·수정 시각, 본문, 출처, 끝에 이 브리핑의 다른 기사."""
+    """기사 하나. 맨 위에 분야와 실린 브리핑(둘 다 링크), 제목, 확인·수정 시각, 요약 한 줄(teaser 가 있을 때만),
+    본문, 출처, 끝에 이 브리핑의 다른 기사. 검색·공유용 설명문도 teaser 가 있으면 그것을 쓴다."""
     root = "../../../"
     sid = esc(sec["id"])
     path = "/news/%s/%s/" % (day["date"], item["id"])
@@ -805,12 +806,14 @@ def render_article(day, sec, item, site, pages):
                        '<h2 id="others-title">이 브리핑의 다른 기사</h2>%s</section></div>'
                        % rows([row("../%s/index.html" % esc(i["id"]), i["title"], meta=inline(s["title"]))
                                for s, i in others]))
+    deck = '<p class="deck">%s</p>' % inline(item["teaser"]) if item.get("teaser") else ""
+    description = plain(item["teaser"]) if item.get("teaser") else first_sentence(item["facts"])
     content = ('<main class="page article" id="brief"><div class="lead">'
-               '<article class="story" aria-labelledby="top-title"><header class="hero">%s<h1 id="top-title">%s</h1>%s'
+               '<article class="story" aria-labelledby="top-title"><header class="hero">%s<h1 id="top-title">%s</h1>%s%s'
                '</header>%s</article></div>%s</main>'
-               % (top, inline(item["title"]), _stamps(day), article_body(item), others_html))
+               % (top, inline(item["title"]), _stamps(day), deck, article_body(item), others_html))
     url = site["base_url"] + path
-    news = {"@type": "NewsArticle", "headline": plain(item["title"]), "description": first_sentence(item["facts"]),
+    news = {"@type": "NewsArticle", "headline": plain(item["title"]), "description": description,
             "url": url, "mainEntityOfPage": url, "datePublished": published_at(day), "inLanguage": "ko-KR",
             "articleSection": plain(sec["title"]), "isAccessibleForFree": True,
             "author": site_org(site), "publisher": site_org(site)}
@@ -820,7 +823,7 @@ def render_article(day, sec, item, site, pages):
     if sources:
         news["citation"] = [{"@type": "CreativeWork", "name": plain(s["name"]), "url": s["url"]} for s in sources]
     return wrap_page(site, pages, title="%s | %s" % (plain(item["title"]), site["title"]),
-                     description=first_sentence(item["facts"]), prefix=root,
+                     description=description, prefix=root,
                      path=path, content=content, og_type="article", current="news",
                      trail=[(HOME_LABEL, root + "index.html"), (NEWS_LABEL, root + "news/index.html"),
                             (day_label(day), "../index.html")],

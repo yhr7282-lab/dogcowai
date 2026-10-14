@@ -107,6 +107,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .summary { margin-top: 16px; max-width: 36em; font-size: var(--fs-body); line-height: 1.8; color: var(--ink-2); text-wrap: pretty; }
 .checked { display: flex; flex-wrap: wrap; column-gap: 12px; margin-top: 12px; font-size: var(--fs-m); color: var(--ink-3); }
 .checked span { white-space: nowrap; }
+.deck { margin-top: 20px; max-width: 38em; font-size: var(--fs-body); font-weight: 600; line-height: 1.75; text-wrap: pretty; }
 
 /* ---- 핵심 1분: 읽기만 한다 ---- */
 .quick { margin-top: 40px; }

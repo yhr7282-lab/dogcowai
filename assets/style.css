@@ -126,6 +126,17 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .sec h2 a:hover { color: var(--link-strong); }
 .sec .rows { margin-top: 4px; }
 
+/* ---- 브리핑의 기사: 누르지 않아도 다 읽도록 제목 아래에 본문을 모두 펼친다.
+   제목은 기사 페이지(공유용 주소)로 가는 링크라 청록색이다 ---- */
+.item { padding: 12px 0 28px; border-top: 1px solid var(--line); }
+.sec h2 + .item { margin-top: 4px; }
+.item h3 { font-size: var(--fs-body); font-weight: 700; line-height: 1.5; letter-spacing: -0.01em; }
+.item h3 a { display: block; padding: 8px 0; }
+.item .part { margin-top: 12px; }
+.item .part:first-of-type { margin-top: 4px; }
+.item .part h4 { margin-bottom: 2px; font-size: var(--fs-m); font-weight: 700; line-height: 1.5; color: var(--ink-3); }
+.item .src { margin-top: 12px; }
+
 /* ---- 다른 페이지로 가는 줄: 머리글(작게), 제목(청록), 한 줄. 사이트의 모든 목록이 이 모양이다 ---- */
 .rows { border-bottom: 1px solid var(--line); }
 .rows li { border-top: 1px solid var(--line); }

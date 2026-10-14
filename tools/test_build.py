@@ -240,7 +240,7 @@ class BuildOutputTests(SiteCase):
             self.assertIn(part, home)
         self.assertNotIn("2026-10-12 헤드라인</h1>", home)
 
-    # ---- 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록, 시장, 일정, 정정, 이전·다음
+    # ---- 브리핑: 헤드라인, 핵심 1분, 분야별 기사(내용 전부), 시장, 일정, 정정, 이전·다음
 
     def test_briefing_reads_in_one_fixed_order(self):
         self.write_day(make_day("2026-10-12"))
@@ -254,14 +254,39 @@ class BuildOutputTests(SiteCase):
         self.assertEqual(order, sorted(order))
         self.assertIn("2026년 10월 13일 화요일 오후판", page)
 
-    def test_briefing_lists_every_story_with_its_title_and_one_line_but_not_its_body(self):
+    def test_briefing_shows_every_story_in_full_without_clicking(self):
         page = self.day_page(make_day())
-        self.assertIn('<li id="a-one"><a href="a-one/index.html">', page)
-        self.assertIn('<li id="a-two"><a href="a-two/index.html">', page)
-        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
-        self.assertIn('<span class="line">두 번째 사실.</span>', page)
-        for absent in ("둘째 문장", "의미 문장.", "조건 문장.", "https://example.com/a", "무슨 일이 있었나"):
-            self.assertNotIn(absent, page)
+        for text in ("지수가 5.46% 내렸다. 둘째 문장 <strong>강조</strong>.", "의미 문장.", "조건 문장.",
+                     "두 번째 사실.", 'href="https://example.com/a"', 'href="https://example.com/b"'):
+            self.assertIn(text, page)
+        self.assertIn('<article class="item" id="a-one"><h3><a href="a-one/index.html">기사 하나</a></h3>', page)
+        self.assertIn('<article class="item" id="a-two"><h3><a href="a-two/index.html">기사 둘</a></h3>', page)
+        self.assertNotIn('<span class="line">', page)
+
+    def test_briefing_story_parts_sit_under_the_story_title(self):
+        page = self.day_page(make_day())
+        one = page[page.index('id="a-one"'):page.index("</article>", page.index('id="a-one"'))]
+        for label in ("<h4>무슨 일이 있었나</h4>", "<h4>왜 중요한가</h4>", "<h4>다시 볼 조건</h4>"):
+            self.assertIn(label, one)
+        two = page[page.index('id="a-two"'):page.index("</article>", page.index('id="a-two"'))]
+        self.assertNotIn("<h4>", two)
+        self.assertIn("두 번째 사실.", two)
+
+    def test_home_shows_the_latest_briefing_in_full(self):
+        self.write_day(make_day())
+        self.build()
+        home = self.read("index.html")
+        for text in ("의미 문장.", "조건 문장.", "두 번째 사실.",
+                     '<h3><a href="news/2026-10-13/a-one/index.html">기사 하나</a></h3>'):
+            self.assertIn(text, home)
+
+    def test_briefing_does_not_repeat_the_teaser_above_the_full_text(self):
+        day = make_day()
+        day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날의 가상 요약"
+        self.write_day(day)
+        self.build()
+        for rel in ("index.html", "news/2026-10-13/index.html"):
+            self.assertNotIn("가상 요약", self.read(rel), rel)
 
     def test_featured_story_comes_first_in_its_section(self):
         day = make_day()
@@ -472,19 +497,19 @@ class BuildOutputTests(SiteCase):
         self.assertLess(new, old)
         self.assertIn("/topic/economy/", self.read("sitemap.xml"))
 
-    def test_lists_use_the_teaser_when_an_article_has_one(self):
+    def test_topic_list_uses_the_teaser_when_an_article_has_one(self):
         day = make_day()
         day["sections"][0]["items"][0]["teaser"] = "지수가 5.46% 내린 날 <b>&"
         self.write_day(day)
         self.build()
-        for rel in ("index.html", "news/2026-10-13/index.html", "topic/economy/index.html"):
-            page = self.read(rel)
-            self.assertIn('<span class="line">지수가 5.46% 내린 날 &lt;b&gt;&amp;</span>', page, rel)
-            self.assertNotIn('<span class="line">지수가 5.46% 내렸다.</span>', page, rel)
+        page = self.read("topic/economy/index.html")
+        self.assertIn('<span class="line">지수가 5.46% 내린 날 &lt;b&gt;&amp;</span>', page)
+        self.assertNotIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
 
-    def test_lists_fall_back_to_the_first_sentence_without_a_teaser(self):
-        page = self.day_page(make_day())
-        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', page)
+    def test_topic_list_falls_back_to_the_first_sentence_without_a_teaser(self):
+        self.write_day(make_day())
+        self.build()
+        self.assertIn('<span class="line">지수가 5.46% 내렸다.</span>', self.read("topic/economy/index.html"))
 
     def test_article_page_shows_its_teaser_once_between_the_times_and_the_body(self):
         day = make_day()

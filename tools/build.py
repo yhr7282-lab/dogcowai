@@ -616,39 +616,46 @@ def ordered_items(sec):
     return [i for i in sec["items"] if i.get("featured")] + [i for i in sec["items"] if not i.get("featured")]
 
 
-def _part(cls, label, text):
-    return '<div class="part %s"><h2>%s</h2><p>%s</p></div>' % (cls, inline(label), inline(text))
+def _part(cls, label, text, level):
+    return '<div class="part %s"><h%d>%s</h%d><p>%s</p></div>' % (cls, level, inline(label), level, inline(text))
 
 
-def article_body(item):
-    """기사 본문. 사실만 있는 기사는 소제목 없이 문단만 둔다."""
+def article_body(item, level=2):
+    """기사 본문. 사실만 있는 기사는 소제목 없이 문단만 둔다.
+    level: 소제목의 단계. 기사 페이지는 2, 브리핑 안에서는 기사 제목(h3) 아래라 4."""
     parts = []
     recheck = item.get("recheck")
     has_recheck = bool(recheck and recheck.get("text"))
     if item.get("so") or has_recheck:
-        parts.append(_part("fact", "무슨 일이 있었나", item["facts"]))
+        parts.append(_part("fact", "무슨 일이 있었나", item["facts"], level))
     else:
         parts.append('<div class="part fact"><p>%s</p></div>' % inline(item["facts"]))
     if item.get("so"):
-        parts.append(_part("why", "왜 중요한가", item["so"]))
+        parts.append(_part("why", "왜 중요한가", item["so"], level))
     if has_recheck:
-        parts.append(_part("recheck", recheck.get("label", "다시 볼 조건"), recheck["text"]))
+        parts.append(_part("recheck", recheck.get("label", "다시 볼 조건"), recheck["text"], level))
     parts.append(render_sources(item.get("sources")))
     return "\n".join(p for p in parts if p)
 
 
+def render_story(item, href):
+    """브리핑 안의 기사 한 건: 제목과 본문·출처 전부. 누르지 않아도 다 읽을 수 있다.
+    제목은 기사 페이지(공유·검색용 주소)로 가는 링크다. 목록용 한 줄(teaser)은 본문과 겹쳐서 넣지 않는다."""
+    return ('<article class="item" id="%s"><h3><a href="%s">%s</a></h3>%s</article>'
+            % (esc(item["id"]), href, inline(item["title"]), article_body(item, level=4)))
+
+
 def render_sections(day, root, here):
-    """분야별 기사 목록. 분야 이름은 그 분야의 모든 기사 목록으로 가는 링크, 기사 줄은 기사 페이지로 가는 링크다.
+    """분야별 기사. 분야 이름은 그 분야의 모든 기사 목록으로 가는 링크이고, 그 아래에 기사마다 내용을 모두 펼쳐 둔다.
     root: 사이트 루트까지의 상대 경로. here: 이 페이지에서 그날 브리핑 폴더까지의 상대 경로.
-    입력의 lede(분야 요약)와 points 는 기사 줄과 겹쳐서 화면에 내지 않는다."""
+    입력의 lede(분야 요약)와 points 는 화면에 내지 않는다."""
     out = []
     for sec in visible_sections(day):
         sid = esc(sec["id"])
+        stories = "\n".join(render_story(i, "%s%s/index.html" % (here, esc(i["id"]))) for i in ordered_items(sec))
         out.append('<section class="sec" id="%s" aria-labelledby="h-%s">'
                    '<h2 id="h-%s"><a href="%stopic/%s/index.html">%s</a></h2>%s</section>'
-                   % (sid, sid, sid, root, sid, inline(sec["title"]),
-                      rows([row("%s%s/index.html" % (here, esc(i["id"])), i["title"], line=list_line(i), rid=i["id"])
-                            for i in ordered_items(sec)])))
+                   % (sid, sid, sid, root, sid, inline(sec["title"]), stories))
     return "\n".join(out)
 
 

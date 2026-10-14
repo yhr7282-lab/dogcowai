@@ -13,18 +13,24 @@
 
 ## 구조
 ```
-index.html                홈 (자동 생성)
-news/index.html           지난 브리핑 목록 (자동 생성)
-news/YYYY-MM-DD/index.html  그날의 브리핑 (자동 생성)
-404.html                  없는 주소 안내 (자동 생성)
-content/YYYY-MM-DD.json   그날의 내용 (사람/Claude가 작성하는 원본)
-content/_site.json        사이트 공통 설정 (이름, 푸터, 금지 단어)
-assets/style.css          디자인
-tools/build.py            생성 프로그램
-tools/templates/base.html 페이지 공통 틀
-tools/test_build.py       테스트
-CNAME, .nojekyll          도메인 연결 (건드리지 않는다)
+index.html                      홈: 소개, 오늘의 주요 뉴스, 옆 칸(시장 막대, 지난 브리핑, 분야)
+news/index.html                 날짜별 브리핑 목록
+news/YYYY-MM-DD/index.html      하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록, 시장 요약, 일정
+news/YYYY-MM-DD/기사id/index.html  기사 하나
+topic/index.html                분야 목록
+topic/분야id/index.html          그 분야의 기사 목록 (모든 날짜)
+about/index.html 등              고정 페이지
+404.html, sitemap.xml, robots.txt, feed.xml
+content/YYYY-MM-DD.json         그날의 내용 (원본)
+content/_site.json              사이트 공통 설정
+content/pages/*.json            고정 페이지 내용
+assets/style.css                디자인
+tools/build.py                  생성 프로그램
+tools/templates/base.html       페이지 공통 틀
+tools/test_build.py             테스트
+CNAME, .nojekyll                도메인 연결 (건드리지 않는다)
 ```
+위 HTML 은 모두 자동 생성이다. 손으로 고치지 않는다.
 
 ## 화면
 - 홈: 최신 브리핑의 헤드라인·요약·시장 요약·핵심 1분, 지난 브리핑 목록, 전체 보기 링크
@@ -61,3 +67,4 @@ CNAME, .nojekyll          도메인 연결 (건드리지 않는다)
 - 2026-10-14 (통일): 펼침은 모두 같은 말을 쓴다(닫힘 "… 더 보기", 열림 "… 접기"). 분야는 늘 같은 순서다: 이름과 건수, 요약, 대표 기사, 더 보기(기사가 더 있을 때), "지난 ○○ 기사 모아 보기". 시장 수치 한 줄, 분야별 모아 보기 페이지(`/topic/<분야 id>/`), 기사마다 "이 기사의 주소", 구역 한 줄 설명을 추가했다. 분야 id 는 날짜가 달라도 같은 분야면 같아야 한다.
 - 2026-10-14 (누르는 곳 구분): 누를 수 있는 것은 모두 링크 색(짙은 청록)이다. 다른 곳으로 가는 줄에는 오른쪽에 ›, 펼치는 버튼에는 테두리와 + 가 있다. 기사 제목, 핵심 1분, 시장 수치는 누르는 곳이 아니라서 검은 글씨다. 안내 문장("누르면 …로 이동합니다")은 모두 뺐다. 사실만 있는 기사는 "무슨 일이 있었나" 소제목을 생략한다. 스타일 파일을 한 벌로 다시 썼다.
 - 2026-10-14 (이름): 사이트 이름을 '다섯 시 경제'로 바꿨다. 새벽 5시와 오후 5시에 갱신한다는 뜻이다. 주소(dogcowai.com)와 저장소 이름은 그대로다. 갱신 시각을 바꾸면 이름과 소개글도 함께 본다.
+- 2026-10-14 (페이지 나누기): 한 페이지에 모든 내용을 담던 구조를 나눴다. 기사마다 페이지가 있고(`/news/날짜/기사id/`), 일별 브리핑은 그날 기사의 목록이다. 홈은 소개와 오늘의 주요 뉴스만 두고 브리핑으로 가는 버튼을 둔다. 분야 목록 페이지(`/topic/`)를 추가했다. 메뉴는 홈, 날짜별, 분야별, 소개다. 분야 바로가기 띠와 그 스크립트는 없앴다. 예전 주소 `/news/날짜/#기사id` 는 일별 브리핑의 그 기사 줄로 간다.

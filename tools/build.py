@@ -19,7 +19,7 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 - 공개 입력에는 개인 전용 내용을 둘 수 없다: 'actions', 'side.career', 'private' 표시는 오류.
 - 기사에는 고유 id 와 출처가 있어야 한다. 핵심 1분은 기사에 연결되고 숫자가 기사와 맞아야 한다.
 - 날짜·기준 시각·일정·시장 수치의 기준일을 검사한다.
-- 금지 패턴은 입력 JSON 전체와 생성 결과 전체에서 검사한다. 오류에는 파일·필드·규칙만 적는다.
+- 금지 규칙은 입력 JSON 전체와 생성 결과 전체에서 검사한다. 오류에는 파일·필드·규칙 번호만 적는다 (규칙 원문은 적지 않는다).
 - 검증에 실패하면 아무 파일도 쓰지 않는다.
 
 표준 라이브러리만 쓴다 (Python 3.9 이상).
@@ -885,48 +885,52 @@ def render_feed(site, days):
 # ---------------------------------------------------------------- 금지 단어 검사·쓰기
 
 def load_blocklist(root, site):
-    """공개 패턴(_site.json)과 로컬 전용 패턴(보관/blocklist.local.txt)을 합쳐 컴파일한다."""
-    patterns = list(site["blocklist"])
+    """공개 규칙(_site.json)과 로컬 전용 규칙(보관/blocklist.local.txt)을 합쳐 (규칙 이름, 정규식) 목록으로 낸다.
+
+    규칙 이름은 '공개 규칙 3번', '로컬 규칙 5번째 줄'처럼 위치만 가리킨다. 규칙의 원문은 그 자체가
+    비공개일 수 있으므로 오류 메시지와 로그 어디에도 넣지 않는다."""
+    rules = [("공개 규칙 %d번" % n, p) for n, p in enumerate(site["blocklist"], 1)]
     local = Path(root) / LOCAL_BLOCKLIST
     if local.is_file():
-        for line in local.read_text(encoding="utf-8").splitlines():
+        for n, line in enumerate(local.read_text(encoding="utf-8").splitlines(), 1):
             line = line.strip()
             if line and not line.startswith("#"):
-                patterns.append(line)
+                rules.append(("로컬 규칙 %d번째 줄" % n, line))
     compiled = []
-    for p in patterns:
+    for name, pattern in rules:
         try:
-            compiled.append((p, re.compile(p)))
+            compiled.append((name, re.compile(pattern)))
         except re.error as e:
-            raise BuildError("blocklist 패턴 오류 %r: %s" % (p, e))
+            # re.error 는 패턴 원문을 속성으로 들고 있다. 이어 붙이지 않고 끊는다.
+            raise BuildError("blocklist %s: 정규식 문법 오류 (%s)" % (name, e.msg)) from None
     return compiled
 
 
 def _stop_on_matches(problems):
     if problems:
-        raise BuildError("금지 단어가 있어 생성을 멈췄습니다 (아무것도 쓰지 않음):\n  "
+        raise BuildError("금지 규칙에 걸려 생성을 멈췄습니다 (아무것도 쓰지 않음):\n  "
                          + "\n  ".join(problems))
 
 
-def check_sources_text(named, patterns):
+def check_sources_text(named, rules):
     """입력 JSON의 모든 문자열을 검사한다. 렌더링되지 않는 필드도 포함한다."""
     problems = []
     for label, data, skip in named:
         for path, text in iter_strings(data, skip=skip):
-            for p, rx in patterns:
+            for name, rx in rules:
                 if rx.search(text):
-                    problems.append("%s: %s — 금지 패턴 '%s'" % (label, path, p))
+                    problems.append("%s: %s — %s" % (label, path, name))
     _stop_on_matches(problems)
 
 
-def check_pages(outputs, patterns):
+def check_pages(outputs, rules):
     """생성된 결과 전체(본문·속성·메타)를 검사한다."""
     problems = []
     for rel, page in outputs.items():
         text = html.unescape(page).replace(WORD_JOINER, "")
-        for p, rx in patterns:
+        for name, rx in rules:
             if rx.search(text):
-                problems.append("%s: 생성 결과 — 금지 패턴 '%s'" % (rel, p))
+                problems.append("%s: 생성 결과 — %s" % (rel, name))
     _stop_on_matches(problems)
 
 
@@ -964,11 +968,11 @@ def build(root, out=None, check_only=False):
     pages = load_pages(root)
     if not days:
         raise BuildError("content/ 에 YYYY-MM-DD.json 파일이 없습니다")
-    patterns = load_blocklist(root, site)
+    rules = load_blocklist(root, site)
     named = [("_site.json", site, ("blocklist",))]
     named += [("%s.json" % d["date"], d, ()) for d in days]
     named += [("pages/%s.json" % p["slug"], p, ()) for p in pages]
-    check_sources_text(named, patterns)
+    check_sources_text(named, rules)
 
     topics = collect_topics(days)
     outputs = {"index.html": render_home(days, site, pages, topics),
@@ -994,7 +998,7 @@ def build(root, out=None, check_only=False):
     outputs["robots.txt"] = "User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n" % site["base_url"]
     outputs["feed.xml"] = render_feed(site, days)
 
-    check_pages(outputs, patterns)
+    check_pages(outputs, rules)
     if check_only:
         return outputs
 

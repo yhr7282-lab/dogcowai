@@ -2,8 +2,10 @@
 
 테스트에 쓰는 이름·문장은 모두 가상의 표식이다. 실제 개인 정보를 넣지 않는다.
 """
+import contextlib
 import copy
 import hashlib
+import io
 import json
 import re
 import sys
@@ -718,18 +720,18 @@ class PublicInputTests(SiteCase):
         day = make_day()
         day["sections"][0]["items"][0]["facts"] = "샘플 매입가 5억원"
         day["quick"] = []
-        self.assert_rejected(day, "매입가")
+        self.assert_rejected(day, "공개 규칙 1번")
         self.assertFalse(self.exists("index.html"))
 
     def test_blocklist_scans_fields_that_are_not_rendered(self):
         day = make_day()
         day["memo"] = "렌더링되지 않는 필드의 매입가"
-        self.assert_rejected(day, "memo", "매입가")
+        self.assert_rejected(day, "memo", "공개 규칙 1번")
 
     def test_blocklist_scans_attribute_values(self):
         day = make_day()
         day["sections"][0]["items"][0]["sources"][0]["url"] = "https://example.com/J-12345678"
-        self.assert_rejected(day, "J-")
+        self.assert_rejected(day, "sources[0].url", "공개 규칙 2번")
 
     def test_blocklist_scans_site_settings_but_not_its_own_definition(self):
         self.write_day(make_day())
@@ -755,7 +757,69 @@ class PublicInputTests(SiteCase):
         (self.root / "보관" / "blocklist.local.txt").write_text("# 주석\n가상비밀어\n", encoding="utf-8")
         day = make_day()
         day["sections"][0]["items"][1]["facts"] = "문장 속의 가상비밀어"
-        self.assert_rejected(day, "가상비밀어")
+        self.assert_rejected(day, "로컬 규칙 2번째 줄")
+
+    # ---- 규칙의 원문은 그 자체가 비공개일 수 있다. 오류와 로그에 다시 적지 않는다.
+
+    def local_rules(self, text):
+        (self.root / "보관").mkdir(exist_ok=True)
+        (self.root / "보관" / "blocklist.local.txt").write_text(text, encoding="utf-8")
+
+    def run_main(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = build.main(["--root", str(self.root)])
+        return code, out.getvalue() + err.getvalue()
+
+    def test_input_match_reports_the_rule_by_name_not_by_its_text(self):
+        self.local_rules("가상표식A\\d+\n")
+        day = make_day()
+        day["sections"][0]["items"][1]["facts"] = "문장 속의 가상표식A77"
+        before = self.snapshot()
+        self.write_day(day)
+        code, printed = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertIn("로컬 규칙 1번째 줄", printed)
+        self.assertIn("sections[0].items[1].facts", printed)
+        self.assertNotIn("가상표식A", printed)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_public_rule_text_is_not_printed_either(self):
+        day = make_day()
+        day["memo"] = "렌더링되지 않는 필드의 매입가"
+        self.write_day(day)
+        code, printed = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertIn("공개 규칙 1번", printed)
+        self.assertNotIn("매입가", printed)
+
+    def test_broken_rule_is_reported_without_its_text(self):
+        self.local_rules("# 주석\n가상표식B[\n")
+        self.write_day(make_day())
+        code, printed = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertIn("로컬 규칙 2번째 줄", printed)
+        self.assertNotIn("가상표식B", printed)
+        self.assertFalse(self.exists("index.html"))
+
+    def test_error_object_does_not_carry_the_rule_text(self):
+        self.local_rules("가상표식C\n")
+        day = make_day()
+        day["summary"] = "요약 속의 가상표식C"
+        self.write_day(day)
+        with self.assertRaises(build.BuildError) as ctx:
+            self.build()
+        err = ctx.exception
+        self.assertNotIn("가상표식C", repr(err) + str(err.args) + repr(err.__cause__) + repr(err.__context__))
+
+    def test_generated_page_match_reports_the_rule_by_name(self):
+        problems = None
+        rules = [("로컬 규칙 1번째 줄", re.compile("가상표식D"))]
+        with self.assertRaises(build.BuildError) as ctx:
+            build.check_pages({"index.html": "<p>가상표식D</p>"}, rules)
+        self.assertIn("index.html", str(ctx.exception))
+        self.assertIn("로컬 규칙 1번째 줄", str(ctx.exception))
+        self.assertNotIn("가상표식D", str(ctx.exception))
 
 
 if __name__ == "__main__":

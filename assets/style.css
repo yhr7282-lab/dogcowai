@@ -1,15 +1,18 @@
-/* 다섯 시 경제 디자인
+/* 다섯 시 경제 디자인 — 2026-10-24 '석간 지면'으로 다시 만듦
    페이지: 홈(소개 + 최신 브리핑), 브리핑, 기사, 날짜별, 분야별, 고정 페이지.
    규칙 1. 누를 수 있는 것은 청록색(--link)이다. 누를 수 없는 것은 그 색을 쓰지 않는다.
    규칙 2. 다른 페이지로 가는 목록은 모두 같은 줄 모양(.rows)이고 오른쪽에 › 가 있다.
    규칙 3. 빨강과 파랑은 등락 표시에만 쓴다 (상승 빨강, 하락 파랑).
    규칙 4. 글자 크기는 다섯 가지만 쓴다: 13(출처·주석), 15(보조), 17(본문), 20(구역 제목), 페이지 제목.
-   규칙 5. 누르는 곳은 손가락으로 누를 수 있는 높이(44px 안팎)를 여백으로 확보한다. */
+           사이트 이름과 기사 제목은 명조(--serif), 나머지는 고딕이다.
+   규칙 5. 누르는 곳은 손가락으로 누를 수 있는 높이(44px 안팎)를 여백으로 확보한다.
+   규칙 6. 구역은 상자 대신 선으로 나눈다. 굵은 선(3px 먹색)은 큰 구역의 시작, 가는 선은 줄 사이다.
+           상자 바탕(--wash)은 '다시 볼 조건' 한 곳에만 쓴다. */
 :root {
   color-scheme: light;
-  --paper: #fff;
-  --wash: #f5f6f7;
-  --line: #e4e6ea;
+  --paper: #fbfaf6;
+  --wash: #f1efe8;
+  --line: #e2e0da;
   --ink: #16181d;
   --ink-2: #474c56;
   --ink-3: #636a76;
@@ -17,20 +20,21 @@
   --link-strong: #084f4f;
   --up: #c4261a;
   --down: #1d5fd1;
+  --serif: "Noto Serif KR", "AppleMyungjo", "Nanum Myeongjo", serif;
   --fs-s: 13px;
   --fs-m: 15px;
   --fs-body: 17px;
   --fs-h2: 20px;
-  --fs-h1: clamp(26px, 6.4vw, 34px);
-  --gutter: clamp(18px, 4.6vw, 32px);
+  --fs-h1: clamp(28px, 6.6vw, 44px);
+  --gutter: clamp(16px, 4.6vw, 40px);
   --wrap: 760px;
 }
 @media (min-width: 1080px) {
-  :root { --wrap: 1120px; }
+  :root { --wrap: 1180px; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: 68px; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 16px; }
 body {
   margin: 0;
   background: var(--paper);
@@ -58,24 +62,31 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .skip:focus { top: 12px; }
 .wrap { max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gutter); }
 
-/* ---- 상단: 사이트 이름과 메뉴 한 줄. 스크롤해도 위에 붙어 있다 ---- */
-.masthead { position: sticky; top: 0; z-index: 30; background: var(--paper); border-bottom: 1px solid var(--line); }
-.masthead .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; }
-.brand { padding: 12px 0; font-size: 20px; font-weight: 700; line-height: 1.4; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
+/* ---- 상단: 신문 제호처럼 큰 사이트 이름, 겹줄, 그 아래 메뉴 한 줄 ---- */
+.masthead { background: var(--paper); }
+.masthead .wrap { display: flex; flex-wrap: wrap; align-items: flex-end; }
+.brand {
+  order: 0; padding: 22px 0 14px;
+  font-family: var(--serif); font-size: clamp(34px, 7.4vw, 52px); font-weight: 900;
+  line-height: 1.05; letter-spacing: -0.035em; color: var(--ink); white-space: nowrap;
+}
 .brand:hover { color: var(--ink); text-decoration: none; }
-.toplinks { display: flex; min-width: 0; margin-right: -8px; overflow-x: auto; scrollbar-width: none; }
+.masthead .wrap::after {
+  content: ""; order: 1; flex: 0 0 100%; height: 7px;
+  border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink);
+}
+.toplinks {
+  order: 2; display: flex; gap: 26px; width: 100%; min-width: 0;
+  overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line);
+}
 .toplinks::-webkit-scrollbar { display: none; }
-.toplink { display: block; min-width: 40px; padding: 15px 8px 12px; text-align: center; font-size: 16px; font-weight: 600; line-height: 1.4; white-space: nowrap; border-bottom: 3px solid transparent; }
+.toplink {
+  display: block; padding: 12px 0 9px; font-size: 16px; font-weight: 600; line-height: 1.4;
+  white-space: nowrap; border-bottom: 3px solid transparent;
+}
 .toplink:hover { text-decoration: none; border-bottom-color: var(--link); }
 .toplink:focus-visible { outline-offset: -3px; }
 .toplink[aria-current] { color: var(--ink); font-weight: 700; border-bottom-color: var(--ink); }
-@media (max-width: 400px) { .brand { font-size: 18px; } }
-@media (max-width: 359px) {
-  html { scroll-padding-top: 12px; }
-  .masthead { position: static; }
-  .masthead .wrap { flex-wrap: wrap; gap: 0; }
-  .toplinks { width: 100%; margin: 0 0 0 -8px; }
-}
 
 /* ---- 페이지 골격: 본문 칸 하나. 시장·일정(rail)이 있는 페이지만 1080px부터 오른쪽 칸을 쓴다 ---- */
 .page { max-width: var(--wrap); margin-inline: auto; padding: 32px var(--gutter) 0; }
@@ -83,11 +94,12 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .rail { margin-top: 56px; }
 .tail { margin-top: 56px; }
 @media (min-width: 1080px) {
-  .page { padding-top: 48px; }
-  .page.has-rail { display: grid; grid-template-columns: minmax(0, 1fr) 300px; column-gap: 64px; align-items: start; }
-  .has-rail > .lead, .has-rail > .body, .has-rail > .tail { grid-column: 1; max-width: none; }
+  .page { padding-top: 44px; }
+  .page.has-rail { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 72px; align-items: start; }
+  .has-rail > .lead, .has-rail > .body, .has-rail > .tail { grid-column: 1; max-width: 760px; }
   .has-rail > .rail { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
 }
+.rail > section { border-top: 3px solid var(--ink); padding-top: 12px; }
 .rail > * + * { margin-top: 48px; }
 
 /* ---- 구역 제목: 모두 같은 크기 ---- */
@@ -96,48 +108,60 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 }
 
 /* ---- 홈 맨 위 소개: 짧게 ---- */
-.intro { padding-bottom: 24px; margin-bottom: 32px; border-bottom: 1px solid var(--line); }
+.intro { padding-bottom: 20px; margin-bottom: 32px; border-bottom: 1px solid var(--line); }
 .intro-title { font-size: var(--fs-body); font-weight: 700; line-height: 1.5; }
 .intro p + p { margin-top: 4px; }
 .intro p:not(.intro-title):not(.more) { font-size: var(--fs-m); line-height: 1.7; color: var(--ink-2); }
 
 /* ---- 페이지 머리: 날짜·판, 제목, 요약, 확인·수정 시각 ---- */
-.dateline { margin-bottom: 8px; font-size: var(--fs-m); color: var(--ink-3); }
-.hero h1 { font-size: var(--fs-h1); line-height: 1.3; font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; }
-.summary { margin-top: 16px; max-width: 36em; font-size: var(--fs-body); line-height: 1.8; color: var(--ink-2); text-wrap: pretty; }
-.checked { display: flex; flex-wrap: wrap; column-gap: 12px; margin-top: 12px; font-size: var(--fs-m); color: var(--ink-3); }
+.dateline { margin-bottom: 12px; font-size: var(--fs-m); font-weight: 700; color: var(--ink); }
+.hero h1 {
+  font-family: var(--serif); font-size: var(--fs-h1); font-weight: 700;
+  line-height: 1.3; letter-spacing: -0.03em; text-wrap: balance;
+}
+.summary { margin-top: 20px; max-width: 36em; font-size: 18px; line-height: 1.8; color: #2e323a; text-wrap: pretty; }
+.checked { display: flex; flex-wrap: wrap; column-gap: 12px; margin-top: 14px; font-size: var(--fs-s); color: var(--ink-3); }
 .checked span { white-space: nowrap; }
-.deck { margin-top: 20px; max-width: 38em; font-size: var(--fs-body); font-weight: 600; line-height: 1.75; text-wrap: pretty; }
+.deck { margin-top: 18px; max-width: 38em; font-size: 18px; font-weight: 500; line-height: 1.7; color: #2e323a; text-wrap: pretty; }
 
-/* ---- 핵심 1분: 읽기만 한다 ---- */
-.quick { margin-top: 40px; }
-.quick ul { margin-top: 8px; }
-.quick li, .points li { position: relative; margin-top: 8px; padding-left: 18px; }
-.quick li::before, .points li::before {
+/* ---- 핵심 1분: 번호를 단 줄 목록. 읽기만 한다 ---- */
+.quick { margin-top: 40px; border-top: 3px solid var(--ink); padding-top: 12px; }
+.quick ul { margin-top: 4px; counter-reset: quick; }
+.quick li {
+  counter-increment: quick; position: relative; padding: 11px 0 11px 30px;
+  font-size: 16px; line-height: 1.6; border-bottom: 1px solid var(--line);
+}
+.quick li:last-child { border-bottom: 0; }
+.quick li::before {
+  content: counter(quick); position: absolute; left: 2px; top: 11px;
+  font-family: var(--serif); font-weight: 700; color: var(--ink-3);
+}
+.points li { position: relative; margin-top: 8px; padding-left: 18px; }
+.points li::before {
   content: ""; position: absolute; left: 3px; top: calc(.875em - 2.5px);
   width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3);
 }
 
-/* ---- 분야별 기사: 분야 이름은 그 분야 목록으로 가는 링크 ---- */
-.sec { margin-top: 48px; }
-.body > .sec:first-child { margin-top: 40px; }
-.sec h2 a { display: inline-block; padding: 8px 0; color: var(--ink); }
+/* ---- 분야별 기사: 분야 이름은 그 분야 목록으로 가는 링크. 분야마다 굵은 선으로 시작한다 ---- */
+.sec { margin-top: 56px; border-top: 3px solid var(--ink); }
+.body > .sec:first-child { margin-top: 48px; }
+.sec h2 a { display: inline-block; padding: 10px 0 6px; color: var(--ink); }
 .sec h2 a::after { content: " ›"; color: var(--link); }
 .sec h2 a:hover { color: var(--link-strong); }
 .sec .rows { margin-top: 4px; }
 
 /* ---- 브리핑의 기사: 누르지 않아도 다 읽도록 제목 아래에 본문을 모두 펼친다.
    제목은 기사 페이지(공유용 주소)로 가는 링크라 청록색이다 ---- */
-.item { padding: 12px 0 28px; border-top: 1px solid var(--line); }
-.sec h2 + .item { margin-top: 4px; }
-.item h3 { font-size: var(--fs-body); font-weight: 700; line-height: 1.5; letter-spacing: -0.01em; }
+.item { padding: 8px 0 32px; border-top: 1px solid var(--line); }
+.sec h2 + .item { margin-top: 2px; border-top: 0; }
+.item h3 { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.42; letter-spacing: -0.025em; text-wrap: balance; }
 .item h3 a { display: block; padding: 8px 0; }
-.item .part { margin-top: 12px; }
-.item .part:first-of-type { margin-top: 4px; }
+.item .part { margin-top: 14px; }
+.item .part:first-of-type { margin-top: 6px; }
 .item .part h4 { margin-bottom: 2px; font-size: var(--fs-m); font-weight: 700; line-height: 1.5; color: var(--ink-3); }
 .item .src { margin-top: 12px; }
 
-/* ---- 다른 페이지로 가는 줄: 머리글(작게), 제목(청록), 한 줄. 사이트의 모든 목록이 이 모양이다 ---- */
+/* ---- 다른 페이지로 가는 줄: 머리글(작게), 제목(청록 명조), 한 줄. 사이트의 모든 목록이 이 모양이다 ---- */
 .rows { border-bottom: 1px solid var(--line); }
 .rows li { border-top: 1px solid var(--line); }
 .rows a { position: relative; display: block; padding: 14px 28px 14px 0; color: var(--ink); }
@@ -147,19 +171,19 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 }
 .rows a:hover { text-decoration: none; background: var(--wash); }
 .rows .meta { display: block; font-size: var(--fs-m); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.rows .t { display: block; font-size: var(--fs-body); font-weight: 700; line-height: 1.5; letter-spacing: -0.01em; color: var(--link); }
+.rows .t { display: block; font-family: var(--serif); font-size: 18px; font-weight: 700; line-height: 1.5; letter-spacing: -0.02em; color: var(--link); }
 .rows a:hover .t { color: var(--link-strong); text-decoration: underline; text-underline-offset: 4px; }
 .rows .line { display: block; margin-top: 2px; font-size: var(--fs-m); line-height: 1.65; color: var(--ink-2); }
 
 /* ---- 시장: 기준별로 묶은 한 곳. 이름과 값 / 막대 / 등락 ---- */
 .market { font-variant-numeric: tabular-nums; }
-.mgroup { margin-top: 16px; }
+.mgroup { margin-top: 14px; }
 .mgroup h3 { padding-bottom: 6px; font-size: var(--fs-s); font-weight: 600; line-height: 1.5; color: var(--ink-3); border-bottom: 1px solid var(--line); }
-.mrows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mrows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .mrows.bars li { grid-template-columns: 7.5em minmax(0, 1fr) auto; }
 .mrows .n b { display: block; font-size: var(--fs-m); font-weight: 600; line-height: 1.4; color: var(--ink-2); }
 .mrows .n small { display: block; font-size: var(--fs-s); line-height: 1.5; color: var(--ink-3); }
-.mrows .v { font-size: var(--fs-m); font-weight: 700; color: var(--ink); }
+.mrows .v { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
 .mrows .x { display: block; }
 .mrows .c { font-size: var(--fs-m); font-weight: 700; text-align: right; white-space: nowrap; }
 .track { position: relative; height: 12px; background: linear-gradient(var(--ink-3), var(--ink-3)) center / 1px 100% no-repeat; }
@@ -186,12 +210,12 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .corrections li + li { margin-top: 6px; }
 .corrections time { font-weight: 700; }
 .corrections + .pager { margin-top: 48px; }
-.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 16px; border-top: 3px solid var(--ink); }
 .pager a { display: block; padding-bottom: 8px; }
 .pager .prev { grid-column: 1; }
 .pager .next { grid-column: 2; text-align: right; }
 .pager span { display: block; font-size: var(--fs-m); color: var(--ink-3); }
-.pager b { display: block; font-size: var(--fs-body); line-height: 1.5; text-wrap: balance; }
+.pager b { display: block; font-family: var(--serif); font-size: var(--fs-body); line-height: 1.5; text-wrap: balance; }
 @media (max-width: 520px) {
   .pager { grid-template-columns: 1fr; }
   .pager .next { grid-column: 1; text-align: left; }
@@ -201,18 +225,21 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .kicker { display: flex; flex-wrap: wrap; column-gap: 16px; margin-bottom: 4px; font-size: var(--fs-m); }
 .kicker a { display: inline-block; padding: 10px 0; }
 .kicker a:first-child { font-weight: 700; }
-.part { margin-top: 28px; }
-.part h2 { margin-bottom: 4px; font-size: var(--fs-body); font-weight: 700; line-height: 1.5; }
-.part p { max-width: 38em; text-wrap: pretty; }
-.part.why p, .part.recheck p { color: var(--ink-2); }
+.part { margin-top: 32px; }
+.part h2 { margin-bottom: 6px; font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: -0.02em; }
+.part p { max-width: 38em; line-height: 1.85; text-wrap: pretty; }
+.part.why p { color: var(--ink-2); }
+.part.recheck { padding: 16px 20px; background: var(--wash); }
+.part.recheck h2, .part.recheck h4 { font-size: var(--fs-body); color: var(--ink); }
+.part.recheck p { color: #2e323a; }
 .src { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 14px; margin-top: 20px; font-size: var(--fs-m); color: var(--ink-3); }
 .src a { display: inline-block; padding: 10px 0; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-.others { margin-top: 56px; }
+.others { margin-top: 56px; border-top: 3px solid var(--ink); padding-top: 12px; }
 .others .rows { margin-top: 8px; }
 
 /* ---- 날짜별, 분야별, 고정 페이지 ---- */
 .body > .rows:first-child { margin-top: 24px; }
-.month { margin-top: 32px; }
+.month { margin-top: 36px; border-top: 3px solid var(--ink); padding-top: 12px; }
 .month .rows { margin-top: 8px; }
 .doc { margin-top: 40px; }
 .doc p { margin-top: 12px; }
@@ -221,10 +248,12 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .more a { display: inline-block; padding: 11px 0; }
 .more a::after { content: " ›"; }
 
-/* ---- 맨 아래 ---- */
-footer { margin-top: 96px; border-top: 1px solid var(--line); }
-footer .wrap { padding-block: 24px 52px; font-size: var(--fs-m); line-height: 1.7; color: var(--ink-3); }
-footer .meta { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; }
+/* ---- 맨 아래: 굵은 선, 명조 사이트 이름 ---- */
+footer { margin-top: 96px; }
+footer .wrap { padding-block: 0 52px; font-size: var(--fs-s); line-height: 1.7; color: var(--ink-3); }
+footer .wrap::before { content: ""; display: block; height: 3px; margin-bottom: 20px; background: var(--ink); }
+footer .meta { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 20px; font-size: var(--fs-m); }
+footer .meta > span:first-child { font-family: var(--serif); font-size: var(--fs-h2); font-weight: 900; letter-spacing: -0.03em; color: var(--ink); }
 footer .meta a { display: inline-block; padding: 10px 8px; margin-inline: -8px; }
 footer p + p { margin-top: 4px; }
 

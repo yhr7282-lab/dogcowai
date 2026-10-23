@@ -4,12 +4,11 @@
 content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), content/pages/*.json (고정 페이지)에서
 아래 페이지와 404, sitemap.xml, robots.txt, feed.xml 을 만든다.
 
-    /                       홈: 소개, 오늘의 주요 뉴스
-    /news/                  날짜별 브리핑 목록
-    /news/날짜/              하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사 목록, 이전 판에 실린 기사
+    /                       홈: 짧은 소개, 최신 브리핑과 그 기사 전부
+    /news/                  날짜별 브리핑: 날마다 헤드라인·요약·핵심 1분·기사 목록을 최신순으로 쌓는다
+    /news/날짜/              하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사, 이전 판에 실린 기사
     /news/날짜/기사id/        기사 하나
-    /topic/, /topic/분야id/   분야 목록, 분야별 기사 목록
-    /소개 등                 고정 페이지
+    /이름/                   고정 페이지 (content/pages/*.json 이 있을 때만. 지금은 없다)
 
     python3 tools/build.py            # 저장소 루트에 생성
     python3 tools/build.py --check    # 검증만 하고 파일은 쓰지 않음
@@ -50,9 +49,8 @@ SLUG = re.compile(r"^[a-z0-9-]+$")
 CHECKED_AT = re.compile(r"^(\d{2}):(\d{2}) KST$")
 HOME_LABEL = "홈"          # 메뉴에 쓰는 이름
 NEWS_LABEL = "날짜별"
-TOPIC_LABEL = "분야별"
 NEWS_TITLE = "날짜별 브리핑"  # 그 페이지의 제목
-TOPIC_TITLE = "분야별 기사"
+RETIRED_DIRS = ("topic", "about")  # 없앤 페이지(분야별·소개, 2026-10-24). 이번 생성에 없으면 생성 파일만 지운다
 RESERVED_IDS = {"brief", "top-title", "market-title", "quick-title", "recent-title", "topics-title",
                 "today-title", "intro-title", "related-title", "others-title", "h-sched", "h-absent",
                 "h-corrections"}
@@ -645,17 +643,17 @@ def render_story(item, href):
             % (esc(item["id"]), href, inline(item["title"]), article_body(item, level=4)))
 
 
-def render_sections(day, root, here):
-    """분야별 기사. 분야 이름은 그 분야의 모든 기사 목록으로 가는 링크이고, 그 아래에 기사마다 내용을 모두 펼쳐 둔다.
-    root: 사이트 루트까지의 상대 경로. here: 이 페이지에서 그날 브리핑 폴더까지의 상대 경로.
+def render_sections(day, here):
+    """분야별 기사. 분야 이름(링크 아님) 아래에 기사마다 내용을 모두 펼쳐 둔다.
+    here: 이 페이지에서 그날 브리핑 폴더까지의 상대 경로.
     입력의 lede(분야 요약)와 points 는 화면에 내지 않는다."""
     out = []
     for sec in visible_sections(day):
         sid = esc(sec["id"])
         stories = "\n".join(render_story(i, "%s%s/index.html" % (here, esc(i["id"]))) for i in ordered_items(sec))
         out.append('<section class="sec" id="%s" aria-labelledby="h-%s">'
-                   '<h2 id="h-%s"><a href="%stopic/%s/index.html">%s</a></h2>%s</section>'
-                   % (sid, sid, sid, root, sid, inline(sec["title"]), stories))
+                   '<h2 id="h-%s">%s</h2>%s</section>'
+                   % (sid, sid, sid, inline(sec["title"]), stories))
     return "\n".join(out)
 
 
@@ -727,7 +725,7 @@ def _stamps(day):
     return '<p class="checked">%s</p>' % "".join(out) if out else ""
 
 
-def render_briefing(day, older, newer, *, root, here, days_prefix, intro=""):
+def render_briefing(day, older, newer, *, here, days_prefix, intro=""):
     """브리핑 본문. 홈(intro 가 붙는다)과 날짜 페이지가 함께 쓴다.
     좁은 화면에서 읽는 순서: 소개, 날짜·헤드라인·요약, 핵심 1분, 분야별 기사, 이전 판에 실린 기사(있을 때),
     시장·다음 일정, 정정, 이전·다음. 넓은 화면에서는 시장·다음 일정이 오른쪽 칸(rail)으로 간다."""
@@ -737,7 +735,7 @@ def render_briefing(day, older, newer, *, root, here, days_prefix, intro=""):
             % (long_date(day["date"]), edition, inline(day["headline"]), inline(day["summary"]), _stamps(day)))
     rail = render_market(day) + render_side(day)
     tail = render_corrections(day) + render_pager(older, newer, days_prefix)
-    body = "\n".join(p for p in (render_sections(day, root, here), render_earlier(day, here)) if p)
+    body = "\n".join(p for p in (render_sections(day, here), render_earlier(day, here)) if p)
     return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s%s</div><div class="body">%s</div>%s%s</main>'
             % (" has-rail" if rail else "", intro, head, render_quick(day), body,
                '<aside class="rail" aria-label="시장과 일정">%s</aside>' % rail if rail else "",
@@ -836,8 +834,7 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
     head.append('<link rel="alternate" type="application/atom+xml" title="%s" href="%sfeed.xml">'
                 % (esc(site["title"]), prefix))
     menu = [("home", HOME_LABEL, prefix + "index.html"),
-            ("news", NEWS_LABEL, prefix + "news/index.html"),
-            ("topic", TOPIC_LABEL, prefix + "topic/index.html")]
+            ("news", NEWS_LABEL, prefix + "news/index.html")]
     menu += [(p["slug"], p.get("nav") or p["title"], "%s%s/index.html" % (prefix, p["slug"])) for p in pages]
 
     def toplink(key, label, href):
@@ -876,7 +873,7 @@ def render_home(days, site, pages):
     latest = days[0]
     about = next((p for p in pages if p["slug"] == "about"), None)
     content = render_briefing(latest, days[1] if len(days) > 1 else None, None,
-                              root="", here="news/%s/" % latest["date"], days_prefix="news/",
+                              here="news/%s/" % latest["date"], days_prefix="news/",
                               intro=render_intro(site, "about/index.html" if about else ""))
     website = {"@type": "WebSite", "name": site["title"], "url": site["base_url"] + "/", "inLanguage": "ko-KR",
                "publisher": site_org(site)}
@@ -894,19 +891,18 @@ def render_day(day, older, newer, site, pages):
         site, pages,
         title="%s%s | %s" % (long_date(day["date"]), edition, site["title"]),
         description=plain(day["summary"]), prefix="../../", path="/news/%s/" % day["date"],
-        content=render_briefing(day, older, newer, root="../../", here="", days_prefix="../"),
+        content=render_briefing(day, older, newer, here="", days_prefix="../"),
         og_type="article", current="news", published=published_at(day), modified=modified_value(day),
         trail=[(HOME_LABEL, "../../index.html"), (NEWS_LABEL, "../index.html"), (day_label(day), None)])
 
 
 def render_article(day, sec, item, site, pages):
-    """기사 하나. 맨 위에 분야와 실린 브리핑(둘 다 링크), 제목, 확인·수정 시각, 요약 한 줄(teaser 가 있을 때만),
+    """기사 하나. 맨 위에 분야 이름과 실린 브리핑(링크), 제목, 확인·수정 시각, 요약 한 줄(teaser 가 있을 때만),
     본문, 출처, 끝에 이 브리핑의 다른 기사. 검색·공유용 설명문도 teaser 가 있으면 그것을 쓴다."""
     root = "../../../"
-    sid = esc(sec["id"])
     path = "/news/%s/%s/" % (day["date"], item["id"])
-    top = ('<p class="kicker"><a href="%stopic/%s/index.html">%s</a><a href="../index.html">%s</a></p>'
-           % (root, sid, inline(sec["title"]), edition_label(day)))
+    top = ('<p class="kicker"><span>%s</span><a href="../index.html">%s</a></p>'
+           % (inline(sec["title"]), edition_label(day)))
     others = [(s, i) for s in visible_sections(day) for i in ordered_items(s) if i is not item]
     others_html = ""
     if others:
@@ -939,55 +935,33 @@ def render_article(day, sec, item, site, pages):
                      modified=modified_value(day))
 
 
+def render_archive_day(day):
+    """날짜별 브리핑 페이지의 하루 한 칸: 날짜·판, 헤드라인, 요약, 핵심 1분, 그날 실린 기사 목록(이전 판 기사 포함).
+    날짜·판과 헤드라인은 그날 브리핑으로, 기사 줄은 기사 페이지로 간다."""
+    d = day["date"]
+    hid = "h-day-%s" % d
+    quick = day.get("quick") or []
+    quick_html = ('<div class="quick"><h3>핵심 1분</h3><ul>%s</ul></div>'
+                  % "".join("<li>%s</li>" % inline(q["text"]) for q in quick)) if quick else ""
+    lines = [row("%s/%s/index.html" % (d, esc(i["id"])), i["title"], meta=inline(s["title"]), line=list_line(i))
+             for s in visible_sections(day) for i in ordered_items(s)]
+    for group, s, i in earlier_items(day):
+        lines.append(row("%s/%s/index.html" % (d, esc(i["id"])), i["title"],
+                         meta="%s · %s" % (inline(s["title"]), inline(group["edition"])), line=list_line(i)))
+    return ('<section class="day" id="day-%s" aria-labelledby="%s">'
+            '<p class="dateline"><a href="%s/index.html">%s</a></p>'
+            '<h2 id="%s"><a href="%s/index.html">%s</a></h2><p class="summary">%s</p>%s%s</section>'
+            % (d, hid, d, edition_label(day), hid, d, inline(day["headline"]), inline(day["summary"]),
+               quick_html, rows(lines) if lines else ""))
+
+
 def render_archive(days, site, pages):
-    """날짜별 브리핑 목록. 줄마다 날짜·판과 헤드라인만."""
-    groups = {}
-    for d in days:  # days 는 최신순이라 월도 최신순으로 쌓인다
-        groups.setdefault(month_label(d["date"]), []).append(d)
-    months = "".join('<section class="month"><h2>%s</h2>%s</section>'
-                     % (label, rows([row("%s/index.html" % d["date"], d["headline"], meta=edition_label(d))
-                                     for d in ds]))
-                     for label, ds in groups.items())
+    """날짜별 브리핑. 날마다의 브리핑(헤드라인, 요약, 핵심 1분, 기사 목록)을 최신순으로 한 페이지에 쌓는다."""
+    body = "\n".join(render_archive_day(d) for d in days)
     return wrap_page(site, pages, title="%s | %s" % (NEWS_TITLE, site["title"]),
-                     description="%s의 날짜별 브리핑 목록" % site["title"],
-                     prefix="../", path="/news/", content=_title_page(NEWS_TITLE, months), current="news",
+                     description="%s의 날짜별 브리핑. 날마다 헤드라인, 핵심 1분, 실린 기사를 최신순으로 모았다" % site["title"],
+                     prefix="../", path="/news/", content=_title_page(NEWS_TITLE, body), current="news",
                      trail=[(HOME_LABEL, "../index.html"), (NEWS_LABEL, None)])
-
-
-def collect_topics(days):
-    """분야 id 별로 모든 날짜의 기사를 모은다 (이전 판 기사 포함). 이름은 가장 최근 날짜의 것을 쓴다. days 는 최신순."""
-    topics = {}
-    for day in days:
-        for sec in visible_sections(day):
-            topic = topics.setdefault(sec["id"], {"id": sec["id"], "title": sec["title"], "rows": []})
-            topic["rows"].extend((day, item) for item in ordered_items(sec))
-        for _, sec, item in earlier_items(day):
-            topic = topics.setdefault(sec["id"], {"id": sec["id"], "title": sec["title"], "rows": []})
-            topic["rows"].append((day, item))
-    return list(topics.values())
-
-
-def render_topic_index(topics, site, pages):
-    """분야 목록. 줄마다 분야 이름과 기사 수만."""
-    body = rows([row("%s/index.html" % esc(t["id"]), t["title"], line="기사 %d건" % len(t["rows"])) for t in topics])
-    return wrap_page(site, pages, title="%s | %s" % (TOPIC_TITLE, site["title"]),
-                     description="%s의 분야별 기사 목록" % site["title"],
-                     prefix="../", path="/topic/", content=_title_page(TOPIC_TITLE, body),
-                     current="topic", trail=[(HOME_LABEL, "../index.html"), (TOPIC_LABEL, None)])
-
-
-def render_topic(topic, site, pages):
-    """분야 하나의 기사 목록. 줄마다 날짜, 제목, 한 줄."""
-    label = "%s 기사" % plain(topic["title"])
-    body = rows([row("../../news/%s/%s/index.html" % (day["date"], esc(item["id"])), item["title"],
-                     meta=date_meta(day["date"]), line=list_line(item))
-                 for day, item in topic["rows"]])
-    return wrap_page(site, pages, title="%s | %s" % (label, site["title"]),
-                     description="%s에 실린 %s 기사 목록" % (site["title"], plain(topic["title"])),
-                     prefix="../../", path="/topic/%s/" % topic["id"],
-                     content=_title_page("%s 기사" % inline(topic["title"]), body), current="topic",
-                     trail=[(HOME_LABEL, "../../index.html"), (TOPIC_LABEL, "../index.html"),
-                            (plain(topic["title"]), None)])
 
 
 def render_static(page, site, pages):
@@ -1132,15 +1106,19 @@ def dropped_articles(out, days):
     return found
 
 
-def remove_stale(out, days, topics):
-    """내용이 사라진 분야 폴더, 철회한 기사의 페이지, 기사 페이지가 남지 않은 지난 날짜 폴더를 지운다.
+def _only_generated_tree(path):
+    """폴더 안(하위 폴더 포함)에 이 프로그램이 만든 index.html 말고는 아무것도 없는가."""
+    return all(p.is_dir() or p.name == "index.html" for p in path.rglob("*"))
+
+
+def remove_stale(out, days, outputs):
+    """없앤 페이지의 폴더(RETIRED_DIRS), 철회한 기사의 페이지, 기사 페이지가 남지 않은 지난 날짜 폴더를 지운다.
     이 프로그램이 만든 파일만 지운다. 게시한 기사가 그냥 빠진 경우는 그 전에 생성을 멈춘다 (dropped_articles)."""
-    topic_dir = out / "topic"
-    keep_topics = {t["id"] for t in topics}
-    if topic_dir.is_dir():
-        for child in sorted(topic_dir.iterdir()):
-            if child.is_dir() and child.name not in keep_topics and _only_generated(child):
-                shutil.rmtree(child)
+    made = {rel.split("/", 1)[0] for rel in outputs}
+    for name in RETIRED_DIRS:
+        retired = out / name
+        if name not in made and retired.is_dir() and _only_generated_tree(retired):
+            shutil.rmtree(retired)
 
     gone = {d["date"]: withdrawn_ids(d) for d in days}
     for child in sorted((out / "news").iterdir()):
@@ -1174,12 +1152,8 @@ def build(root, out=None, check_only=False):
         raise BuildError("게시한 기사 %d건의 주소가 내용에서 빠졌습니다: %s — 새 판에서 뺀 기사는 earlier(이전 판 기사)로 "
                          "옮기고, 내려야 하는 기사만 withdrawn 에 적으세요" % (len(dropped), ", ".join(dropped)))
 
-    topics = collect_topics(days)
     outputs = {"index.html": render_home(days, site, pages),
-               "news/index.html": render_archive(days, site, pages),
-               "topic/index.html": render_topic_index(topics, site, pages)}
-    for topic in topics:
-        outputs["topic/%s/index.html" % topic["id"]] = render_topic(topic, site, pages)
+               "news/index.html": render_archive(days, site, pages)}
     for i, day in enumerate(days):
         newer = days[i - 1] if i > 0 else None
         older = days[i + 1] if i + 1 < len(days) else None
@@ -1206,7 +1180,7 @@ def build(root, out=None, check_only=False):
         path.parent.mkdir(parents=True, exist_ok=True)
         if not path.exists() or path.read_text(encoding="utf-8") != text:
             path.write_text(text, encoding="utf-8")
-    remove_stale(out, days, topics)
+    remove_stale(out, days, outputs)
     return outputs
 
 

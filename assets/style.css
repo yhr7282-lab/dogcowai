@@ -142,12 +142,10 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
   width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3);
 }
 
-/* ---- 분야별 기사: 분야 이름은 그 분야 목록으로 가는 링크. 분야마다 굵은 선으로 시작한다 ---- */
+/* ---- 분야별 기사: 분야 이름(누르는 곳 아님). 분야마다 굵은 선으로 시작한다 ---- */
 .sec { margin-top: 56px; border-top: 3px solid var(--ink); }
 .body > .sec:first-child { margin-top: 48px; }
-.sec h2 a { display: inline-block; padding: 10px 0 6px; color: var(--ink); }
-.sec h2 a::after { content: " ›"; color: var(--link); }
-.sec h2 a:hover { color: var(--link-strong); }
+.sec h2 { padding: 10px 0 6px; }
 .sec .rows { margin-top: 4px; }
 
 /* ---- 브리핑의 기사: 누르지 않아도 다 읽도록 제목 아래에 본문을 모두 펼친다.
@@ -224,7 +222,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 /* ---- 기사 ---- */
 .kicker { display: flex; flex-wrap: wrap; column-gap: 16px; margin-bottom: 4px; font-size: var(--fs-m); }
 .kicker a { display: inline-block; padding: 10px 0; }
-.kicker a:first-child { font-weight: 700; }
+.kicker span { display: inline-block; padding: 10px 0; font-weight: 700; color: var(--ink-2); }
 .part { margin-top: 32px; }
 .part h2 { margin-bottom: 6px; font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: -0.02em; }
 .part p { max-width: 38em; line-height: 1.85; text-wrap: pretty; }
@@ -237,7 +235,18 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .others { margin-top: 56px; border-top: 3px solid var(--ink); padding-top: 12px; }
 .others .rows { margin-top: 8px; }
 
-/* ---- 날짜별, 분야별, 고정 페이지 ---- */
+/* ---- 날짜별 브리핑: 날마다 한 칸씩 최신순으로 쌓는다. 날짜·판과 헤드라인은 그날 브리핑으로 간다 ---- */
+.day { margin-top: 40px; padding-top: 14px; border-top: 3px solid var(--ink); }
+.body > .day:first-child { margin-top: 32px; }
+.day .dateline { margin-bottom: 6px; }
+.day .dateline a { display: inline-block; padding: 6px 0; }
+.day h2 { font-family: var(--serif); font-size: clamp(22px, 4.6vw, 28px); font-weight: 700; line-height: 1.38; letter-spacing: -0.025em; text-wrap: balance; }
+.day .summary { margin-top: 12px; font-size: var(--fs-body); }
+.day .quick { margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--ink); }
+.day .quick h3 { font-size: var(--fs-m); font-weight: 700; color: var(--ink-2); }
+.day .rows { margin-top: 20px; }
+
+/* ---- 고정 페이지 ---- */
 .body > .rows:first-child { margin-top: 24px; }
 .month { margin-top: 36px; border-top: 3px solid var(--ink); padding-top: 12px; }
 .month .rows { margin-top: 8px; }

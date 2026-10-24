@@ -288,7 +288,7 @@ class BuildOutputTests(SiteCase):
             'id="quick-title"', 'id="economy"', 'id="auto"',
             'id="h-corrections"', 'class="pager"')]
         self.assertEqual(order, sorted(order))
-        self.assertIn("2026년 10월 13일 화요일 오후판", page)
+        self.assertIn("2026년 10월 13일 화요일", page)
 
     def test_briefing_shows_every_story_in_full_without_clicking(self):
         page = self.day_page(make_day())
@@ -414,7 +414,7 @@ class BuildOutputTests(SiteCase):
         top = page[page.index('class="kicker"'):page.index("</p>", page.index('class="kicker"'))]
         self.assertIn('<span>경제</span>', top)
         self.assertNotIn("topic/", top)
-        self.assertIn('<a href="../index.html">10월 13일 화요일 오후판</a>', top)
+        self.assertIn('<a href="../index.html">10월 13일 화요일 브리핑</a>', top)
         self.assertLess(page.index('class="kicker"'), page.index('<h1 id="top-title">'))
         stamps = page[page.index('class="checked"'):]
         self.assertIn("17:02 기준", stamps[:stamps.index("</p>")])
@@ -481,7 +481,7 @@ class BuildOutputTests(SiteCase):
         self.build()
         archive = self.read("news/index.html")
         day = archive[archive.index('id="day-2026-10-13"'):]
-        self.assertIn('<p class="dateline">10월 13일 화요일 오후판</p>', day)
+        self.assertIn('<p class="dateline">10월 13일 화요일 브리핑</p>', day)
         self.assertIn('<a href="2026-10-13/index.html">2026-10-13 헤드라인</a></h2>', day)
         self.assertIn("요약 문장입니다.", day)
         self.assertIn('href="2026-10-13/a-one/index.html"', day)
@@ -611,7 +611,6 @@ class PublishedAddressTests(SiteCase):
         self.publish_morning_then(self.afternoon(self.morning()))
         page = self.read("news/2026-10-13/a-two/index.html")
         self.assertIn("두 번째 사실.", page)
-        self.assertIn("화요일 오전판", page)
         self.assertIn("05:06 기준", page)
         self.assertIn('"datePublished": "2026-10-13T05:06:00+09:00"', page)
 
@@ -619,7 +618,6 @@ class PublishedAddressTests(SiteCase):
         self.publish_morning_then(self.afternoon(self.morning()))
         page = self.read("news/2026-10-13/a-one/index.html")
         self.assertIn("기사 하나 오후 정정", page)
-        self.assertIn("화요일 오후판", page)
         self.assertTrue(self.exists("news/2026-10-13/a-three/index.html"))
 
     def test_briefing_merges_earlier_articles_into_their_sections_in_full(self):
@@ -636,7 +634,7 @@ class PublishedAddressTests(SiteCase):
             two = sec[sec.index('id="a-two"'):]
             self.assertIn(href, two)
             self.assertIn("두 번째 사실.", two)
-            self.assertIn("오전판", two[:two.index("두 번째 사실.")])
+            self.assertNotIn("오전판", two)
 
     def test_earlier_section_missing_from_this_edition_still_shows(self):
         day = self.afternoon(self.morning())
@@ -648,6 +646,15 @@ class PublishedAddressTests(SiteCase):
         self.assertLess(page.index('id="economy"'), page.index('id="auto"'))
         self.assertIn("차 사실.", page[page.index('id="auto"'):])
 
+    def test_edition_names_are_not_shown_anywhere(self):
+        """오전판·오후판은 한 브리핑으로 합쳐 보여 주므로 화면·제목·피드 어디에도 판 이름을 쓰지 않는다 (2026-10-24)."""
+        self.publish_morning_then(self.afternoon(self.morning()))
+        for path in sorted(self.root.rglob("*")):
+            if path.suffix in (".html", ".xml") and "content" not in path.parts:
+                text = path.read_text(encoding="utf-8")
+                for word in ("오전판", "오후판"):
+                    self.assertNotIn(word, text, str(path.relative_to(self.root)))
+
     def test_date_picker_on_archive_and_day_pages(self):
         """날짜별 브리핑과 하루치 브리핑 맨 위의 날짜 선택 칸: 고르면 그날 브리핑(오전·오후판을 합친 전문)으로 간다."""
         self.write_day(make_day("2026-10-12"))
@@ -657,7 +664,7 @@ class PublishedAddressTests(SiteCase):
         self.assertIn('value="2026-10-13/index.html"', sel)
         self.assertIn('value="2026-10-12/index.html"', sel)
         self.assertLess(sel.index("2026-10-13/"), sel.index("2026-10-12/"))
-        self.assertIn("오전판·오후판", sel)
+        self.assertNotIn("판", sel)
         day = self.read("news/2026-10-12/index.html")
         sel = day[day.index('<select id="pick-date"'):day.index("</select>")]
         self.assertIn('<option value="../2026-10-12/index.html" selected>', sel)
@@ -1425,7 +1432,7 @@ class NewsV2Tests(SiteCase):
     # ---- 기사 페이지: 브리핑으로 돌아가는 줄
     def test_article_page_has_a_way_back_to_its_briefing(self):
         page = self.article_page(make_day(), "a-one")
-        self.assertIn('<p class="back"><a href="../index.html">10월 13일 화요일 오후판 전체 보기</a></p>', page)
+        self.assertIn('<p class="back"><a href="../index.html">10월 13일 화요일 브리핑 전체 보기</a></p>', page)
 
     # ---- 개인 문맥 규칙과 주의 단어
     RULES = dict(SITE, blocklist=[],

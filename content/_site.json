@@ -24,5 +24,6 @@
   "base_url": "http://dogcowai.com",
   "require_sources_from": "2026-10-13",
   "market_max_age_days": 4,
-  "v2_from": "2026-10-24"
+  "v2_from": "2026-10-24",
+  "style_from": "2026-10-13"
 }

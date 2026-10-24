@@ -5,8 +5,8 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 아래 페이지와 404, sitemap.xml, robots.txt, feed.xml 을 만든다.
 
     /                       홈: 짧은 소개, 최신 브리핑과 그 기사 전부
-    /news/                  날짜별 브리핑: 날마다 헤드라인·요약·핵심 1분·기사 목록을 최신순으로 쌓는다
-    /news/날짜/              하루치 브리핑: 헤드라인, 핵심 1분, 분야별 기사, 이전 판에 실린 기사
+    /news/                  날짜별 브리핑: 날마다 헤드라인·요약·기사 목록을 최신순으로 쌓는다
+    /news/날짜/              하루치 브리핑: 헤드라인, 주요 뉴스, 분야별 기사, 이전 판에 실린 기사
     /news/날짜/기사id/        기사 하나
     /이름/                   고정 페이지 (content/pages/*.json 이 있을 때만. 지금은 없다)
 
@@ -16,7 +16,7 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 
 규칙 (자세한 형식은 docs/content-format.md)
 - 공개 입력에는 개인 전용 내용을 둘 수 없다: 'actions', 'side.career', 'private' 표시는 오류.
-- 기사에는 고유 id 와 출처가 있어야 한다. 핵심 1분은 기사에 연결되고 숫자가 기사와 맞아야 한다.
+- 기사에는 고유 id 와 출처가 있어야 한다. 주요 뉴스(quick)는 기사에 연결되고 숫자가 기사와 맞아야 한다.
 - 게시한 기사 주소는 지우지 않는다. 같은 날짜의 새 판에서 뺀 기사는 earlier(이전 판 기사)로 옮기고,
   내리는 기사는 withdrawn 에 적는다. 이미 만든 기사 페이지가 둘 다에 없으면 생성을 멈춘다.
 - 날짜·기준 시각·일정·시장 수치의 기준일을 검사한다.
@@ -53,8 +53,19 @@ NEWS_TITLE = "날짜별 브리핑"  # 그 페이지의 제목
 ITEM_STATUS = ("신규", "진전", "보완")   # 노션 v2 기록 줄의 상태. 화면에는 진전·보완만 작은 글자로 보인다
 SHOWN_STATUS = ("진전", "보완")
 BASIS_MAX = 24                            # basis(전망·잠정·단일 보도 등 근거 문구)의 최대 글자 수
-SUMMARY_MAX = 110
-RELATED_MAX = 5                           # 기사 페이지의 '이 브리핑의 다른 기사' 줄 수 (같은 분야 먼저)                         # v2 판부터 summary(대표 제목의 짧은 의미)의 최대 글자 수
+SUMMARY_MAX = 110                         # v2 판부터 summary(대표 제목의 짧은 의미)의 최대 글자 수
+RELATED_MAX = 5                           # 기사 페이지의 '이 브리핑의 다른 기사' 줄 수 (같은 분야 먼저)
+# 기사체 점검 규칙: (이름, 정규식, 대상 칸). 제작 단계가 'AI 티'나 점검표·훈계 말투를 내지 않게 한다.
+STYLE_RULES = [
+    ("굵게 표시(**)", r"\*\*", ("headline", "summary", "quick", "title", "teaser", "facts", "so", "recheck")),
+    ("색 표시는 주요 뉴스 줄에만", r"\{\{(up|down):", ("headline", "summary", "title", "teaser", "facts", "so", "recheck")),
+    ("주요 뉴스 색 표시 안의 부호(+/-)", r"\{\{(up|down):[+\-−]", ("quick",)),
+    ("점검표 말투(~확인한다/~본다)", r"(확인한다|본다)\.?\s*$", ("so", "recheck")),
+    ("훈계 말투(~봐야/해야 한다, ~필요가 있다, ~서는 안 된다)", r"(봐야|해야|읽어야) 한다\.|필요가 있다\.|서는 안 된다\.",
+     ("summary", "teaser", "so", "recheck")),
+    ("편집 메모(기사 참고·일반적인 설명 등)", r"기사 참고\)|일반적인 설명\)|이번에 확인한 자료", ("summary", "teaser", "facts", "so", "recheck")),
+    ("할 일 메모(일정 설명의 ~확인)", r"확인\.?\s*$", ("schedule",)),
+]
 # 공개 입력(content/날짜.json)에 쓸 수 있는 항목. 여기에 없는 항목이 있으면 생성을 멈춘다.
 # 개인 원본의 다른 칸이나 제작용 운영 정보(판 상태·개정·내부 키 등)가 공개 파일에 섞여 들어오지 않게 하려는 것이다.
 ALLOWED = {
@@ -290,6 +301,7 @@ def load_site(root):
     site.setdefault("require_sources_from", "0001-01-01")
     site.setdefault("market_max_age_days", 4)
     site.setdefault("v2_from", "9999-12-31")  # 이 날짜의 판부터 v2 규칙(행별 근거, 짧은 의미, 대표 기사)을 적용한다
+    site.setdefault("style_from", "9999-12-31")  # 이 날짜의 판부터 기사체 점검(STYLE_RULES)을 적용한다
     site.setdefault("context_rules", [])
     site.setdefault("review_terms", [])
     site.setdefault("tagline", "")
@@ -353,6 +365,32 @@ def _check_indicators(ind, where):
         base = r.get("base")
         if base is not None and (not isinstance(base, int) or isinstance(base, bool) or not 0 <= base <= 100):
             raise BuildError("%s: base 는 0~100 정수여야 합니다" % w)
+
+
+def style_problems(day):
+    """기사체 점검. 걸린 곳을 '칸 — 규칙 이름'으로 돌려준다 (원문은 적지 않는다)."""
+    texts = [("headline", "headline", day.get("headline") or ""), ("summary", "summary", day.get("summary") or "")]
+    texts += [("quick", "quick[%d]" % n, q.get("text") or "") for n, q in enumerate(day.get("quick") or [])
+              if isinstance(q, dict)]
+    texts += [("schedule", "side.schedule[%d].desc" % n, row.get("desc") or "")
+              for n, row in enumerate((day.get("side") or {}).get("schedule") or []) if isinstance(row, dict)]
+    groups = [day.get("sections") or []] + [g.get("sections") or [] for g in day.get("earlier") or []]
+    for secs in groups:
+        for sec in secs:
+            for item in sec.get("items") or []:
+                iid = item.get("id", "?")
+                for key in ("title", "teaser", "facts", "so"):
+                    if item.get(key):
+                        texts.append((key, "%s.%s" % (iid, key), item[key]))
+                recheck = item.get("recheck")
+                if isinstance(recheck, dict) and recheck.get("text"):
+                    texts.append(("recheck", "%s.recheck" % iid, recheck["text"]))
+    problems = []
+    for kind, where, text in texts:
+        for name, pattern, kinds in STYLE_RULES:
+            if kind in kinds and re.search(pattern, text):
+                problems.append("%s — %s" % (where, name))
+    return problems
 
 
 def _check_date(value, where):
@@ -518,6 +556,11 @@ def validate_day(day, name_date, filename, site):
             items_by_id[item["id"]] = item
     earlier = _check_earlier(day, filename, date, need_sources, ids, now)
     _check_withdrawn(day, filename, set(items_by_id) | earlier)
+    if day["date"] >= site["style_from"]:
+        problems = style_problems(day)
+        if problems:
+            raise BuildError("%s: 기사체 점검에 걸렸습니다 (docs/prompts/briefing.md 의 '문체'):\n  %s"
+                             % (filename, "\n  ".join(problems)))
     v2 = day["date"] >= site["v2_from"]
     if "indicators" in day:
         _check_indicators(day["indicators"], "%s indicators" % filename)
@@ -526,7 +569,7 @@ def validate_day(day, name_date, filename, site):
     if "lead_ref" in day and day["lead_ref"] not in items_by_id:
         raise BuildError("%s: lead_ref 가 지금 판의 기사를 가리켜야 합니다" % filename)
     if v2 and len(plain(day["summary"]).strip()) > SUMMARY_MAX:
-        raise BuildError("%s: summary 는 %d자 이내로 대표 사건의 의미만 씁니다 (다른 사건은 핵심 1분에)" % (filename, SUMMARY_MAX))
+        raise BuildError("%s: summary 는 %d자 이내로 대표 사건의 의미만 씁니다 (다른 사건은 주요 뉴스(quick)에)" % (filename, SUMMARY_MAX))
     headline = plain(day["headline"]).strip()
     if plain(day["summary"]).strip() == headline:
         raise BuildError("%s: summary 가 headline 과 같은 문장입니다 — 대표 제목의 의미를 따로 쓰세요" % filename)
@@ -536,9 +579,9 @@ def validate_day(day, name_date, filename, site):
         if isinstance(q, dict):
             _check_keys(q, "quick", where)
         if isinstance(q, dict) and plain(q.get("text") or "").strip() == headline:
-            raise BuildError("%s: 핵심 1분 줄이 headline 과 같은 문장입니다" % where)
+            raise BuildError("%s: 주요 뉴스(quick) 줄이 headline 과 같은 문장입니다" % where)
         if not isinstance(q, dict) or not q.get("text") or not q.get("ref"):
-            raise BuildError("%s: 핵심 1분 항목은 {\"text\", \"ref\"} 형태로 기사에 연결해야 합니다" % where)
+            raise BuildError("%s: 주요 뉴스(quick) 항목은 {\"text\", \"ref\"} 형태로 기사에 연결해야 합니다" % where)
         item = items_by_id.get(q["ref"])
         if item is None:
             raise BuildError("%s: ref 가 가리키는 기사가 없습니다" % where)
@@ -650,11 +693,11 @@ def load_pages(root):
 #
 # 페이지는 네 가지다. 같은 정보는 한 곳에만 둔다.
 #   홈      제호 아래 한 줄 소개 + 최신 브리핑 (브리핑 페이지와 같은 구성)
-#   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·뉴스 확인 시각 → 대표 제목 → 짧은 의미
-#           → 핵심 1분(줄마다 본문 기사로 이동) → 다음 일정(넓은 화면에서는 오른쪽 보조 열) → 분야 바로가기 → 분야별 기사 전문
-#           → 이전 판에 실린 기사 → 정정·수정 내역 → 이전·다음 브리핑
-#   기사    분야·실린 판, 제목, 뉴스 확인·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 앞선 기사, 출처,
-#           이 기사의 정정, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
+#   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·기준 시각 → 대표 제목 → 짧은 의미
+#           → 주요 뉴스(줄마다 본문 기사로 이동) → 다음 일정(넓은 화면에서는 오른쪽 보조 열) → 분야 바로가기
+#           → 분야별 기사 전문(사실 문단 → 해설 → 전망 → 관련 기사 → 출처) → 이전 판에 실린 기사 → 바로잡습니다 → 이전·다음
+#   기사    분야·실린 판, 제목, 기준·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 관련 기사, 출처,
+#           바로잡습니다, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
 #   날짜별  날마다 한 칸, 최신순: 날짜·판, 대표 제목, 짧은 요약, 그날 실린 기사 줄 (전문은 다시 싣지 않는다)
 # 철회한 기사의 주소에는 내린 사유만 적은 안내 페이지를 남긴다 (검색 제외).
 # 누를 수 있는 것은 모두 청록색 글자·줄이다. 펼치는 버튼과 스크립트는 없다.
@@ -703,12 +746,12 @@ def render_ticker(day):
     at = datetime.datetime.fromisoformat(ind["as_of"]).astimezone(KST)
     return ('<section class="ticker" aria-labelledby="ticker-title"><h2 id="ticker-title" class="sr">시장 지표</h2>'
             '<div class="tk-pages" role="region" aria-label="시장 지표, 옆으로 넘겨 보기" tabindex="0">%s</div>'
-            '<p class="tk-src">%d월 %d일 %02d:%02d 한국 시간에 가져온 값 · 자료 %s</p></section>'
+            '<p class="tk-src">%d월 %d일 %02d:%02d 기준 · 자료: %s</p></section>'
             % (pages, at.month, at.day, at.hour, at.minute, esc(ind.get("source") or "")))
 
 
 def render_quick(day):
-    """핵심 1분. 줄마다 같은 페이지의 그 기사(#기사id)로 이동한다. 앞의 세 줄은 조금 더 크게 보인다 (class top).
+    """주요 뉴스(quick). 줄마다 같은 페이지의 그 기사(#기사id)로 이동한다. 앞의 세 줄은 조금 더 크게 보인다 (class top).
     줄 수는 입력 그대로다 (중요 기사가 적으면 적은 대로)."""
     items = day.get("quick") or []
     if not items:
@@ -716,7 +759,7 @@ def render_quick(day):
     lis = "".join('<li%s><a href="#%s">%s</a></li>' % (' class="top"' if n < 3 else "", esc(q["ref"]), inline(q["text"]))
                   for n, q in enumerate(items))
     return ('<section class="quick" aria-labelledby="quick-title">'
-            '<h2 id="quick-title">핵심 1분</h2><ol>%s</ol></section>' % lis)
+            '<h2 id="quick-title">주요 뉴스</h2><ol>%s</ol></section>' % lis)
 
 
 def render_jump(day):
@@ -743,13 +786,13 @@ def item_meta(item, day):
 
 
 def render_follows(item, index, days_prefix):
-    """다른 날 후속 기사면 앞선 기사로 가는 줄. days_prefix: 이 페이지에서 news/ 폴더까지의 상대 경로."""
+    """다른 날 후속 기사면 앞선 기사로 가는 '관련 기사' 줄. days_prefix: 이 페이지에서 news/ 폴더까지의 상대 경로."""
     fol = item.get("follows")
     if not fol:
         return ""
     target = index.get((fol["date"], fol["id"]))
     title = target[2]["title"] if target else fol["id"]
-    return ('<p class="follows">앞선 기사 <a href="%s%s/%s/index.html">%s · %s</a></p>'
+    return ('<p class="follows">관련 기사 <a href="%s%s/%s/index.html">%s · %s</a></p>'
             % (days_prefix, fol["date"], esc(fol["id"]), short_date(fol["date"]), inline(title)))
 
 
@@ -797,26 +840,22 @@ def _part(cls, label, text, level):
 
 
 def article_body(item, level=2, before_sources=""):
-    """기사 본문. 사실만 있는 기사는 소제목 없이 문단만 둔다.
+    """기사 본문. 신문 기사처럼 사실 문단(facts)은 소제목 없이 맨 앞에 두고, 그다음 해설(so)과 전망(recheck)만
+    작은 소제목을 단다. 입력의 recheck.label 은 쓰지 않는다 (소제목은 '전망'으로 통일).
     level: 소제목의 단계. 기사 페이지는 2, 브리핑 안에서는 기사 제목(h3) 아래라 4."""
-    parts = []
+    parts = ['<div class="part fact"><p>%s</p></div>' % inline(item["facts"])]
     recheck = item.get("recheck")
-    has_recheck = bool(recheck and recheck.get("text"))
-    if item.get("so") or has_recheck:
-        parts.append(_part("fact", "무슨 일이 있었나", item["facts"], level))
-    else:
-        parts.append('<div class="part fact"><p>%s</p></div>' % inline(item["facts"]))
     if item.get("so"):
-        parts.append(_part("why", "왜 중요한가", item["so"], level))
-    if has_recheck:
-        parts.append(_part("recheck", recheck.get("label", "다시 볼 조건"), recheck["text"], level))
+        parts.append(_part("why", "해설", item["so"], level))
+    if recheck and recheck.get("text"):
+        parts.append(_part("recheck", "전망", recheck["text"], level))
     parts.append(before_sources)
     parts.append(render_sources(item.get("sources")))
     return "\n".join(p for p in parts if p)
 
 
 def render_story(item, href, day, index, days_prefix, lead=False):
-    """브리핑 안의 기사 한 건: 제목, 진행·근거 표시, 본문, 앞선 기사, 출처. 누르지 않아도 다 읽을 수 있다.
+    """브리핑 안의 기사 한 건: 제목, 진행·근거 표시, 본문, 관련 기사, 출처. 누르지 않아도 다 읽을 수 있다.
     제목은 기사 페이지(공유·검색용 주소)로 가는 링크다. 대표 기사(lead_ref)는 제목을 더 크게 쓴다 (class lead).
     목록용 한 줄(teaser)은 본문과 겹쳐서 넣지 않는다."""
     return ('<article class="item%s" id="%s"><h3><a href="%s">%s</a></h3>%s%s</article>'
@@ -868,7 +907,7 @@ def render_side(day):
             desc = ' <span class="d">%s</span>' % "<span> · </span>".join(notes) if notes else ""
             lis.append('<li><time class="when" datetime="%s">%d/%d %02d:%02d</time><span><b>%s</b>%s</span></li>'
                        % (esc(s["at"]), at.month, at.day, at.hour, at.minute, inline(s["title"]), desc))
-        asof = "%s %s 기준, 한국 시간" % (short_date(day["date"]), day.get("checked_at") or "0시")
+        asof = "%s %s 기준" % (short_date(day["date"]), _clock(day.get("checked_at")) or "0시")
         blocks.append('<section class="sched" aria-labelledby="h-sched"><h2 id="h-sched">다음 일정</h2>'
                       '<p class="asof">%s</p><ul>%s</ul></section>' % (inline(asof), "".join(lis)))
 
@@ -882,7 +921,7 @@ def render_side(day):
 
 
 def render_corrections(day, days_prefix):
-    """정정·수정 내역. 대상 기사(ref)가 있으면 그 기사로 가는 링크를 붙인다."""
+    """바로잡습니다(정정). 대상 기사(ref)가 있으면 그 기사로 가는 링크를 붙인다."""
     rows_ = day.get("corrections") or []
     if not rows_:
         return ""
@@ -894,7 +933,7 @@ def render_corrections(day, days_prefix):
         lis.append('<li><time datetime="%s">%s</time> %s%s</li>' % (esc(c["date"]), short_date(c["date"]),
                                                                    inline(c["text"]), link))
     return ('<section class="corrections" aria-labelledby="h-corrections">'
-            '<h2 id="h-corrections">정정·수정 내역</h2><ul>%s</ul></section>' % "".join(lis))
+            '<h2 id="h-corrections">바로잡습니다</h2><ul>%s</ul></section>' % "".join(lis))
 
 
 def render_pager(older, newer, days_prefix):
@@ -906,11 +945,17 @@ def render_pager(older, newer, days_prefix):
     return '<nav class="pager" aria-label="이전·다음 브리핑">%s</nav>' % parts if parts else ""
 
 
+def _clock(checked_at):
+    """'16:59 KST' → '16:59'. 사이트의 시각은 모두 한국 시간이라 KST 를 따로 적지 않는다."""
+    m = CHECKED_AT.match(checked_at or "")
+    return "%s:%s" % (m.group(1), m.group(2)) if m else ""
+
+
 def _stamps(day):
     """뉴스를 다시 확인한 시각과 고친 시각을 한 줄로. 둘 다 없으면 빈 문자열."""
     out = []
     if day.get("checked_at"):
-        out.append("<span>뉴스 확인 %s</span>" % inline(day["checked_at"]))
+        out.append("<span>%s 기준</span>" % _clock(day["checked_at"]))
     label = updated_label(day)
     if label:
         out.append("<span>%s</span>" % label)
@@ -918,11 +963,11 @@ def _stamps(day):
 
 
 def render_hero(day):
-    """브리핑 머리: 날짜·판과 뉴스 확인·수정 시각 한 줄, 대표 제목, 짧은 의미."""
+    """브리핑 머리: 날짜·판과 기준·수정 시각 한 줄, 대표 제목, 짧은 의미."""
     edition = " " + inline(day["edition"]) if day.get("edition") else ""
     stamps = []
     if day.get("checked_at"):
-        stamps.append("<span>뉴스 확인 %s</span>" % inline(day["checked_at"]))
+        stamps.append("<span>%s 기준</span>" % _clock(day["checked_at"]))
     label = updated_label(day)
     if label:
         stamps.append("<span>%s</span>" % label)
@@ -933,7 +978,7 @@ def render_hero(day):
 
 def render_briefing(day, older, newer, *, here, days_prefix, index):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
-    문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·확인 시각, 대표 제목, 짧은 의미) → 핵심 1분 → 다음 일정
+    문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스 → 다음 일정
     → 분야 바로가기 → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음.
     넓은 화면(1080px 이상)에서는 다음 일정이 오른쪽 열로 간다."""
     rail = render_side(day)
@@ -1086,8 +1131,8 @@ def render_day(day, older, newer, site, pages, index):
 
 
 def render_article(day, sec, item, site, pages, index):
-    """기사 하나. 맨 위에 분야 이름과 실린 브리핑(링크), 제목, 확인·수정 시각, 요약 한 줄(teaser 가 있을 때만),
-    진행·근거 표시, 본문, 앞선 기사, 출처, 이 기사의 정정, 이 브리핑의 다른 기사, 브리핑으로 돌아가는 줄.
+    """기사 하나. 맨 위에 분야 이름과 실린 브리핑(링크), 제목, 기준·수정 시각, 요약 한 줄(teaser 가 있을 때만),
+    진행·근거 표시, 본문, 관련 기사, 출처, 바로잡습니다, 이 브리핑의 다른 기사, 브리핑으로 돌아가는 줄.
     검색·공유용 설명문도 teaser 가 있으면 그것을 쓴다."""
     root = "../../../"
     path = "/news/%s/%s/" % (day["date"], item["id"])
@@ -1106,7 +1151,7 @@ def render_article(day, sec, item, site, pages, index):
     fixes = [c for c in day.get("corrections") or [] if c.get("ref") == item["id"]]
     fix_html = ""
     if fixes:
-        fix_html = ('<section class="corrections" aria-labelledby="fix-title"><h2 id="fix-title">이 기사의 정정</h2>'
+        fix_html = ('<section class="corrections" aria-labelledby="fix-title"><h2 id="fix-title">바로잡습니다</h2>'
                     '<ul>%s</ul></section>'
                     % "".join('<li><time datetime="%s">%s</time> %s</li>' % (esc(c["date"]), short_date(c["date"]),
                                                                           inline(c["text"])) for c in fixes))
@@ -1138,7 +1183,7 @@ def render_article(day, sec, item, site, pages, index):
 
 def render_archive_day(day):
     """날짜별 브리핑 페이지의 하루 한 칸: 날짜·판, 대표 제목, 짧은 요약, 그날 실린 기사 줄(이전 판 기사 포함).
-    날짜·판과 대표 제목은 그날 브리핑으로, 기사 줄은 기사 페이지로 간다. 기사 전문과 핵심 1분은 다시 싣지 않는다."""
+    날짜·판과 대표 제목은 그날 브리핑으로, 기사 줄은 기사 페이지로 간다. 기사 전문과 주요 뉴스는 다시 싣지 않는다."""
     d = day["date"]
     hid = "h-day-%s" % d
     lines = [row("%s/%s/index.html" % (d, esc(i["id"])), i["title"], meta=inline(s["title"]))
@@ -1154,10 +1199,10 @@ def render_archive_day(day):
 
 
 def render_archive(days, site, pages):
-    """날짜별 브리핑. 날마다의 브리핑(헤드라인, 요약, 핵심 1분, 기사 목록)을 최신순으로 한 페이지에 쌓는다."""
+    """날짜별 브리핑. 날마다의 브리핑(헤드라인, 요약, 기사 목록)을 최신순으로 한 페이지에 쌓는다."""
     body = "\n".join(render_archive_day(d) for d in days)
     return wrap_page(site, pages, title="%s | %s" % (NEWS_TITLE, site["title"]),
-                     description="%s의 날짜별 브리핑. 날마다 헤드라인, 핵심 1분, 실린 기사를 최신순으로 모았다" % site["title"],
+                     description="%s의 날짜별 브리핑. 날마다 대표 제목과 요약, 실린 기사를 최신순으로 모았다" % site["title"],
                      prefix="../", path="/news/", content=_title_page(NEWS_TITLE, body), current="news",
                      trail=[(HOME_LABEL, "../index.html"), (NEWS_LABEL, None)])
 
@@ -1183,11 +1228,11 @@ def render_withdrawn(day, w, site, pages):
     """철회한 기사의 주소에 남기는 안내 페이지. 기사 내용은 두지 않고 내린 사유와 그날 브리핑으로 가는 길만 둔다.
     검색에는 올리지 않는다 (noindex, sitemap 제외)."""
     content = ('<main class="page article" id="brief"><div class="lead"><header class="hero">'
-               '<p class="kicker"><a href="../index.html">%s</a></p><h1 id="top-title">내린 기사입니다</h1>'
+               '<p class="kicker"><a href="../index.html">%s</a></p><h1 id="top-title">삭제된 기사입니다</h1>'
                '<p class="summary">%s</p></header></div><div class="tail"><p class="back">'
                '<a href="../index.html">%s 전체 보기</a></p></div></main>'
                % (edition_label(day), inline(w["reason"]), edition_label(day)))
-    return wrap_page(site, pages, title="내린 기사 | %s" % site["title"], description="", prefix="../../../",
+    return wrap_page(site, pages, title="삭제된 기사 | %s" % site["title"], description="", prefix="../../../",
                      path="/news/%s/%s/" % (day["date"], w["id"]), content=content, noindex=True, current="news")
 
 

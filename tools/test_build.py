@@ -270,7 +270,7 @@ class BuildOutputTests(SiteCase):
                    side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]})
         page = self.day_page(day)
         order = [page.index(s) for s in (
-            'class="dateline"', "뉴스 확인 17:02 KST", '<h1 id="top-title">', 'class="summary"',
+            'class="dateline"', "17:02 기준", '<h1 id="top-title">', 'class="summary"',
             'id="quick-title"', 'id="h-sched"', 'class="jump"', 'id="economy"', 'id="auto"',
             'id="h-corrections"', 'class="pager"')]
         self.assertEqual(order, sorted(order))
@@ -288,8 +288,9 @@ class BuildOutputTests(SiteCase):
     def test_briefing_story_parts_sit_under_the_story_title(self):
         page = self.day_page(make_day())
         one = page[page.index('id="a-one"'):page.index("</article>", page.index('id="a-one"'))]
-        for label in ("<h4>무슨 일이 있었나</h4>", "<h4>왜 중요한가</h4>", "<h4>다시 볼 조건</h4>"):
+        for label in ("<h4>해설</h4>", "<h4>전망</h4>"):
             self.assertIn(label, one)
+        self.assertEqual(one.count("<h4>"), 2)
         two = page[page.index('id="a-two"'):page.index("</article>", page.index('id="a-two"'))]
         self.assertNotIn("<h4>", two)
         self.assertIn("두 번째 사실.", two)
@@ -391,11 +392,13 @@ class BuildOutputTests(SiteCase):
         self.build()
         first = self.read("news/2026-10-13/a-one/index.html")
         second = self.read("news/2026-10-13/a-two/index.html")
-        for label in ("무슨 일이 있었나", "왜 중요한가", "다시 볼 조건", "출처"):
+        for label in ("<h2>해설</h2>", "<h2>전망</h2>", "출처"):
             self.assertIn(label, first)
+        self.assertNotIn("무슨 일이 있었나", first)  # 사실 문단은 소제목 없이 맨 앞
+        self.assertLess(first.index("지수가 5.46% 내렸다."), first.index("<h2>해설</h2>"))
         self.assertIn("두 번째 사실.", second)
-        for label in ("무슨 일이 있었나", "왜 중요한가", "다시 볼 조건"):
-            self.assertNotIn(label, second)
+        for label in ("해설", "전망"):
+            self.assertNotIn("<h2>%s</h2>" % label, second)
 
     def test_article_top_line_names_its_category_and_links_its_briefing(self):
         page = self.article_page(make_day(), "a-one")
@@ -405,7 +408,7 @@ class BuildOutputTests(SiteCase):
         self.assertIn('<a href="../index.html">10월 13일 화요일 오후판</a>', top)
         self.assertLess(page.index('class="kicker"'), page.index('<h1 id="top-title">'))
         stamps = page[page.index('class="checked"'):]
-        self.assertIn("뉴스 확인 17:02 KST", stamps[:stamps.index("</p>")])
+        self.assertIn("17:02 기준", stamps[:stamps.index("</p>")])
 
     def test_article_page_lists_the_other_stories_of_its_briefing(self):
         page = self.article_page(self.two_sections(), "a-one")
@@ -600,7 +603,7 @@ class PublishedAddressTests(SiteCase):
         page = self.read("news/2026-10-13/a-two/index.html")
         self.assertIn("두 번째 사실.", page)
         self.assertIn("화요일 오전판", page)
-        self.assertIn("뉴스 확인 05:06 KST", page)
+        self.assertIn("05:06 기준", page)
         self.assertIn('"datePublished": "2026-10-13T05:06:00+09:00"', page)
 
     def test_republished_article_is_corrected_at_the_same_address(self):
@@ -653,7 +656,7 @@ class PublishedAddressTests(SiteCase):
         day["withdrawn"] = [{"id": "a-two", "reason": "가상 사유"}]
         self.publish_morning_then(day)
         notice = self.read("news/2026-10-13/a-two/index.html")
-        self.assertIn("내린 기사입니다", notice)
+        self.assertIn("삭제된 기사입니다", notice)
         self.assertIn("가상 사유", notice)
         self.assertIn('<meta name="robots" content="noindex">', notice)
         self.assertNotIn("두 번째 사실.", notice)
@@ -670,7 +673,7 @@ class PublishedAddressTests(SiteCase):
         day["withdrawn"] = [{"id": "a-two", "reason": "가상 사유"}]
         self.write_day(day)
         self.build()
-        self.assertIn("내린 기사입니다", self.read("news/2026-10-13/a-two/index.html"))
+        self.assertIn("삭제된 기사입니다", self.read("news/2026-10-13/a-two/index.html"))
         self.assertTrue(self.exists("news/2026-10-13/a-two/note.txt"))
 
     def test_same_article_cannot_be_current_and_earlier(self):
@@ -805,11 +808,11 @@ class ComponentTests(SiteCase):
         day = make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표", "desc": "확인할 것"}]})
         page = self.day_page(day)
         self.assertIn("10/13 21:30", page)
-        self.assertIn("17:02 KST 기준", page)
+        self.assertIn("10월 13일 17:02 기준", page)
 
     def test_corrections_are_listed(self):
         page = self.day_page(make_day(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}]))
-        self.assertIn("정정·수정 내역", page)
+        self.assertIn("<h2 id=\"h-corrections\">바로잡습니다</h2>", page)
         self.assertIn("수치를 바로잡았다.", page)
 
     def test_page_without_optional_blocks_has_no_empty_blocks(self):
@@ -1188,7 +1191,7 @@ class NewsV2Tests(SiteCase):
     def test_follow_up_links_to_the_earlier_article(self):
         day = self.two_days()
         page = self.day_page(day)
-        self.assertIn('앞선 기사 <a href="../2026-10-12/a-one/index.html">10월 12일 · 기사 하나</a>', page)
+        self.assertIn('관련 기사 <a href="../2026-10-12/a-one/index.html">10월 12일 · 기사 하나</a>', page)
         article = self.read("news/2026-10-13/a-two/index.html")
         self.assertIn('href="../../2026-10-12/a-one/index.html"', article)
         home = self.read("index.html")
@@ -1302,7 +1305,7 @@ class NewsV2Tests(SiteCase):
                        '<polyline points=', '<line x1="0"', '<span class="tk-t">10.13 장마감</span>'):
             self.assertIn(needle, first)
         self.assertIn('<span class="sr">하락 </span>-1.01', ticker)
-        self.assertIn("10월 13일 17:05 한국 시간에 가져온 값 · 자료 가상시세", ticker)
+        self.assertIn("10월 13일 17:05 기준 · 자료: 가상시세", ticker)
         self.assertIn('tabindex="0"', ticker)
 
     def test_ticker_is_on_home_and_briefing_only(self):
@@ -1340,6 +1343,60 @@ class NewsV2Tests(SiteCase):
         ind = self.indicators()
         ind["rows"][2]["extra"] = "x"
         self.assert_rejected(make_day(indicators=ind), "extra")
+
+    # ---- 기사체 점검 (style_from 이후 판)
+    def styled(self):
+        self.write_site(dict(SITE, style_from="2026-10-13"))
+        day = make_day()
+        day["quick"] = [{"text": "지수 {{down:5.46%}} 하락", "ref": "a-one"}]
+        day["sections"][0]["items"][0]["facts"] = "지수가 5.46% 내렸다. 둘째 문장."
+        day["sections"][0]["items"][0]["recheck"] = {"label": "다시 볼 조건", "text": "가상 지표는 다음 주 발표된다."}
+        return day
+
+    def test_clean_news_style_passes(self):
+        self.write_day(self.styled())
+        self.build()
+
+    def test_checklist_and_lecturing_endings_are_stopped(self):
+        day = self.styled()
+        day["sections"][0]["items"][0]["recheck"]["text"] = "가상 지표가 오르는지 확인한다."
+        self.assert_rejected(day, "a-one.recheck", "점검표 말투")
+        day = self.styled()
+        day["sections"][0]["items"][0]["so"] = "두 지표를 함께 봐야 한다."
+        self.assert_rejected(day, "a-one.so", "훈계 말투")
+        day = self.styled()
+        day["summary"] = "가상 요약은 나눠 볼 필요가 있다."
+        self.assert_rejected(day, "summary", "훈계 말투")
+
+    def test_quoted_obligation_is_not_lecturing(self):
+        day = self.styled()
+        day["sections"][0]["items"][0]["so"] = "가상 의원은 정부가 지원해야 한다고 말했다."
+        self.write_day(day)
+        self.build()
+
+    def test_bold_signs_and_editor_notes_are_stopped(self):
+        day = self.styled()
+        day["sections"][0]["items"][0]["facts"] = "지수가 **5.46%** 내렸다."
+        self.assert_rejected(day, "a-one.facts", "굵게")
+        day = self.styled()
+        day["quick"][0]["text"] = "지수 {{down:-5.46%}} 하락"
+        self.assert_rejected(day, "quick[0]", "부호")
+        day = self.styled()
+        day["sections"][0]["items"][0]["so"] = "가상 매도가 나왔다(주식 분야 기사 참고)."
+        self.assert_rejected(day, "a-one.so", "편집 메모")
+        day = self.styled()
+        day["sections"][0]["items"][0]["title"] = "지수 {{down:-5.46%}} 급락"
+        self.assert_rejected(day, "a-one.title", "색 표시")
+        day = self.styled()
+        day["side"] = {"schedule": [{"at": "2026-10-14T08:30:00+09:00", "title": "가상 발표", "desc": "발표 뒤 확정치 확인"}]}
+        self.assert_rejected(day, "side.schedule[0].desc", "할 일 메모")
+
+    def test_style_rules_wait_for_the_set_date(self):
+        day = self.styled()
+        day["sections"][0]["items"][0]["recheck"]["text"] = "가상 지표가 오르는지 확인한다."
+        self.write_site(dict(SITE, style_from="2026-10-14"))
+        self.write_day(day)
+        self.build()
 
     # ---- 기사 페이지: 브리핑으로 돌아가는 줄
     def test_article_page_has_a_way_back_to_its_briefing(self):

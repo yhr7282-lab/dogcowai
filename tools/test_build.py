@@ -622,13 +622,47 @@ class PublishedAddressTests(SiteCase):
         self.assertIn("화요일 오후판", page)
         self.assertTrue(self.exists("news/2026-10-13/a-three/index.html"))
 
-    def test_briefing_lists_earlier_articles_under_their_edition(self):
+    def test_briefing_merges_earlier_articles_into_their_sections_in_full(self):
+        """오전판에서 빠진 기사도 따로 모아 제목만 두지 않고, 같은 분야 안에 지금 판 기사 뒤로 전문을 싣는다 (2026-10-24)."""
         self.publish_morning_then(self.afternoon(self.morning()))
         for rel, href in (("news/2026-10-13/index.html", 'href="a-two/index.html"'),
                           ("index.html", 'href="news/2026-10-13/a-two/index.html"')):
-            main, earlier = self.read(rel).split("오전판에 실린 기사", 1)
-            self.assertNotIn(href, main)
-            self.assertIn(href, earlier)
+            page = self.read(rel)
+            self.assertNotIn("실린 기사</h2>", page)
+            sec = page[page.index('id="economy"'):]
+            sec = sec[:sec.index("</section>")]
+            order = [sec.index(s) for s in ('id="a-one"', 'id="a-three"', 'id="a-two"')]
+            self.assertEqual(order, sorted(order))
+            two = sec[sec.index('id="a-two"'):]
+            self.assertIn(href, two)
+            self.assertIn("두 번째 사실.", two)
+            self.assertIn("오전판", two[:two.index("두 번째 사실.")])
+
+    def test_earlier_section_missing_from_this_edition_still_shows(self):
+        day = self.afternoon(self.morning())
+        day["earlier"][0]["sections"].append({"id": "auto", "title": "자동차", "items": [
+            {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "차 사실.",
+             "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
+        self.publish_morning_then(day)
+        page = self.read("news/2026-10-13/index.html")
+        self.assertLess(page.index('id="economy"'), page.index('id="auto"'))
+        self.assertIn("차 사실.", page[page.index('id="auto"'):])
+
+    def test_date_picker_on_archive_and_day_pages(self):
+        """날짜별 브리핑과 하루치 브리핑 맨 위의 날짜 선택 칸: 고르면 그날 브리핑(오전·오후판을 합친 전문)으로 간다."""
+        self.write_day(make_day("2026-10-12"))
+        self.publish_morning_then(self.afternoon(self.morning()))
+        archive = self.read("news/index.html")
+        sel = archive[archive.index('<select id="pick-date"'):archive.index("</select>")]
+        self.assertIn('value="2026-10-13/index.html"', sel)
+        self.assertIn('value="2026-10-12/index.html"', sel)
+        self.assertLess(sel.index("2026-10-13/"), sel.index("2026-10-12/"))
+        self.assertIn("오전판·오후판", sel)
+        day = self.read("news/2026-10-12/index.html")
+        sel = day[day.index('<select id="pick-date"'):day.index("</select>")]
+        self.assertIn('<option value="../2026-10-12/index.html" selected>', sel)
+        self.assertIn('value="../2026-10-13/index.html"', sel)
+        self.assertNotIn('id="pick-date"', self.read("index.html"))
 
     def test_archive_and_sitemap_keep_earlier_articles(self):
         self.publish_morning_then(self.afternoon(self.morning()))

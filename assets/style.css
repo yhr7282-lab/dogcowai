@@ -127,6 +127,18 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
   line-height: 1.32; letter-spacing: -0.025em; text-wrap: balance;
 }
 .summary { margin-top: 12px; max-width: 36em; line-height: 1.72; color: var(--ink-2); text-wrap: pretty; }
+
+/* ---- 날짜 선택: 날짜별 브리핑과 하루치 브리핑 맨 위. 고르면 그날 브리핑으로 간다 ---- */
+.pick { display: flex; align-items: center; gap: 12px; margin: 0 0 24px; }
+.hero .pick { margin: 18px 0 0; }
+.pick label { flex: none; font-size: var(--fs-m); font-weight: 600; color: var(--ink-2); }
+.pick select {
+  flex: 1; min-width: 0; max-width: 360px; min-height: 44px; padding: 0 38px 0 12px;
+  font: inherit; font-size: 16px; font-weight: 600; color: var(--link);
+  background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%230b6a6a' stroke-width='1.8'/%3E%3C/svg%3E") no-repeat right 14px center;
+  border: 1px solid var(--line); border-radius: 6px; appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+.pick select:hover { border-color: var(--link); }
 .checked { display: flex; flex-wrap: wrap; column-gap: 12px; margin-top: 10px; font-size: var(--fs-s); color: var(--ink-3); }
 .checked span { white-space: nowrap; }
 .deck { margin-top: 14px; max-width: 38em; font-size: 18px; line-height: 1.66; color: var(--ink-2); text-wrap: pretty; }
@@ -224,9 +236,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .absent ul { margin-top: 10px; }
 .absent li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
 
-/* ---- 이전 판 기사, 바로잡습니다(정정), 이전·다음 브리핑 ---- */
-.sec.earlier > h2 { font-size: var(--fs-h2); }
-.sec.earlier .rows { margin-top: 6px; }
+/* ---- 바로잡습니다(정정), 이전·다음 브리핑. 이전 판 기사는 2026-10-24부터 분야 안에 함께 싣는다 ---- */
 .corrections { font-size: var(--fs-m); line-height: 1.7; }
 .corrections ul { margin-top: 8px; }
 .corrections li + li { margin-top: 6px; }

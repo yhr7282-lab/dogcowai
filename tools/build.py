@@ -6,7 +6,7 @@ content/YYYY-MM-DD.json (날짜별 내용), content/_site.json (공통 설정), 
 
     /                       홈: 짧은 소개, 최신 브리핑과 그 기사 전부
     /news/                  날짜별 브리핑: 날마다 헤드라인·요약·기사 목록을 최신순으로 쌓는다
-    /news/날짜/              하루치 브리핑: 헤드라인, 주요 뉴스, 분야별 기사, 이전 판에 실린 기사
+    /news/날짜/              하루치 브리핑: 날짜 선택, 헤드라인, 주요 뉴스, 분야별 기사(같은 날 이전 판 기사 포함)
     /news/날짜/기사id/        기사 하나
     /이름/                   고정 페이지 (content/pages/*.json 이 있을 때만. 지금은 없다)
 
@@ -679,7 +679,7 @@ def load_pages(root):
 #   홈      제호 아래 한 줄 소개 + 최신 브리핑 (브리핑 페이지와 같은 구성)
 #   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·기준 시각 → 대표 제목 → 짧은 의미
 #           → 주요 뉴스(줄마다 본문 기사로 이동)
-#           → 분야별 기사 전문(사실 문단 → 해설 → 전망 → 관련 기사 → 출처) → 이전 판에 실린 기사 → 바로잡습니다 → 이전·다음
+#           → 분야별 기사 전문(사실 문단 → 해설 → 전망 → 관련 기사 → 출처, 같은 날 이전 판 기사도 분야 안에) → 바로잡습니다 → 이전·다음
 #   기사    분야·실린 판, 제목, 기준·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 관련 기사, 출처,
 #           바로잡습니다, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
 #   날짜별  날마다 한 칸, 최신순: 날짜·판, 대표 제목, 짧은 요약, 그날 실린 기사 줄 (전문은 다시 싣지 않는다)
@@ -741,10 +741,10 @@ def render_quick(day):
             '<h2 id="quick-title">주요 뉴스</h2><ol>%s</ol></section>' % lis)
 
 
-def item_meta(item, day):
-    """기사 제목 아래 작은 글자 한 줄: 진행(진전·보완), 사건 날짜(브리핑 날짜와 다를 때), 근거 문구(basis).
-    '신규'는 대부분이라 표시하지 않는다. 포괄적인 '검증 완료' 같은 표시는 만들지 않는다."""
-    parts = []
+def item_meta(item, day, edition=None):
+    """기사 제목 아래 작은 글자 한 줄: 실린 판(이전 판 기사일 때), 진행(진전·보완), 사건 날짜(브리핑 날짜와 다를 때),
+    근거 문구(basis). '신규'는 대부분이라 표시하지 않는다. 포괄적인 '검증 완료' 같은 표시는 만들지 않는다."""
+    parts = ["<span>%s</span>" % inline(edition)] if edition else []
     if item.get("status") in SHOWN_STATUS:
         parts.append('<span class="st">%s</span>' % item["status"])
     if item["date"] != day["date"]:
@@ -823,41 +823,41 @@ def article_body(item, level=2, before_sources=""):
     return "\n".join(p for p in parts if p)
 
 
-def render_story(item, href, day, index, days_prefix, lead=False):
+def render_story(item, href, day, index, days_prefix, lead=False, edition=None):
     """브리핑 안의 기사 한 건: 제목, 진행·근거 표시, 본문, 관련 기사, 출처. 누르지 않아도 다 읽을 수 있다.
     제목은 기사 페이지(공유·검색용 주소)로 가는 링크다. 대표 기사(lead_ref)는 제목을 더 크게 쓴다 (class lead).
-    목록용 한 줄(teaser)은 본문과 겹쳐서 넣지 않는다."""
+    목록용 한 줄(teaser)은 본문과 겹쳐서 넣지 않는다. edition: 이전 판 기사면 그 판 이름(제목 아래 작은 글자)."""
     return ('<article class="item%s" id="%s"><h3><a href="%s">%s</a></h3>%s%s</article>'
-            % (" lead" if lead else "", esc(item["id"]), href, inline(item["title"]), item_meta(item, day),
+            % (" lead" if lead else "", esc(item["id"]), href, inline(item["title"]), item_meta(item, day, edition),
                article_body(item, level=4, before_sources=render_follows(item, index, days_prefix))))
 
 
 def render_sections(day, here, days_prefix, index):
     """분야별 기사. 분야 이름(링크 아님) 아래에 기사마다 내용을 모두 펼쳐 둔다. 기사가 없는 분야는 내지 않는다.
+    같은 날 이전 판에서 빠진 기사(earlier)도 따로 모으지 않고 같은 분야 안에 지금 판 기사 뒤로 전문을 싣는다
+    (제목 아래 작은 글자로 실린 판을 적는다). 지금 판에 없는 분야는 지금 판 분야 뒤에 둔다.
     here: 이 페이지에서 그날 브리핑 폴더까지의 상대 경로. days_prefix: news/ 폴더까지의 상대 경로.
     입력의 lede(분야 요약)와 points 는 화면에 내지 않는다."""
-    out = []
+    order, titles, stories = [], {}, {}
+    def add(sec, html):
+        if sec["id"] not in titles:
+            order.append(sec["id"])
+            titles[sec["id"]] = sec["title"]
+            stories[sec["id"]] = []
+        stories[sec["id"]].append(html)
     lead = day.get("lead_ref")
     for sec in visible_sections(day):
-        sid = esc(sec["id"])
-        stories = "\n".join(render_story(i, "%s%s/index.html" % (here, esc(i["id"])), day, index, days_prefix,
-                                         lead=i["id"] == lead) for i in ordered_items(sec))
-        out.append('<section class="sec" id="%s" aria-labelledby="h-%s">'
-                   '<h2 id="h-%s">%s</h2>%s</section>'
-                   % (sid, sid, sid, inline(sec["title"]), stories))
-    return "\n".join(out)
-
-
-def render_earlier(day, here):
-    """이전 판에만 실린 기사. 새 판에서 빠져도 주소는 남아 있으므로, 브리핑에서 찾을 수 있게 판마다 제목 줄만 둔다."""
-    out = []
-    for n, group in enumerate(day.get("earlier") or [], 1):
-        lines = [row("%s%s/index.html" % (here, esc(i["id"])), i["title"], meta=inline(s["title"]), rid=i["id"])
-                 for s in group["sections"] for i in ordered_items(s)]
-        out.append('<section class="sec earlier" aria-labelledby="h-earlier-%d">'
-                   '<h2 id="h-earlier-%d">%s에 실린 기사</h2>%s</section>'
-                   % (n, n, inline(group["edition"]), rows(lines)))
-    return "\n".join(out)
+        for i in ordered_items(sec):
+            add(sec, render_story(i, "%s%s/index.html" % (here, esc(i["id"])), day, index, days_prefix,
+                                  lead=i["id"] == lead))
+    for group in day.get("earlier") or []:
+        for sec in group["sections"]:
+            for i in ordered_items(sec):
+                add(sec, render_story(i, "%s%s/index.html" % (here, esc(i["id"])), day, index, days_prefix,
+                                      edition=group["edition"]))
+    return "\n".join('<section class="sec" id="%s" aria-labelledby="h-%s"><h2 id="h-%s">%s</h2>%s</section>'
+                     % (esc(sid), esc(sid), esc(sid), inline(titles[sid]), "\n".join(stories[sid]))
+                     for sid in order)
 
 
 def render_side(day):
@@ -930,15 +930,33 @@ def render_hero(day):
             % (long_date(day["date"]), edition, "".join(stamps), inline(day["headline"]), inline(day["summary"])))
 
 
-def render_briefing(day, older, newer, *, here, days_prefix, index):
+def render_date_picker(days, current, days_prefix):
+    """날짜 선택 칸: 고르면 그날 브리핑으로 간다. 날짜별 브리핑과 하루치 브리핑 맨 위에 둔다.
+    고르는 순간 이동하도록 select 에 한 줄짜리 동작(onchange)만 붙인다. 별도 스크립트 파일은 없다.
+    current: 지금 보고 있는 날짜(없으면 '날짜 선택'이 먼저 보인다). days_prefix: news/ 폴더까지의 상대 경로."""
+    opts = [] if current else ['<option value="" selected disabled>날짜 선택</option>']
+    for d in days:
+        editions = [plain(g["edition"]) for g in d.get("earlier") or [] if g.get("edition")]
+        if d.get("edition"):
+            editions.append(plain(d["edition"]))
+        label = day_label(d) + (" · " + "·".join(editions) if editions else "")
+        opts.append('<option value="%s%s/index.html"%s>%s</option>'
+                    % (days_prefix, d["date"], " selected" if d["date"] == current else "", esc(label)))
+    return ('<p class="pick"><label for="pick-date">날짜</label>'
+            '<select id="pick-date" onchange="if(this.value)location.href=this.value">%s</select></p>'
+            % "".join(opts))
+
+
+def render_briefing(day, older, newer, *, here, days_prefix, index, picker=""):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
     문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스
-    → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음. (분야 바로가기는 2026-10-24에 없앴다.)
+    → 분야별 기사(이전 판 기사도 같은 분야 안에) → 정정 → 이전·다음. (분야 바로가기는 2026-10-24에 없앴다.)
+    picker: 하루치 브리핑 페이지의 날짜 선택 칸(홈에는 없다).
     이번 판 부재 항목이 있으면 넓은 화면(1080px 이상)에서 오른쪽 열로 간다."""
     rail = render_side(day)
-    tail = render_earlier(day, here) + render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
-    return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s</div>%s<div class="body">%s</div>%s</main>'
-            % (" has-rail" if rail else "", render_hero(day), render_quick(day),
+    tail = render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
+    return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s%s</div>%s<div class="body">%s</div>%s</main>'
+            % (" has-rail" if rail else "", picker, render_hero(day), render_quick(day),
                '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
                render_sections(day, here, days_prefix, index),
                '<div class="tail">%s</div>' % tail if tail else ""))
@@ -1072,14 +1090,15 @@ def render_home(days, site, pages, index):
                      prefix="", path="/", content=content, current="home", ld=[website], tagline=True)
 
 
-def render_day(day, older, newer, site, pages, index):
+def render_day(day, older, newer, site, pages, index, days):
     """하루치 브리핑. 기사 전문이 모두 펼쳐져 있고, 기사마다 공유용 기사 페이지가 따로 있다."""
     edition = " " + plain(day["edition"]) if day.get("edition") else ""
     return wrap_page(
         site, pages,
         title="%s%s | %s" % (long_date(day["date"]), edition, site["title"]),
         description=plain(day["summary"]), prefix="../../", path="/news/%s/" % day["date"],
-        content=render_ticker(day) + render_briefing(day, older, newer, here="", days_prefix="../", index=index),
+        content=render_ticker(day) + render_briefing(day, older, newer, here="", days_prefix="../", index=index,
+                                                     picker=render_date_picker(days, day["date"], "../")),
         og_type="article", current="news", published=published_at(day), modified=modified_value(day),
         trail=[(HOME_LABEL, "../../index.html"), (NEWS_LABEL, "../index.html"), (day_label(day), None)])
 
@@ -1157,7 +1176,8 @@ def render_archive(days, site, pages):
     body = "\n".join(render_archive_day(d) for d in days)
     return wrap_page(site, pages, title="%s | %s" % (NEWS_TITLE, site["title"]),
                      description="%s의 날짜별 브리핑. 날마다 대표 제목과 요약, 실린 기사를 최신순으로 모았다" % site["title"],
-                     prefix="../", path="/news/", content=_title_page(NEWS_TITLE, body), current="news",
+                     prefix="../", path="/news/", content=_title_page(NEWS_TITLE, body, render_date_picker(days, None, "")),
+                     current="news",
                      trail=[(HOME_LABEL, "../index.html"), (NEWS_LABEL, None)])
 
 
@@ -1386,7 +1406,7 @@ def build(root, out=None, check_only=False):
     for i, day in enumerate(days):
         newer = days[i - 1] if i > 0 else None
         older = days[i + 1] if i + 1 < len(days) else None
-        outputs["news/%s/index.html" % day["date"]] = render_day(day, older, newer, site, pages, index)
+        outputs["news/%s/index.html" % day["date"]] = render_day(day, older, newer, site, pages, index, days)
         for sec, item in all_items(day):
             outputs["news/%s/%s/index.html" % (day["date"], item["id"])] = render_article(day, sec, item, site, pages,
                                                                                         index)

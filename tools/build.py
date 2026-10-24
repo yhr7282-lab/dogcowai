@@ -64,7 +64,6 @@ STYLE_RULES = [
     ("훈계 말투(~봐야/해야 한다, ~필요가 있다, ~서는 안 된다)", r"(봐야|해야|읽어야) 한다\.|필요가 있다\.|서는 안 된다\.",
      ("summary", "teaser", "so", "recheck")),
     ("편집 메모(기사 참고·일반적인 설명 등)", r"기사 참고\)|일반적인 설명\)|이번에 확인한 자료", ("summary", "teaser", "facts", "so", "recheck")),
-    ("할 일 메모(일정 설명의 ~확인)", r"확인\.?\s*$", ("schedule",)),
 ]
 # 공개 입력(content/날짜.json)에 쓸 수 있는 항목. 여기에 없는 항목이 있으면 생성을 멈춘다.
 # 개인 원본의 다른 칸이나 제작용 운영 정보(판 상태·개정·내부 키 등)가 공개 파일에 섞여 들어오지 않게 하려는 것이다.
@@ -82,8 +81,7 @@ ALLOWED = {
     "market": {"rows", "note", "sources", "forecast"},
     "forecast": {"title", "rows"},
     "market_row": {"name", "note", "basis", "asof", "value", "change", "dir", "source"},
-    "side": {"schedule", "absent"},
-    "schedule": {"at", "title", "desc", "source"},
+    "side": {"absent"},                # 다음 일정(schedule)은 2026-10-24부터 싣지 않는다
     "absent": {"name", "note"},
     "quick": {"text", "ref"},
     "correction": {"date", "text", "ref"},
@@ -95,7 +93,7 @@ TICKER_KEYS = ("kospi", "kosdaq", "sp500", "nasdaq", "dow", "usd", "eur", "wti",
 TICKER_PAGE = 6   # 좁은 화면에서 한 쪽에 보이는 칸 수 (3칸 × 2줄)
 RETIRED_DIRS = ("topic", "about")  # 없앤 페이지(분야별·소개, 2026-10-24). 이번 생성에 없으면 생성 파일만 지운다
 RESERVED_IDS = {"brief", "top-title", "market-title", "quick-title", "recent-title", "topics-title",
-                "today-title", "intro-title", "related-title", "others-title", "h-sched", "h-absent",
+                "today-title", "intro-title", "related-title", "others-title", "h-absent",
                 "h-corrections", "fix-title", "ticker-title"}
 
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
@@ -372,8 +370,6 @@ def style_problems(day):
     texts = [("headline", "headline", day.get("headline") or ""), ("summary", "summary", day.get("summary") or "")]
     texts += [("quick", "quick[%d]" % n, q.get("text") or "") for n, q in enumerate(day.get("quick") or [])
               if isinstance(q, dict)]
-    texts += [("schedule", "side.schedule[%d].desc" % n, row.get("desc") or "")
-              for n, row in enumerate((day.get("side") or {}).get("schedule") or []) if isinstance(row, dict)]
     groups = [day.get("sections") or []] + [g.get("sections") or [] for g in day.get("earlier") or []]
     for secs in groups:
         for sec in secs:
@@ -611,24 +607,12 @@ def validate_day(day, name_date, filename, site):
     _check_sources(market.get("sources") or [], "%s market.sources" % filename)
 
     side = day.get("side") or {}
+    if isinstance(side, dict) and "schedule" in side:
+        raise BuildError("%s: side.schedule — 다음 일정은 2026-10-24부터 사이트에 싣지 않습니다. 입력에서 빼세요" % filename)
     if "side" in day:
         _check_keys(side, "side", "%s side" % filename)
     for n, a in enumerate(side.get("absent") or []):
         _check_keys(a, "absent", "%s side.absent[%d]" % (filename, n))
-    for n, s in enumerate(side.get("schedule") or []):
-        where = "%s side.schedule[%d]" % (filename, n)
-        _check_keys(s, "schedule", where)
-        _check_row_source(s, where, need_row_sources)
-        _need(s, "at", where)
-        _need(s, "title", where)
-        try:
-            at = datetime.datetime.fromisoformat(s["at"])
-        except (ValueError, TypeError):
-            at = None
-        if at is None or at.tzinfo is None:
-            raise BuildError("%s: at 은 시간대가 붙은 ISO 형식이어야 합니다 (예: 2026-10-14T21:30:00+09:00)" % where)
-        if at <= now:
-            raise BuildError("%s: 브리핑 기준 시각보다 이른 일정은 '다음 일정'에 둘 수 없습니다" % where)
 
     targets = set(items_by_id) | earlier | withdrawn_ids(day)
     for n, c in enumerate(day.get("corrections") or []):
@@ -694,7 +678,7 @@ def load_pages(root):
 # 페이지는 네 가지다. 같은 정보는 한 곳에만 둔다.
 #   홈      제호 아래 한 줄 소개 + 최신 브리핑 (브리핑 페이지와 같은 구성)
 #   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·기준 시각 → 대표 제목 → 짧은 의미
-#           → 주요 뉴스(줄마다 본문 기사로 이동) → 다음 일정(넓은 화면에서는 오른쪽 보조 열) → 분야 바로가기
+#           → 주요 뉴스(줄마다 본문 기사로 이동) → 분야 바로가기
 #           → 분야별 기사 전문(사실 문단 → 해설 → 전망 → 관련 기사 → 출처) → 이전 판에 실린 기사 → 바로잡습니다 → 이전·다음
 #   기사    분야·실린 판, 제목, 기준·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 관련 기사, 출처,
 #           바로잡습니다, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
@@ -708,11 +692,6 @@ def render_sources(sources):
     links = " ".join('<a href="%s" target="_blank" rel="noopener">%s</a>'
                      % (esc(s["url"]), inline(s["name"])) for s in sources)
     return '<p class="src"><span>출처<span class="sr"> (새 창에서 열림)</span></span> %s</p>' % links
-
-
-def _source_link(src):
-    return ('<a href="%s" target="_blank" rel="noopener">%s<span class="sr"> (새 창에서 열림)</span></a>'
-            % (esc(src["url"]), inline(src["name"])))
 
 
 def _sparkline(points, base):
@@ -892,24 +871,9 @@ def render_earlier(day, here):
 
 
 def render_side(day):
-    """다음 일정과 이번 판 부재 항목. 일정은 줄마다 근거 링크(source)를 붙일 수 있다."""
+    """이번 판 부재 항목 (있을 때만, 넓은 화면에서는 오른쪽 보조 열). 다음 일정은 2026-10-24부터 싣지 않는다."""
     side = day.get("side") or {}
     blocks = []
-
-    sched = side.get("schedule") or []
-    if sched:
-        lis = []
-        for s in sorted(sched, key=lambda s: datetime.datetime.fromisoformat(s["at"])):
-            at = datetime.datetime.fromisoformat(s["at"]).astimezone(KST)
-            notes = [inline(s["desc"])] if s.get("desc") else []
-            if s.get("source"):
-                notes.append(_source_link(s["source"]))
-            desc = ' <span class="d">%s</span>' % "<span> · </span>".join(notes) if notes else ""
-            lis.append('<li><time class="when" datetime="%s">%d/%d %02d:%02d</time><span><b>%s</b>%s</span></li>'
-                       % (esc(s["at"]), at.month, at.day, at.hour, at.minute, inline(s["title"]), desc))
-        asof = "%s %s 기준" % (short_date(day["date"]), _clock(day.get("checked_at")) or "0시")
-        blocks.append('<section class="sched" aria-labelledby="h-sched"><h2 id="h-sched">다음 일정</h2>'
-                      '<p class="asof">%s</p><ul>%s</ul></section>' % (inline(asof), "".join(lis)))
 
     absent = side.get("absent") or []
     if absent:
@@ -978,14 +942,14 @@ def render_hero(day):
 
 def render_briefing(day, older, newer, *, here, days_prefix, index):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
-    문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스 → 다음 일정
+    문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스
     → 분야 바로가기 → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음.
-    넓은 화면(1080px 이상)에서는 다음 일정이 오른쪽 열로 간다."""
+    이번 판 부재 항목이 있으면 넓은 화면(1080px 이상)에서 오른쪽 열로 간다."""
     rail = render_side(day)
     tail = render_earlier(day, here) + render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
     return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s</div>%s%s<div class="body">%s</div>%s</main>'
             % (" has-rail" if rail else "", render_hero(day), render_quick(day),
-               '<aside class="rail" aria-label="다음 일정">%s</aside>' % rail if rail else "",
+               '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
                render_jump(day), render_sections(day, here, days_prefix, index),
                '<div class="tail">%s</div>' % tail if tail else ""))
 

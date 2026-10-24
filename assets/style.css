@@ -115,7 +115,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .rail > section + section { margin-top: 32px; }
 
 /* ---- 구역 제목: 모두 같은 크기 ---- */
-.quick h2, .sec > h2, .market h2, .sched h2, .absent h2, .corrections h2, .others h2, .doc h2 {
+.quick h2, .sec > h2, .market h2, .absent h2, .corrections h2, .others h2, .doc h2 {
   font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: -0.02em;
 }
 
@@ -226,13 +226,9 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
   .ticker { padding-top: 14px; }
 }
 
-/* ---- 다음 일정, 부재 항목: 짧게 ---- */
-.asof { margin-top: 2px; font-size: var(--fs-s); color: var(--ink-3); }
-.sched ul { margin-top: 10px; }
-.sched li { display: grid; grid-template-columns: 4.6em 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
-.when { font-size: var(--fs-m); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.sched b, .absent b { display: block; font-size: var(--fs-m); font-weight: 600; line-height: 1.5; }
-.sched .d, .absent .d { display: block; font-size: var(--fs-s); line-height: 1.55; color: var(--ink-3); }
+/* ---- 이번 판 부재 항목: 짧게 ---- */
+.absent b { display: block; font-size: var(--fs-m); font-weight: 600; line-height: 1.5; }
+.absent .d { display: block; font-size: var(--fs-s); line-height: 1.55; color: var(--ink-3); }
 .absent ul { margin-top: 10px; }
 .absent li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
 

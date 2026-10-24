@@ -276,17 +276,16 @@ class BuildOutputTests(SiteCase):
             self.assertIn(part, home)
         self.assertNotIn("2026-10-12 헤드라인</h1>", home)
 
-    # ---- 브리핑: 헤드라인, 핵심 1분, 분야별 기사(내용 전부), 시장, 일정, 정정, 이전·다음
+    # ---- 브리핑: 헤드라인, 주요 뉴스, 분야별 기사(내용 전부), 정정, 이전·다음
 
     def test_briefing_reads_in_one_fixed_order(self):
         self.write_day(make_day("2026-10-12"))
         day = self.two_sections()
-        day.update(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}],
-                   side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]})
+        day.update(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}])
         page = self.day_page(day)
         order = [page.index(s) for s in (
             'class="dateline"', "17:02 기준", '<h1 id="top-title">', 'class="summary"',
-            'id="quick-title"', 'id="h-sched"', 'class="jump"', 'id="economy"', 'id="auto"',
+            'id="quick-title"', 'class="jump"', 'id="economy"', 'id="auto"',
             'id="h-corrections"', 'class="pager"')]
         self.assertEqual(order, sorted(order))
         self.assertIn("2026년 10월 13일 화요일 오후판", page)
@@ -378,12 +377,7 @@ class BuildOutputTests(SiteCase):
         self.assert_rejected(make_day(lead_ref="a-one"), "market.rows[0]", "source")
         day = make_day(lead_ref="a-one")
         day["market"]["rows"][0]["source"] = {"name": "가상시세", "url": "https://example.com/row"}
-        day["side"] = {"schedule": [{"at": "2026-10-14T08:30:00+09:00", "title": "가상 발표"}]}
-        self.assert_rejected(day, "side.schedule[0]", "source")
-        day["side"]["schedule"][0]["source"] = {"name": "가상기관 일정", "url": "https://example.com/cal"}
-        page = self.day_page(day)
-        sched = page[page.index('id="h-sched"'):]
-        self.assertIn('href="https://example.com/cal"', sched[:sched.index("</section>")])
+        self.day_page(day)
         self.write_day(make_day("2026-10-12"))
         self.build()  # 기준일 이전 판은 행별 출처 없이도 된다
 
@@ -819,11 +813,10 @@ class SeoTests(SiteCase):
 
 
 class ComponentTests(SiteCase):
-    def test_schedule_is_shown_in_korean_time_with_as_of_note(self):
-        day = make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표", "desc": "확인할 것"}]})
-        page = self.day_page(day)
-        self.assertIn("10/13 21:30", page)
-        self.assertIn("10월 13일 17:02 기준", page)
+    def test_next_schedule_is_no_longer_published(self):
+        # 2026-10-24 사용자 결정: '다음 일정'은 사이트에 싣지 않는다. 입력에 있으면 빼라고 알리고 멈춘다.
+        day = make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]})
+        self.assert_rejected(day, "side.schedule", "싣지 않")
 
     def test_corrections_are_listed(self):
         page = self.day_page(make_day(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}]))
@@ -836,12 +829,11 @@ class ComponentTests(SiteCase):
             del day[key]
         page = self.day_page(day)
         for absent in ("시장 요약", "핵심 1분", 'class="market"', 'class="side"', 'class="rail"', "<ul></ul>",
-                       "정정·수정 내역"):
+                       "정정·수정 내역", "다음 일정", 'class="sched"'):
             self.assertNotIn(absent, page)
 
     def test_anchor_ids_are_unique_in_a_page(self):
-        self.write_day(make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표"}]},
-                                corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}]))
+        self.write_day(make_day(corrections=[{"date": "2026-10-14", "text": "수치를 바로잡았다."}]))
         self.build()
         for rel in ("index.html", "news/2026-10-13/index.html", "news/2026-10-13/a-one/index.html"):
             ids = re.findall(r'\sid="([^"]+)"', self.read(rel))
@@ -914,10 +906,6 @@ class ContentRuleTests(SiteCase):
 
     def test_checked_at_must_be_a_time(self):
         self.assert_rejected(make_day(checked_at="오후쯤"), "checked_at")
-
-    def test_schedule_entry_already_in_the_past_is_rejected(self):
-        day = make_day(side={"schedule": [{"at": "2026-10-13T09:00:00+09:00", "title": "지난 일정"}]})
-        self.assert_rejected(day, "schedule[0]")
 
     def test_market_row_date_cannot_be_in_the_future_or_stale(self):
         day = make_day()
@@ -1291,12 +1279,6 @@ class NewsV2Tests(SiteCase):
         self.assertLess(others.index('href="../a-two/index.html"'), others.index('href="../c-0/index.html"'))
         self.assertNotIn('href="../c-4/index.html"', others)
 
-    def test_schedule_is_listed_in_time_order(self):
-        day = make_day(side={"schedule": [{"at": "2026-10-14T09:00:00+09:00", "title": "가상 늦은 일정"},
-                                          {"at": "2026-10-14T06:00:00+09:00", "title": "가상 이른 일정"}]})
-        page = self.day_page(day)
-        self.assertLess(page.index("가상 이른 일정"), page.index("가상 늦은 일정"))
-
     # ---- 맨 위 시장 지표 (제작 시점에 가져온 12개)
     def indicators(self, keys=None):
         keys = keys or list(build.TICKER_KEYS)
@@ -1402,9 +1384,6 @@ class NewsV2Tests(SiteCase):
         day = self.styled()
         day["sections"][0]["items"][0]["title"] = "지수 {{down:-5.46%}} 급락"
         self.assert_rejected(day, "a-one.title", "색 표시")
-        day = self.styled()
-        day["side"] = {"schedule": [{"at": "2026-10-14T08:30:00+09:00", "title": "가상 발표", "desc": "발표 뒤 확정치 확인"}]}
-        self.assert_rejected(day, "side.schedule[0].desc", "할 일 메모")
 
     def test_style_rules_wait_for_the_set_date(self):
         day = self.styled()

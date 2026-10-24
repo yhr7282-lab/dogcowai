@@ -207,7 +207,7 @@ class BuildOutputTests(SiteCase):
         self.build()
         for rel in self.PAGES:
             html = self.read(rel)
-            for absent in ('class="ticker"', 'class="crumbs"', "<details", 'class="go"', 'class="hint"', "누르면"):
+            for absent in ('class="crumbs"', "<details", 'class="go"', 'class="hint"', "누르면"):
                 self.assertNotIn(absent, html, (rel, absent))
             scripts = re.findall(r"<script\b[^>]*>", html)
             self.assertTrue(all('type="application/ld+json"' in s for s in scripts), (rel, scripts))
@@ -257,7 +257,7 @@ class BuildOutputTests(SiteCase):
         home = self.read("index.html")
         for part in ('<h1 id="top-title">2026-10-13 헤드라인</h1>', 'id="quick-title"', 'id="economy"',
                      'href="news/2026-10-13/a-one/index.html"', 'href="news/2026-10-13/a-two/index.html"',
-                     'id="market-title"', 'href="news/2026-10-12/index.html"'):
+                     'href="news/2026-10-12/index.html"'):
             self.assertIn(part, home)
         self.assertNotIn("2026-10-12 헤드라인</h1>", home)
 
@@ -271,7 +271,7 @@ class BuildOutputTests(SiteCase):
         page = self.day_page(day)
         order = [page.index(s) for s in (
             'class="dateline"', "뉴스 확인 17:02 KST", '<h1 id="top-title">', 'class="summary"',
-            'id="quick-title"', 'id="market-title"', 'id="h-sched"', 'class="jump"', 'id="economy"', 'id="auto"',
+            'id="quick-title"', 'id="h-sched"', 'class="jump"', 'id="economy"', 'id="auto"',
             'id="h-corrections"', 'class="pager"')]
         self.assertEqual(order, sorted(order))
         self.assertIn("2026년 10월 13일 화요일 오후판", page)
@@ -357,40 +357,6 @@ class BuildOutputTests(SiteCase):
 
     # ---- 시장: 기준별로 묶은 한 곳
 
-    def market_of(self, page):
-        start = page.index('class="market"')
-        return page[start:page.index("</section>", start)]
-
-    def test_market_rows_are_grouped_under_their_basis(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "1", "change": "▼ 1.00%", "dir": "down", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
-            {"name": "나", "value": "2", "change": "▲ 1.00%", "dir": "up", "basis": "10/12 뉴욕 종가", "asof": "2026-10-12"},
-            {"name": "다", "value": "3", "basis": "10/12 선물 결제", "asof": "2026-10-12"},
-            {"name": "라", "value": "4"},
-        ]
-        market = self.market_of(self.day_page(day))
-        self.assertEqual(market.count("10/12 뉴욕 종가"), 1)
-        self.assertEqual(market.count("10/12 선물 결제"), 1)
-        self.assertLess(market.index("10/12 뉴욕 종가"), market.index('<span class="n">가</span>'))
-        self.assertLess(market.index('<span class="n">나</span>'), market.index("10/12 선물 결제"))
-        self.assertLess(market.index("10/12 선물 결제"), market.index('<span class="n">다</span>'))
-        self.assertIn('<span class="n">라</span>', market)
-
-    def test_market_draws_no_bars_and_links_each_row_source(self):
-        day = make_day()
-        day["market"]["rows"] = [
-            {"name": "가", "value": "100", "change": "▼ 2.00%", "dir": "down", "basis": "종가", "asof": day["date"],
-             "source": {"name": "가상시세", "url": "https://example.com/row-a"}},
-            {"name": "나", "value": "200", "change": "▲ 30.00", "dir": "up", "basis": "종가", "asof": day["date"]},
-        ]
-        market = self.market_of(self.day_page(day))
-        self.assertNotIn('class="track"', market)
-        self.assertNotIn('class="bar', market)
-        row = market[market.index('<span class="n">가</span>'):market.index('<span class="n">나</span>')]
-        self.assertIn('href="https://example.com/row-a"', row)
-        self.assertIn("가상시세", row)
-
     def test_row_sources_are_required_from_the_set_date(self):
         self.write_site(dict(SITE, v2_from="2026-10-13"))
         self.assert_rejected(make_day(lead_ref="a-one"), "market.rows[0]", "source")
@@ -404,21 +370,6 @@ class BuildOutputTests(SiteCase):
         self.assertIn('href="https://example.com/cal"', sched[:sched.index("</section>")])
         self.write_day(make_day("2026-10-12"))
         self.build()  # 기준일 이전 판은 행별 출처 없이도 된다
-
-    def test_market_has_no_bars_when_fewer_than_two_rows_move(self):
-        market = self.market_of(self.day_page(make_day()))
-        self.assertNotIn('class="track"', market)
-        self.assertIn('<span class="v">6,035.35</span>', market)
-
-    def test_market_forecast_is_listed_without_bars(self):
-        day = make_day()
-        day["market"]["forecast"] = {"title": "가상 전망", "rows": [
-            {"name": "세계", "basis": "7월 전망 3.0%", "value": "3.1%", "change": "▲ 0.1%p", "dir": "up"}]}
-        market = self.market_of(self.day_page(day))
-        self.assertIn("가상 전망", market)
-        self.assertIn("7월 전망 3.0%", market)
-        forecast = market[market.index("가상 전망"):]
-        self.assertNotIn('class="track"', forecast)
 
     # ---- 기사: 분야와 실린 브리핑, 제목, 본문, 출처, 이 브리핑의 다른 기사
 
@@ -850,13 +801,6 @@ class SeoTests(SiteCase):
 
 
 class ComponentTests(SiteCase):
-    def test_market_panel_shows_basis_and_sources(self):
-        page = self.day_page(make_day())
-        self.assertIn('<span class="v">6,035.35</span>', page)
-        self.assertIn('<span class="c down">▼ 5.46%</span>', page)
-        self.assertIn("종가", page)
-        self.assertIn('href="https://example.com/market"', page)
-
     def test_schedule_is_shown_in_korean_time_with_as_of_note(self):
         day = make_day(side={"schedule": [{"at": "2026-10-13T08:30:00-04:00", "title": "가상 발표", "desc": "확인할 것"}]})
         page = self.day_page(day)
@@ -1334,6 +1278,68 @@ class NewsV2Tests(SiteCase):
                                           {"at": "2026-10-14T06:00:00+09:00", "title": "가상 이른 일정"}]})
         page = self.day_page(day)
         self.assertLess(page.index("가상 이른 일정"), page.index("가상 늦은 일정"))
+
+    # ---- 맨 위 시장 지표 (제작 시점에 가져온 12개)
+    def indicators(self, keys=None):
+        keys = keys or list(build.TICKER_KEYS)
+        rows = [{"key": k, "name": "가상지표%d" % n, "value": "%d,000.00" % (n + 1),
+                 "change": "+1.0%d" % n if n % 2 == 0 else "-1.0%d" % n,
+                 "rate": "+0.1%d%%" % n if n % 2 == 0 else "-0.1%d%%" % n,
+                 "dir": "up" if n % 2 == 0 else "down", "time": "10.13 장마감",
+                 "spark": [0, 40, 100, 60], "base": 50} for n, k in enumerate(keys)]
+        return {"as_of": "2026-10-13T17:05:30+09:00", "source": "가상시세", "rows": rows}
+
+    def test_ticker_sits_at_the_very_top_in_two_pages_of_six(self):
+        page = self.day_page(make_day(indicators=self.indicators()))
+        self.assertLess(page.index('class="ticker"'), page.index('class="dateline"'))
+        self.assertLess(page.index('class="masthead"'), page.index('class="ticker"'))
+        ticker = page[page.index('class="ticker"'):page.index("</section>", page.index('class="ticker"'))]
+        self.assertEqual(ticker.count('<ul class="tk-page">'), 2)
+        self.assertEqual(ticker.count('<li class="tk '), 12)
+        first = ticker[ticker.index('<li class="tk '):ticker.index("</li>")]
+        for needle in ('class="tk up"', '<span class="tk-n">가상지표0</span>', '<span class="tk-v">1,000.00</span>',
+                       '<span class="sr">상승 </span>+1.00 <span class="tk-r">(+0.10%)</span>',
+                       '<polyline points=', '<line x1="0"', '<span class="tk-t">10.13 장마감</span>'):
+            self.assertIn(needle, first)
+        self.assertIn('<span class="sr">하락 </span>-1.01', ticker)
+        self.assertIn("10월 13일 17:05 한국 시간에 가져온 값 · 자료 가상시세", ticker)
+        self.assertIn('tabindex="0"', ticker)
+
+    def test_ticker_is_on_home_and_briefing_only(self):
+        day = make_day(indicators=self.indicators())
+        self.write_day(day)
+        self.build()
+        self.assertIn('class="ticker"', self.read("index.html"))
+        for rel in ("news/index.html", "news/2026-10-13/a-one/index.html"):
+            self.assertNotIn('class="ticker"', self.read(rel))
+
+    def test_no_ticker_without_indicators_and_market_rows_are_not_drawn(self):
+        page = self.day_page(make_day())
+        self.assertNotIn('class="ticker"', page)
+        self.assertNotIn('class="market"', page)
+        self.assertNotIn("6,035.35", page)
+
+    def test_ticker_with_missing_indicators_keeps_the_order(self):
+        keys = [k for k in build.TICKER_KEYS if k not in ("eur", "btc")]
+        page = self.day_page(make_day(indicators=self.indicators(keys)))
+        self.assertEqual(page.count('<li class="tk '), 10)
+
+    def test_ticker_input_is_checked(self):
+        ind = self.indicators()
+        ind["rows"][0], ind["rows"][1] = ind["rows"][1], ind["rows"][0]
+        self.assert_rejected(make_day(indicators=ind), "indicators", "순서")
+        ind = self.indicators()
+        ind["rows"][0]["key"] = "fake"
+        self.assert_rejected(make_day(indicators=ind), "indicators")
+        ind = self.indicators()
+        ind["rows"][3]["spark"] = [0, 101]
+        self.assert_rejected(make_day(indicators=ind), "spark")
+        ind = self.indicators()
+        ind["as_of"] = "2026-10-13T17:05:30"
+        self.assert_rejected(make_day(indicators=ind), "as_of")
+        ind = self.indicators()
+        ind["rows"][2]["extra"] = "x"
+        self.assert_rejected(make_day(indicators=ind), "extra")
 
     # ---- 기사 페이지: 브리핑으로 돌아가는 줄
     def test_article_page_has_a_way_back_to_its_briefing(self):

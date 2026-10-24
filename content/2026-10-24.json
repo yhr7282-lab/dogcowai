@@ -14,7 +14,10 @@
         "value": "5,550.30",
         "change": "▲ 0.30%",
         "dir": "up",
-        "source": {"name": "Aju Press", "url": "https://www.ajupress.com/view/20261023153440524"}
+        "source": {
+          "name": "Aju Press",
+          "url": "https://www.ajupress.com/view/20261023153440524"
+        }
       },
       {
         "name": "KOSDAQ",
@@ -23,7 +26,10 @@
         "value": "751.69",
         "change": "▼ 1.62%",
         "dir": "down",
-        "source": {"name": "연합뉴스", "url": "https://www.yna.co.kr/amp/view/AKR20261023129300008"}
+        "source": {
+          "name": "연합뉴스",
+          "url": "https://www.yna.co.kr/amp/view/AKR20261023129300008"
+        }
       },
       {
         "name": "S&P 500",
@@ -32,7 +38,10 @@
         "value": "7,663.43",
         "change": "▼ 1.21%",
         "dir": "down",
-        "source": {"name": "SBS", "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"}
+        "source": {
+          "name": "SBS",
+          "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"
+        }
       },
       {
         "name": "나스닥 종합",
@@ -41,7 +50,10 @@
         "value": "26,008.86",
         "change": "▼ 2.60%",
         "dir": "down",
-        "source": {"name": "SBS", "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"}
+        "source": {
+          "name": "SBS",
+          "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"
+        }
       },
       {
         "name": "다우30",
@@ -50,19 +62,43 @@
         "value": "52,867.98",
         "change": "▲ 0.02%",
         "dir": "up",
-        "source": {"name": "SBS", "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"}
+        "source": {
+          "name": "SBS",
+          "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008811292"
+        }
       }
     ],
     "note": "한국 증시는 10월 23일 종가다. 미국 지수는 10월 22일(현지시간) 정규장 종가이며, 이 판을 확인한 시각에 10월 23일 미국 정규장은 아직 끝나지 않았다."
   },
   "quick": [
-    {"text": "미국 10월 종합 PMI 예비치 {{down:57.6}}, 산출가격 지수는 {{up:59.8}}로 상승", "ref": "us-flash-pmi-2026-oct"},
-    {"text": "유로존 종합 PMI 51.9로 낮아지고 영국은 53.1로 올라 방향이 갈렸다", "ref": "europe-flash-pmi-2026-oct"},
-    {"text": "구글 클라우드의 OpenAI 모델 제공은 선별 기업 대상 비공개 미리보기 단계", "ref": "google-cloud-openai-model-preview"},
-    {"text": "자카르타 AI 데이터센터, 국내 기업 수주 약 1억700만달러 (시공·운영·투자 연계 합산)", "ref": "kind-jakarta-ai-datacenter-contracts"},
-    {"text": "램리서치 분기 매출 약 82.2억달러, 전분기보다 22% 증가", "ref": "lam-research-2026-september-earnings"},
-    {"text": "Peak Energy 1억800만달러 조달, 4GWh 공장은 2027년 1분기 생산 목표", "ref": "peak-energy-series-b-2026"},
-    {"text": "볼보차 3분기 영업손실 56억스웨덴크로나, 약 2,500개 일자리 감축 계획", "ref": "volvo-cars-2026-q3-restructuring"}
+    {
+      "text": "미국 10월 종합 PMI 예비치 {{down:57.6}}, 산출가격 지수는 {{up:59.8}}로 상승",
+      "ref": "us-flash-pmi-2026-oct"
+    },
+    {
+      "text": "유로존 종합 PMI 51.9로 낮아지고 영국은 53.1로 올라 방향이 갈렸다",
+      "ref": "europe-flash-pmi-2026-oct"
+    },
+    {
+      "text": "구글 클라우드의 OpenAI 모델 제공은 선별 기업 대상 비공개 미리보기 단계",
+      "ref": "google-cloud-openai-model-preview"
+    },
+    {
+      "text": "자카르타 AI 데이터센터, 국내 기업 수주 약 1억700만달러 (시공·운영·투자 연계 합산)",
+      "ref": "kind-jakarta-ai-datacenter-contracts"
+    },
+    {
+      "text": "램리서치 분기 매출 약 82.2억달러, 전분기보다 22% 증가",
+      "ref": "lam-research-2026-september-earnings"
+    },
+    {
+      "text": "Peak Energy 1억800만달러 조달, 4GWh 공장은 2027년 1분기 생산 목표",
+      "ref": "peak-energy-series-b-2026"
+    },
+    {
+      "text": "볼보차 3분기 영업손실 56억스웨덴크로나, 약 2,500개 일자리 감축 계획",
+      "ref": "volvo-cars-2026-q3-restructuring"
+    }
   ],
   "sections": [
     {
@@ -79,9 +115,15 @@
           "teaser": "경기 확장 속도는 느려졌지만 기업의 가격 압력은 커졌다.",
           "facts": "S&P Global이 23일 발표한 미국 10월 종합 구매관리자지수(PMI) 예비치는 **57.6**으로 9월 58.4보다 낮아졌다. 확장과 위축을 가르는 기준 50은 웃돌았다. 기업이 받는 판매가격을 나타내는 산출가격 지수는 9월 58.4에서 **59.8**로 올랐다.",
           "so": "경기 확장이 이어지는 가운데 기업의 가격 압력은 낮아지지 않았다. 다만 PMI의 가격 지수는 기업 설문 결과이며 소비자물가 상승률과 같은 수치가 아니다.",
-          "recheck": {"label": "다시 볼 조건", "text": "다음 달 초 나오는 10월 PMI 확정치에서 활동·가격 지수 방향이 유지되는지, 이후 실제 물가지표가 이를 뒷받침하는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "다음 달 초 나오는 10월 PMI 확정치에서 활동·가격 지수 방향이 유지되는지, 이후 실제 물가지표가 이를 뒷받침하는지 확인한다."
+          },
           "sources": [
-            {"name": "Reuters (Regional Media News 재게재)", "url": "https://www.regionalmedianews.com/news/national/business/us-business-activity-cools-in-october-strong-demand-fueling-price-pressures/"}
+            {
+              "name": "Reuters (Regional Media News 재게재)",
+              "url": "https://www.regionalmedianews.com/news/national/business/us-business-activity-cools-in-october-strong-demand-fueling-price-pressures/"
+            }
           ]
         },
         {
@@ -93,10 +135,19 @@
           "teaser": "두 지역 모두 확장 국면이지만 속도는 엇갈렸다.",
           "facts": "23일 발표된 10월 종합 PMI 예비치는 유로존이 **51.9**로 9월 53.1보다 낮아졌다. 영국은 9월 52.0에서 **53.1**로 올랐다. 두 지역 모두 기준 50을 웃돌아 확장 국면이지만 속도는 반대로 움직였다.",
           "so": "유럽 전체를 하나의 경기 흐름으로 묶기보다 국가와 지역을 나눠 볼 필요가 있다.",
-          "recheck": {"label": "다시 볼 조건", "text": "각 지역의 10월 확정 PMI와 제조업·서비스업 세부 지수가 같은 방향인지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "각 지역의 10월 확정 PMI와 제조업·서비스업 세부 지수가 같은 방향인지 확인한다."
+          },
           "sources": [
-            {"name": "FXStreet (유로존)", "url": "https://www.fxstreet.com/news/eurozone-hcob-composite-pmi-declines-to-519-in-october-vs-527-expected-202610230806"},
-            {"name": "investingLive (영국)", "url": "https://investinglive.com/news/uk-october-flash-services-pmi-53-1-vs-51-8-expected/"}
+            {
+              "name": "FXStreet (유로존)",
+              "url": "https://www.fxstreet.com/news/eurozone-hcob-composite-pmi-declines-to-519-in-october-vs-527-expected-202610230806"
+            },
+            {
+              "name": "investingLive (영국)",
+              "url": "https://investinglive.com/news/uk-october-flash-services-pmi-53-1-vs-51-8-expected/"
+            }
           ]
         },
         {
@@ -108,9 +159,15 @@
           "teaser": "과제 대부분은 법령 개정이나 검토가 남은 추진 단계다.",
           "facts": "정부는 23일 규제합리화위원회 제2차 전체회의에서 로봇·반도체·AI 데이터센터 관련 제도 개선 과제를 제시했다. 사족보행 등 새로운 형태 로봇의 안전 가이드를 2027년 상반기까지 먼저 만들고 인증제도는 단계적으로 마련한다. 반도체 산업단지에는 인허가·보상·설계를 동시에 진행하는 패스트트랙을 적용해 조성 기간을 5년 이내로 줄이는 것이 목표다. AI 데이터센터는 인허가 일괄 처리와 전담창구를 추진하고, 비수도권 전력계통영향평가 면제 기준은 검토하기로 했다.",
           "so": "설비·인프라 사업에서 병목으로 꼽힌 제도를 손보겠다는 방향이다. 실제 사업 일정에 반영되는 시점은 과제별 법령·고시 개정과 적용 조건이 확정된 뒤다.",
-          "recheck": {"label": "다시 볼 조건", "text": "관계 법령·고시의 공포와 시행일, 적용 대상이 구체화되는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "관계 법령·고시의 공포와 시행일, 적용 대상이 구체화되는지 확인한다."
+          },
           "sources": [
-            {"name": "국무조정실 보도자료", "url": "https://www.opm.go.kr/opm/news/press-release.do?articleNo=163931&mode=view"}
+            {
+              "name": "국무조정실 보도자료",
+              "url": "https://www.opm.go.kr/opm/news/press-release.do?articleNo=163931&mode=view"
+            }
           ]
         },
         {
@@ -122,9 +179,15 @@
           "teaser": "경제는 완만히 성장하지만 가격 압력이 여전히 높다고 봤다.",
           "facts": "러시아 중앙은행은 23일 기준금리를 연 14%로 유지했다고 AK&M이 보도했다. 중앙은행은 경제가 완만하게 성장하는 가운데 가격 압력과 인플레이션 기대가 여전히 높다고 설명했다.",
           "so": "이번 동결은 물가 위험이 해소됐다는 신호로 보기 어렵다.",
-          "recheck": {"label": "다시 볼 조건", "text": "다음 금리 결정문에서 물가 압력과 기대에 대한 판단이 바뀌는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "다음 금리 결정문에서 물가 압력과 기대에 대한 판단이 바뀌는지 확인한다."
+          },
           "sources": [
-            {"name": "AK&M", "url": "https://www.akm.ru/eng/news/the-central-bank-kept-the-key-rate-at-14-per-annum-/"}
+            {
+              "name": "AK&M",
+              "url": "https://www.akm.ru/eng/news/the-central-bank-kept-the-key-rate-at-14-per-annum-/"
+            }
           ]
         }
       ]
@@ -143,9 +206,15 @@
           "teaser": "일반 공개가 아니라 일부 기업 고객 대상 비공개 미리보기다.",
           "facts": "구글 클라우드는 자사 Model Garden에서 OpenAI의 GPT-6 Astra, GPT-6.1 Sol, GPT-6 Luna를 제공한다고 발표했다. 현재 범위는 선별된 기업 고객 대상 비공개 미리보기이며, 이용 대금은 Google Cloud Marketplace를 통해 구글 클라우드 청구서로 처리된다.",
           "so": "기업은 기존 클라우드 계약 안에서 모델 선택지를 넓힐 수 있다. 전체 고객 대상 일반 공개와 다른 제품 연동은 앞으로의 단계다.",
-          "recheck": {"label": "다시 볼 조건", "text": "일반 공개 전환과 지원 지역·이용 조건이 공식 문서에서 확정되는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "일반 공개 전환과 지원 지역·이용 조건이 공식 문서에서 확정되는지 확인한다."
+          },
           "sources": [
-            {"name": "Google Cloud 공식 블로그", "url": "https://cloud.google.com/blog/products/ai-machine-learning/google-cloud-brings-openai-models-to-customers"}
+            {
+              "name": "Google Cloud 공식 블로그",
+              "url": "https://cloud.google.com/blog/products/ai-machine-learning/google-cloud-brings-openai-models-to-customers"
+            }
           ]
         },
         {
@@ -157,9 +226,15 @@
           "teaser": "시공·운영과 투자 연계 수주를 합친 금액이다.",
           "facts": "뉴스핌에 따르면 한국해외인프라도시개발지원공사(KIND)가 참여한 인도네시아 자카르타 AI 데이터센터 사업에서 국내 기업이 시공·운영과 투자 연계 수주를 합쳐 약 1억700만달러를 확보했다. KIND의 지분 투자 1,400만달러는 이와 별개 항목이다. LG CNS는 기계·전기·배관 설비 구축과 운영·유지관리를 맡는다.",
           "so": "AI 인프라 사업 기회가 서버 공급을 넘어 설비 구축과 운영으로 이어지는 사례다. 합산 수주액을 한 회사의 매출이나 전체 사업비로 읽어서는 안 된다.",
-          "recheck": {"label": "다시 볼 조건", "text": "공사 진행과 운영 개시, 참여 기업별 매출 인식이 확인되는지 본다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "공사 진행과 운영 개시, 참여 기업별 매출 인식이 확인되는지 본다."
+          },
           "sources": [
-            {"name": "뉴스핌", "url": "https://www.newspim.com/news/view/20261023000975"}
+            {
+              "name": "뉴스핌",
+              "url": "https://www.newspim.com/news/view/20261023000975"
+            }
           ]
         },
         {
@@ -171,9 +246,15 @@
           "teaser": "처리 환경을 확인한 뒤에만 데이터를 보내도록 설계했다.",
           "facts": "Cohere는 22일 Model Vault의 기밀 컴퓨팅 기능을 공개 베타로 내놨다. Microsoft Azure의 NVIDIA GPU 환경에서 추론 중 메모리를 하드웨어로 격리해 보호한다. 데이터를 보내기 전에 고객 측 소프트웨어가 처리 환경의 하드웨어·펌웨어·소프트웨어 구성을 암호학적으로 확인하고, 기준에 맞지 않으면 요청을 보내지 않는 방식이라고 회사는 설명했다.",
           "so": "AI 보안의 확인 대상이 저장·전송 중 암호화를 넘어 실제 처리 환경으로 넓어진다. 회사가 제시한 보호 구조와 개별 고객의 보안 적합성 검증은 별개다.",
-          "recheck": {"label": "다시 볼 조건", "text": "정식 출시 조건과 지원 환경, 독립 보안 평가가 나오는지 본다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "정식 출시 조건과 지원 환경, 독립 보안 평가가 나오는지 본다."
+          },
           "sources": [
-            {"name": "Cohere 공식 블로그", "url": "https://cohere.com/blog/introducing-confidential-computing-on-cohere-model-vault"}
+            {
+              "name": "Cohere 공식 블로그",
+              "url": "https://cohere.com/blog/introducing-confidential-computing-on-cohere-model-vault"
+            }
           ]
         },
         {
@@ -184,9 +265,15 @@
           "teaser": "긴 답변 대신 확률·선택지·점수로 답하는 API다.",
           "facts": "OpenAI는 22일 정해진 답 범위 안에서 분류·선택·평가를 하는 Decisions API를 베타에서 일반 공개로 전환했다. 텍스트·이미지·JSON을 입력받아 확률, 선택지, 점수 형태로 답하며, 한 요청에 질문을 최대 400개까지 담을 수 있다.",
           "so": "글을 길게 쓰기보다 업무 흐름의 다음 단계를 고르는 용도에 맞춘 상품이다. 실제 자동화에 쓰려면 오류율과 사람이 다시 볼 조건을 따로 평가해야 한다.",
-          "recheck": {"label": "다시 볼 조건", "text": "실제 사용 사례에서 정확도·응답 지연·비용을 같은 조건으로 측정한 결과를 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "실제 사용 사례에서 정확도·응답 지연·비용을 같은 조건으로 측정한 결과를 확인한다."
+          },
           "sources": [
-            {"name": "Unite.AI", "url": "https://www.unite.ai/openai-makes-decisions-api-generally-available-with-gpt-6-luna/"}
+            {
+              "name": "Unite.AI",
+              "url": "https://www.unite.ai/openai-makes-decisions-api-generally-available-with-gpt-6-luna/"
+            }
           ]
         },
         {
@@ -198,9 +285,15 @@
           "teaser": "고도화된 AI의 평가와 취약점 탐색을 함께 연구한다.",
           "facts": "OpenAI와 폴란드 국립연구기관 NASK는 23일 AI 안전·보안·기술 연구 협력을 모색하는 협약을 맺었다. NASK의 AI 안전 연구센터와 함께 고도화된 AI 시스템을 평가하는 방법, 취약점 탐색, 보호 장치 강화를 연구할 계획이다.",
           "so": "AI 개발사와 공공 연구기관이 평가 역량을 함께 갖추려는 움직임이다. 협약 체결 자체가 보안 개선을 입증하는 것은 아니다.",
-          "recheck": {"label": "다시 볼 조건", "text": "공동 평가 방법이나 연구 결과가 실제로 공개되는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "공동 평가 방법이나 연구 결과가 실제로 공개되는지 확인한다."
+          },
           "sources": [
-            {"name": "Investing.com (Reuters 재게재)", "url": "https://www.investing.com/news/stock-market-news/openai-and-polands-nask-collaborate-on-ai-safety-research-4968092"}
+            {
+              "name": "Investing.com (Reuters 재게재)",
+              "url": "https://www.investing.com/news/stock-market-news/openai-and-polands-nask-collaborate-on-ai-safety-research-4968092"
+            }
           ]
         }
       ]
@@ -218,9 +311,15 @@
           "teaser": "장비 공급사의 매출 확대가 실적으로 확인됐다.",
           "facts": "램리서치는 21일(현지시간) 9월 27일로 끝난 분기 매출이 82억1,942만달러(약 82.2억달러)로 전분기 67억2,224만달러보다 22% 늘었다고 발표했다. 미국 회계기준(GAAP) 희석 주당순이익은 2.19달러, 조정(비GAAP) 기준은 2.20달러였다.",
           "so": "반도체 장비 공급사의 실제 매출 확대는 확인됐다. 다만 한 회사의 실적만으로 반도체 업계 전체의 투자 계획이나 향후 발주가 확정됐다고 볼 수는 없다.",
-          "recheck": {"label": "다시 볼 조건", "text": "다음 분기 매출과 고객사 설비투자 계획이 이어지는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "다음 분기 매출과 고객사 설비투자 계획이 이어지는지 확인한다."
+          },
           "sources": [
-            {"name": "Lam Research IR", "url": "https://investor.lamresearch.com/2026-10-21-Lam-Research-Corporation-Reports-Financial-Results-for-the-Quarter-Ended-September-27,-2026"}
+            {
+              "name": "Lam Research IR",
+              "url": "https://investor.lamresearch.com/2026-10-21-Lam-Research-Corporation-Reports-Financial-Results-for-the-Quarter-Ended-September-27,-2026"
+            }
           ]
         }
       ]
@@ -239,9 +338,15 @@
           "teaser": "투자 유치는 마쳤고, 공장 생산은 2027년 1분기 목표다.",
           "facts": "미국 Peak Energy는 21일 GM Ventures가 주도한 시리즈 B 투자로 1억800만달러를 조달했다고 발표했다. 나트륨이온 에너지저장장치(ESS)의 미국 생산 확대와 데이터센터 시장 진출에 자금을 쓸 계획이다. 캘리포니아 새크라멘토의 생산능력 4GWh 공장은 2027년 1분기 생산 시작이 목표다.",
           "so": "리튬이온 이외의 저장 기술이 생산 확대 자본을 확보한 사례다. 경제성과 신뢰성은 실제 양산·납품·운영 실적으로 더 확인해야 한다.",
-          "recheck": {"label": "다시 볼 조건", "text": "2027년 1분기 생산 개시 목표가 지켜지는지와 실제 납품·운영 실적을 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "2027년 1분기 생산 개시 목표가 지켜지는지와 실제 납품·운영 실적을 확인한다."
+          },
           "sources": [
-            {"name": "Peak Energy 공식 발표", "url": "https://peakenergy.com/news/latest/peak-raises-108-million-series-b"}
+            {
+              "name": "Peak Energy 공식 발표",
+              "url": "https://peakenergy.com/news/latest/peak-raises-108-million-series-b"
+            }
           ]
         },
         {
@@ -253,9 +358,15 @@
           "teaser": "우선협상대상자 선정이며 인수 계약 체결은 아직이다.",
           "facts": "SM그룹 계열사 SM국일(옛 국일제지)은 2차전지·반도체 생산장비 기업 대진기계 인수를 위한 우선협상대상자로 선정됐다고 23일 밝혔다. 대진기계는 배터리 모듈·팩 조립 자동화설비와 반도체 웨이퍼용 잉곳 성장기 등을 만들어 왔고, ESS용 배터리 생산장비 관련 매출이 전체의 약 70%라고 연합뉴스는 전했다.",
           "so": "제지 위주 사업에서 산업장비로 영역을 넓히려는 인수 추진이다. 우선협상대상자 선정은 계약 체결이나 소유권 이전과 다르다.",
-          "recheck": {"label": "다시 볼 조건", "text": "최종 계약과 인수가격·자금 조달, 거래 종결 여부가 공개되는지 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "최종 계약과 인수가격·자금 조달, 거래 종결 여부가 공개되는지 확인한다."
+          },
           "sources": [
-            {"name": "연합뉴스", "url": "https://www.yna.co.kr/amp/view/AKR20261023035700003"}
+            {
+              "name": "연합뉴스",
+              "url": "https://www.yna.co.kr/amp/view/AKR20261023035700003"
+            }
           ]
         }
       ]
@@ -274,9 +385,15 @@
           "teaser": "보고 영업손실과 일부 항목을 뺀 손실의 기준이 다르다.",
           "facts": "볼보자동차는 23일 3분기 영업손실(EBIT)이 56억스웨덴크로나라고 발표했다. 합작·관계기업 손익과 비교에 영향을 주는 항목을 뺀 영업손실은 37억스웨덴크로나다. 회사는 50억스웨덴크로나 규모의 추가 비용 절감의 하나로 전 세계에서 약 2,500개 일자리를 줄일 계획이며, 이 가운데 약 2,000개가 스웨덴이다.",
           "so": "판매 확대보다 손익과 현금흐름 개선이 당장의 과제로 떠올랐다. 감축은 계획 단계이며 완료된 것이 아니다.",
-          "recheck": {"label": "다시 볼 조건", "text": "감축 계획의 실제 이행과 다음 분기 영업손익·현금흐름을 확인한다."},
+          "recheck": {
+            "label": "다시 볼 조건",
+            "text": "감축 계획의 실제 이행과 다음 분기 영업손익·현금흐름을 확인한다."
+          },
           "sources": [
-            {"name": "Volvo Cars 실적 발표 (Macau Business 재게재)", "url": "https://macaubusiness.com/volvo-cars-q3-2026-taking-decisive-action-to-navigate-a-very-tough-environment/"}
+            {
+              "name": "Volvo Cars 실적 발표 (Macau Business 재게재)",
+              "url": "https://macaubusiness.com/volvo-cars-q3-2026-taking-decisive-action-to-navigate-a-very-tough-environment/"
+            }
           ]
         }
       ]
@@ -288,7 +405,880 @@
         "at": "2026-10-23T16:00:00-04:00",
         "title": "미국 10/23 정규장 마감",
         "desc": "미국 동부 16:00. 마감 뒤 확정 종가 확인",
-        "source": {"name": "NYSE 거래시간·휴장 달력", "url": "https://www.nyse.com/trade/hours-calendars"}
+        "source": {
+          "name": "NYSE 거래시간·휴장 달력",
+          "url": "https://www.nyse.com/trade/hours-calendars"
+        }
+      }
+    ]
+  },
+  "indicators": {
+    "as_of": "2026-10-24T10:58:17+09:00",
+    "source": "네이버페이 증권·업비트",
+    "rows": [
+      {
+        "key": "kospi",
+        "name": "코스피",
+        "value": "5,550.30",
+        "change": "+16.53",
+        "rate": "+0.30%",
+        "dir": "up",
+        "time": "10.23 장마감",
+        "spark": [
+          35,
+          0,
+          8,
+          8,
+          6,
+          26,
+          9,
+          25,
+          50,
+          52,
+          43,
+          41,
+          26,
+          46,
+          35,
+          40,
+          55,
+          37,
+          28,
+          24,
+          26,
+          25,
+          21,
+          31,
+          38,
+          40,
+          42,
+          38,
+          32,
+          32,
+          35,
+          37,
+          45,
+          51,
+          62,
+          61,
+          63,
+          70,
+          76,
+          64,
+          63,
+          76,
+          72,
+          68,
+          70,
+          79,
+          76,
+          78,
+          72,
+          75,
+          73,
+          83,
+          94,
+          89,
+          86,
+          88,
+          91,
+          98,
+          98,
+          100
+        ],
+        "base": 92
+      },
+      {
+        "key": "kosdaq",
+        "name": "코스닥",
+        "value": "751.69",
+        "change": "-12.41",
+        "rate": "-1.62%",
+        "dir": "down",
+        "time": "10.23 장마감",
+        "spark": [
+          42,
+          3,
+          9,
+          11,
+          0,
+          18,
+          12,
+          40,
+          41,
+          38,
+          29,
+          30,
+          14,
+          27,
+          25,
+          21,
+          36,
+          24,
+          13,
+          9,
+          8,
+          7,
+          5,
+          10,
+          12,
+          13,
+          12,
+          12,
+          8,
+          5,
+          5,
+          11,
+          19,
+          26,
+          33,
+          35,
+          32,
+          33,
+          40,
+          30,
+          29,
+          38,
+          37,
+          33,
+          34,
+          47,
+          54,
+          53,
+          46,
+          48,
+          46,
+          53,
+          61,
+          57,
+          51,
+          52,
+          54,
+          57,
+          55,
+          57
+        ],
+        "base": 100
+      },
+      {
+        "key": "sp500",
+        "name": "S&P 500",
+        "value": "7,623.68",
+        "change": "-39.75",
+        "rate": "-0.52%",
+        "dir": "down",
+        "time": "10.23 장마감",
+        "spark": [
+          23,
+          4,
+          30,
+          25,
+          32,
+          35,
+          24,
+          5,
+          0,
+          9,
+          16,
+          42,
+          65,
+          78,
+          62,
+          59,
+          73,
+          75,
+          82,
+          78,
+          68,
+          73,
+          75,
+          82,
+          80,
+          70,
+          64,
+          54,
+          65,
+          69,
+          67,
+          51,
+          44,
+          33,
+          18,
+          31,
+          24,
+          25,
+          31,
+          38,
+          29,
+          38,
+          34,
+          34,
+          36,
+          35,
+          39,
+          24,
+          18,
+          28,
+          27,
+          28,
+          30,
+          28,
+          24,
+          25,
+          21,
+          19,
+          17,
+          14
+        ],
+        "base": 100
+      },
+      {
+        "key": "nasdaq",
+        "name": "나스닥",
+        "value": "25,955.34",
+        "change": "-53.52",
+        "rate": "-0.21%",
+        "dir": "down",
+        "time": "10.23 장마감",
+        "spark": [
+          11,
+          0,
+          34,
+          29,
+          45,
+          63,
+          51,
+          33,
+          35,
+          38,
+          51,
+          76,
+          87,
+          100,
+          78,
+          78,
+          86,
+          84,
+          88,
+          87,
+          80,
+          86,
+          85,
+          97,
+          93,
+          81,
+          74,
+          66,
+          76,
+          78,
+          82,
+          66,
+          61,
+          54,
+          41,
+          55,
+          45,
+          44,
+          51,
+          57,
+          49,
+          60,
+          55,
+          52,
+          52,
+          53,
+          56,
+          42,
+          37,
+          44,
+          40,
+          40,
+          43,
+          41,
+          37,
+          40,
+          35,
+          33,
+          35,
+          31
+        ],
+        "base": 58
+      },
+      {
+        "key": "dow",
+        "name": "다우존스",
+        "value": "52,215.16",
+        "change": "-652.82",
+        "rate": "-1.23%",
+        "dir": "down",
+        "time": "10.23 장마감",
+        "spark": [
+          36,
+          30,
+          30,
+          32,
+          31,
+          24,
+          16,
+          9,
+          0,
+          4,
+          1,
+          11,
+          24,
+          29,
+          28,
+          24,
+          34,
+          36,
+          39,
+          35,
+          30,
+          32,
+          36,
+          35,
+          36,
+          35,
+          34,
+          31,
+          34,
+          37,
+          35,
+          30,
+          27,
+          22,
+          16,
+          20,
+          18,
+          20,
+          21,
+          23,
+          21,
+          24,
+          23,
+          25,
+          26,
+          26,
+          27,
+          23,
+          20,
+          24,
+          24,
+          23,
+          23,
+          25,
+          24,
+          22,
+          22,
+          21,
+          19,
+          16
+        ],
+        "base": 100
+      },
+      {
+        "key": "usd",
+        "name": "미국 USD",
+        "value": "1,326.50",
+        "change": "0.00",
+        "rate": "0.00%",
+        "dir": "flat",
+        "time": "10.24 10:37",
+        "spark": [
+          56,
+          90,
+          77,
+          83,
+          60,
+          52,
+          23,
+          0,
+          31,
+          15,
+          15,
+          12,
+          10,
+          2,
+          29,
+          54,
+          87,
+          71,
+          50,
+          60,
+          44,
+          50,
+          73,
+          79,
+          83,
+          98,
+          75,
+          50,
+          63,
+          90,
+          90,
+          100,
+          94,
+          81,
+          90,
+          98,
+          90,
+          67,
+          73,
+          73,
+          56,
+          56,
+          58,
+          71,
+          90,
+          77,
+          81,
+          85,
+          96,
+          85,
+          94,
+          90,
+          65,
+          83,
+          90,
+          96,
+          94,
+          94,
+          81,
+          96
+        ],
+        "base": 96
+      },
+      {
+        "key": "eur",
+        "name": "유럽 EUR",
+        "value": "1,486.08",
+        "change": "-2.39",
+        "rate": "-0.16%",
+        "dir": "down",
+        "time": "10.24 10:37",
+        "spark": [
+          68,
+          98,
+          87,
+          95,
+          76,
+          72,
+          50,
+          29,
+          50,
+          30,
+          33,
+          31,
+          22,
+          0,
+          27,
+          49,
+          76,
+          63,
+          44,
+          58,
+          44,
+          47,
+          62,
+          61,
+          70,
+          78,
+          66,
+          52,
+          54,
+          78,
+          66,
+          47,
+          56,
+          40,
+          56,
+          40,
+          32,
+          19,
+          40,
+          33,
+          18,
+          7,
+          24,
+          50,
+          48,
+          49,
+          35,
+          62,
+          54,
+          55,
+          61,
+          50,
+          28,
+          46,
+          40,
+          44,
+          37,
+          43,
+          35,
+          64
+        ],
+        "base": 100
+      },
+      {
+        "key": "wti",
+        "name": "WTI (26.12)",
+        "value": "103.27",
+        "change": "+3.80",
+        "rate": "+3.82%",
+        "dir": "up",
+        "time": "10.23 장마감",
+        "spark": [
+          2,
+          1,
+          0,
+          2,
+          13,
+          7,
+          5,
+          7,
+          21,
+          17,
+          28,
+          33,
+          25,
+          23,
+          22,
+          22,
+          21,
+          24,
+          27,
+          29,
+          28,
+          36,
+          41,
+          36,
+          38,
+          31,
+          34,
+          31,
+          26,
+          33,
+          46,
+          44,
+          44,
+          42,
+          43,
+          42,
+          41,
+          49,
+          47,
+          48,
+          62,
+          70,
+          72,
+          72,
+          66,
+          73,
+          83,
+          89,
+          81,
+          83,
+          84,
+          82,
+          83,
+          85,
+          90,
+          94,
+          100,
+          93,
+          91,
+          93
+        ],
+        "base": 10
+      },
+      {
+        "key": "gold",
+        "name": "국제 금 (26.12)",
+        "value": "4,007.90",
+        "change": "-52.50",
+        "rate": "-1.29%",
+        "dir": "down",
+        "time": "10.23 장마감",
+        "spark": [
+          65,
+          70,
+          73,
+          62,
+          62,
+          58,
+          56,
+          49,
+          42,
+          41,
+          19,
+          41,
+          49,
+          48,
+          44,
+          44,
+          33,
+          25,
+          27,
+          40,
+          53,
+          48,
+          40,
+          39,
+          35,
+          51,
+          34,
+          46,
+          59,
+          65,
+          58,
+          56,
+          58,
+          57,
+          68,
+          58,
+          59,
+          65,
+          69,
+          73,
+          61,
+          56,
+          2,
+          14,
+          2,
+          6,
+          18,
+          17,
+          19,
+          12,
+          0,
+          7,
+          11,
+          7,
+          7,
+          6,
+          11,
+          5,
+          2,
+          3
+        ],
+        "base": 100
+      },
+      {
+        "key": "us10y",
+        "name": "미국채 10년",
+        "value": "4.9990",
+        "change": "+0.0456",
+        "rate": "+0.92%",
+        "dir": "up",
+        "time": "10.24 06:05",
+        "spark": [
+          24,
+          24,
+          20,
+          30,
+          20,
+          30,
+          34,
+          34,
+          50,
+          58,
+          62,
+          42,
+          42,
+          46,
+          54,
+          66,
+          62,
+          58,
+          42,
+          34,
+          34,
+          58,
+          54,
+          62,
+          70,
+          92,
+          96,
+          84,
+          100,
+          58,
+          38,
+          4,
+          34,
+          30,
+          70,
+          74,
+          74,
+          84,
+          78,
+          74,
+          84,
+          92,
+          78,
+          70,
+          74,
+          74,
+          84,
+          74,
+          70,
+          62,
+          66,
+          74,
+          70,
+          84,
+          84,
+          96,
+          96,
+          88,
+          96,
+          92
+        ],
+        "base": 0
+      },
+      {
+        "key": "dxy",
+        "name": "달러인덱스",
+        "value": "101.81",
+        "change": "+0.20",
+        "rate": "+0.20%",
+        "dir": "up",
+        "time": "10.23 장마감",
+        "spark": [
+          16,
+          3,
+          0,
+          6,
+          7,
+          12,
+          39,
+          44,
+          45,
+          50,
+          42,
+          39,
+          45,
+          45,
+          53,
+          56,
+          56,
+          54,
+          51,
+          52,
+          60,
+          85,
+          85,
+          81,
+          76,
+          91,
+          86,
+          74,
+          64,
+          67,
+          75,
+          78,
+          87,
+          91,
+          94,
+          77,
+          66,
+          51,
+          59,
+          73,
+          55,
+          76,
+          64,
+          65,
+          77,
+          74,
+          87,
+          89,
+          94,
+          94,
+          100,
+          90,
+          88,
+          85,
+          84,
+          87,
+          87,
+          91,
+          95,
+          72
+        ],
+        "base": 26
+      },
+      {
+        "key": "btc",
+        "name": "비트코인",
+        "value": "108,511,000",
+        "change": "-368,000",
+        "rate": "-0.34%",
+        "dir": "down",
+        "time": "10.24 10:58",
+        "spark": [
+          28,
+          60,
+          100,
+          74,
+          89,
+          82,
+          69,
+          54,
+          80,
+          80,
+          79,
+          83,
+          86,
+          70,
+          60,
+          66,
+          83,
+          80,
+          62,
+          65,
+          76,
+          71,
+          67,
+          56,
+          69,
+          58,
+          73,
+          69,
+          73,
+          94,
+          26,
+          86,
+          60,
+          56,
+          62,
+          61,
+          76,
+          78,
+          62,
+          60,
+          50,
+          47,
+          36,
+          46,
+          39,
+          48,
+          54,
+          57,
+          57,
+          49,
+          52,
+          21,
+          13,
+          34,
+          49,
+          23,
+          6,
+          11,
+          0,
+          21
+        ],
+        "base": 49
       }
     ]
   }

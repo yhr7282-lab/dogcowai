@@ -59,7 +59,9 @@ RELATED_MAX = 5                           # 기사 페이지의 '이 브리핑�
 # 개인 원본의 다른 칸이나 제작용 운영 정보(판 상태·개정·내부 키 등)가 공개 파일에 섞여 들어오지 않게 하려는 것이다.
 ALLOWED = {
     "day": {"date", "edition", "checked_at", "headline", "summary", "lead_ref", "market", "quick", "sections",
-            "side", "updated_at", "corrections", "earlier", "withdrawn"},
+            "side", "updated_at", "corrections", "earlier", "withdrawn", "indicators"},
+    "indicators": {"as_of", "source", "rows"},
+    "indicator_row": {"key", "name", "value", "change", "rate", "dir", "time", "spark", "base"},
     "section": {"id", "title", "items", "lede", "points"},
     "item": {"id", "date", "featured", "title", "teaser", "facts", "so", "recheck", "sources",
              "status", "basis", "follows"},
@@ -77,10 +79,13 @@ ALLOWED = {
     "earlier": {"edition", "checked_at", "sections"},
     "withdrawn": {"id", "reason"},
 }
+# 맨 위 시장 지표 12개와 순서 (tools/market_snapshot.py 가 제작 시점에 가져와 indicators 에 넣는다)
+TICKER_KEYS = ("kospi", "kosdaq", "sp500", "nasdaq", "dow", "usd", "eur", "wti", "gold", "us10y", "dxy", "btc")
+TICKER_PAGE = 6   # 좁은 화면에서 한 쪽에 보이는 칸 수 (3칸 × 2줄)
 RETIRED_DIRS = ("topic", "about")  # 없앤 페이지(분야별·소개, 2026-10-24). 이번 생성에 없으면 생성 파일만 지운다
 RESERVED_IDS = {"brief", "top-title", "market-title", "quick-title", "recent-title", "topics-title",
                 "today-title", "intro-title", "related-title", "others-title", "h-sched", "h-absent",
-                "h-corrections", "fix-title"}
+                "h-corrections", "fix-title", "ticker-title"}
 
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
 _DIRECTION = re.compile(r"\{\{(up|down):(.+?)\}\}")
@@ -316,6 +321,40 @@ def _check_row_source(row, where, required):
     _check_sources([src], where + ".source")
 
 
+def _check_indicators(ind, where):
+    """맨 위 시장 지표 (indicators). 정해진 12개 키만, 정해진 순서로. 값은 문자열, 차트는 0~100 정수."""
+    _check_keys(ind, "indicators", where)
+    try:
+        at = datetime.datetime.fromisoformat(ind.get("as_of") or "")
+    except (TypeError, ValueError):
+        at = None
+    if at is None or at.tzinfo is None:
+        raise BuildError("%s: as_of 는 시간대가 붙은 ISO 시각이어야 합니다" % where)
+    rows = ind.get("rows")
+    if not isinstance(rows, list) or not 1 <= len(rows) <= len(TICKER_KEYS):
+        raise BuildError("%s: rows 는 지표 1~%d개 목록이어야 합니다" % (where, len(TICKER_KEYS)))
+    keys = [r.get("key") if isinstance(r, dict) else None for r in rows]
+    order = [k for k in TICKER_KEYS if k in keys]
+    if keys != order:
+        raise BuildError("%s: 지표는 정해진 12개(%s) 안에서 정해진 순서로 한 번씩만 씁니다" % (where, ", ".join(TICKER_KEYS)))
+    for n, r in enumerate(rows):
+        w = "%s.rows[%d]" % (where, n)
+        _check_keys(r, "indicator_row", w)
+        for key in ("name", "value", "change", "rate", "time"):
+            _need(r, key, w)
+            if not isinstance(r[key], str):
+                raise BuildError("%s: %s 는 문자열이어야 합니다" % (w, key))
+        if r.get("dir") not in ("up", "down", "flat"):
+            raise BuildError("%s: dir 은 up·down·flat 중 하나여야 합니다" % w)
+        spark = r.get("spark", [])
+        if not isinstance(spark, list) or len(spark) > 120 or any(
+                not isinstance(v, int) or isinstance(v, bool) or not 0 <= v <= 100 for v in spark):
+            raise BuildError("%s: spark 는 0~100 정수 120개 이하여야 합니다" % w)
+        base = r.get("base")
+        if base is not None and (not isinstance(base, int) or isinstance(base, bool) or not 0 <= base <= 100):
+            raise BuildError("%s: base 는 0~100 정수여야 합니다" % w)
+
+
 def _check_date(value, where):
     try:
         return parse_date(value)
@@ -480,6 +519,8 @@ def validate_day(day, name_date, filename, site):
     earlier = _check_earlier(day, filename, date, need_sources, ids, now)
     _check_withdrawn(day, filename, set(items_by_id) | earlier)
     v2 = day["date"] >= site["v2_from"]
+    if "indicators" in day:
+        _check_indicators(day["indicators"], "%s indicators" % filename)
     if v2 and "lead_ref" not in day:
         raise BuildError("%s: lead_ref — 대표 제목이 다루는 기사(대표 기사)의 id 가 있어야 합니다" % filename)
     if "lead_ref" in day and day["lead_ref"] not in items_by_id:
@@ -609,8 +650,8 @@ def load_pages(root):
 #
 # 페이지는 네 가지다. 같은 정보는 한 곳에만 둔다.
 #   홈      제호 아래 한 줄 소개 + 최신 브리핑 (브리핑 페이지와 같은 구성)
-#   브리핑  날짜·판·뉴스 확인 시각 → 대표 제목 → 짧은 의미 → 핵심 1분(줄마다 본문 기사로 이동)
-#           → 시장·다음 일정(넓은 화면에서는 오른쪽 보조 열) → 분야 바로가기 → 분야별 기사 전문
+#   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·뉴스 확인 시각 → 대표 제목 → 짧은 의미
+#           → 핵심 1분(줄마다 본문 기사로 이동) → 다음 일정(넓은 화면에서는 오른쪽 보조 열) → 분야 바로가기 → 분야별 기사 전문
 #           → 이전 판에 실린 기사 → 정정·수정 내역 → 이전·다음 브리핑
 #   기사    분야·실린 판, 제목, 뉴스 확인·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 앞선 기사, 출처,
 #           이 기사의 정정, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
@@ -631,55 +672,39 @@ def _source_link(src):
             % (esc(src["url"]), inline(src["name"])))
 
 
-def market_groups(rows_):
-    """연속한 시장 수치를 기준(basis)이 같은 것끼리 묶는다. [(기준, [행...])]"""
-    groups = []
-    for r in rows_:
-        basis = r.get("basis") or ""
-        if groups and groups[-1][0] == basis:
-            groups[-1][1].append(r)
-        else:
-            groups.append((basis, [r]))
-    return groups
-
-
-def _market_row(r, sub_keys=("note",)):
-    """시장 수치 한 줄: 이름 / 값 / 등락, 그 아래 작은 글자로 메모와 근거 링크.
-    막대는 그리지 않는다. 기준(종가·장중, 퍼센트·포인트)이 다른 수치를 한 척도에 놓지 않기 위해서다."""
-    value = '<span class="v">%s</span>' % inline(r["value"]) if r.get("value") else ""
-    change = ""
-    if r.get("change"):
-        cls = " " + r["dir"] if r.get("dir") in ("up", "down") else ""
-        change = '<span class="c%s">%s</span>' % (cls, inline(r["change"]))
-    notes = [inline(r[k]) for k in sub_keys if r.get(k)]
-    if r.get("source"):
-        notes.append(_source_link(r["source"]))
-    sub = '<span class="x">%s</span>' % "<span> · </span>".join(notes) if notes else ""
-    return '<li><span class="n">%s</span>%s%s%s</li>' % (inline(r["name"]), value, change, sub)
-
-
-def render_market(day):
-    """시장 수치는 이 한 곳에만 둔다. 기준(10/13 뉴욕 종가 등)이 같은 줄끼리 묶고 기준을 먼저 적는다.
-    줄마다 근거 링크(source)가 있으면 그 줄에, 판 전체의 출처(sources)가 있으면 끝에 둔다."""
-    market = day.get("market")
-    if not market:
+def _sparkline(points, base):
+    """작은 흐름 선 (SVG). 점수는 0~100 (100이 가장 높음), base 는 전 거래일 종가 높이(점선)."""
+    if len(points) < 2:
         return ""
-    parts = ['<section class="market" aria-labelledby="market-title">', '<h2 id="market-title">시장</h2>']
-    for basis, group in market_groups(market.get("rows") or []):
-        head = '<h3>%s</h3>' % inline(basis) if basis else ""
-        parts.append('<div class="mgroup">%s<ul class="mrows">%s</ul></div>'
-                     % (head, "".join(_market_row(r) for r in group)))
-    forecast = market.get("forecast") or {}
-    frows = forecast.get("rows") or []
-    if frows:
-        head = '<h3>%s</h3>' % inline(forecast["title"]) if forecast.get("title") else ""
-        parts.append('<div class="mgroup">%s<ul class="mrows">%s</ul></div>'
-                     % (head, "".join(_market_row(r, ("basis", "note")) for r in frows)))
-    if market.get("note"):
-        parts.append('<p class="note">%s</p>' % inline(market["note"]))
-    parts.append(render_sources(market.get("sources")))
-    parts.append("</section>")
-    return "\n".join(p for p in parts if p)
+    step = 100 / (len(points) - 1)
+    y = lambda v: 2 + (100 - v) * 0.26
+    line = " ".join("%.1f,%.1f" % (i * step, y(v)) for i, v in enumerate(points))
+    base_line = ('<line x1="0" x2="100" y1="%.1f" y2="%.1f"/>' % (y(base), y(base))) if base is not None else ""
+    return ('<svg class="tk-s" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
+            '%s<polyline points="%s"/></svg>' % (base_line, line))
+
+
+def render_ticker(day):
+    """맨 위 시장 지표: 정해진 12개, 좁은 화면에서는 6개씩 두 쪽(옆으로 넘김), 넓은 화면에서는 한 줄에 다 보인다.
+    값은 제작 시점에 가져온 것이고, 칸마다 그 값의 시각(장마감이면 거래일)을 적는다."""
+    ind = day.get("indicators")
+    if not ind:
+        return ""
+    words = {"up": "상승", "down": "하락", "flat": "보합"}
+    tiles = []
+    for r in ind["rows"]:
+        tiles.append('<li class="tk %s"><span class="tk-n">%s</span><span class="tk-v">%s</span>'
+                     '<span class="tk-c"><span class="sr">%s </span>%s <span class="tk-r">(%s)</span></span>%s'
+                     '<span class="tk-t">%s</span></li>'
+                     % (r["dir"], esc(r["name"]), esc(r["value"]), words[r["dir"]], esc(r["change"]), esc(r["rate"]),
+                        _sparkline(r.get("spark") or [], r.get("base")), esc(r["time"])))
+    pages = "".join('<ul class="tk-page">%s</ul>' % "".join(tiles[i:i + TICKER_PAGE])
+                    for i in range(0, len(tiles), TICKER_PAGE))
+    at = datetime.datetime.fromisoformat(ind["as_of"]).astimezone(KST)
+    return ('<section class="ticker" aria-labelledby="ticker-title"><h2 id="ticker-title" class="sr">시장 지표</h2>'
+            '<div class="tk-pages" role="region" aria-label="시장 지표, 옆으로 넘겨 보기" tabindex="0">%s</div>'
+            '<p class="tk-src">%d월 %d일 %02d:%02d 한국 시간에 가져온 값 · 자료 %s</p></section>'
+            % (pages, at.month, at.day, at.hour, at.minute, esc(ind.get("source") or "")))
 
 
 def render_quick(day):
@@ -907,14 +932,15 @@ def render_hero(day):
 
 
 def render_briefing(day, older, newer, *, here, days_prefix, index):
-    """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 문서 순서(좁은 화면에서 읽는 순서):
-    머리(날짜·판·확인 시각, 대표 제목, 짧은 의미) → 핵심 1분 → 시장·다음 일정 → 분야 바로가기 → 분야별 기사
-    → 이전 판에 실린 기사 → 정정 → 이전·다음. 넓은 화면(1080px 이상)에서는 시장·다음 일정이 오른쪽 열로 간다."""
-    rail = render_market(day) + render_side(day)
+    """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
+    문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·확인 시각, 대표 제목, 짧은 의미) → 핵심 1분 → 다음 일정
+    → 분야 바로가기 → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음.
+    넓은 화면(1080px 이상)에서는 다음 일정이 오른쪽 열로 간다."""
+    rail = render_side(day)
     tail = render_earlier(day, here) + render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
     return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s</div>%s%s<div class="body">%s</div>%s</main>'
             % (" has-rail" if rail else "", render_hero(day), render_quick(day),
-               '<aside class="rail" aria-label="시장과 일정">%s</aside>' % rail if rail else "",
+               '<aside class="rail" aria-label="다음 일정">%s</aside>' % rail if rail else "",
                render_jump(day), render_sections(day, here, days_prefix, index),
                '<div class="tail">%s</div>' % tail if tail else ""))
 
@@ -1035,8 +1061,9 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
 def render_home(days, site, pages, index):
     """홈: 제호 아래 한 줄 소개, 그다음 최신 브리핑 전체. 브리핑 페이지와 같은 구성이라 한 번 더 누를 필요가 없다."""
     latest = days[0]
-    content = render_briefing(latest, days[1] if len(days) > 1 else None, None,
-                              here="news/%s/" % latest["date"], days_prefix="news/", index=index)
+    content = render_ticker(latest) + render_briefing(latest, days[1] if len(days) > 1 else None, None,
+                                                      here="news/%s/" % latest["date"], days_prefix="news/",
+                                                      index=index)
     website = {"@type": "WebSite", "name": site["title"], "url": site["base_url"] + "/", "inLanguage": "ko-KR",
                "publisher": site_org(site)}
     if site.get("description"):
@@ -1053,7 +1080,7 @@ def render_day(day, older, newer, site, pages, index):
         site, pages,
         title="%s%s | %s" % (long_date(day["date"]), edition, site["title"]),
         description=plain(day["summary"]), prefix="../../", path="/news/%s/" % day["date"],
-        content=render_briefing(day, older, newer, here="", days_prefix="../", index=index),
+        content=render_ticker(day) + render_briefing(day, older, newer, here="", days_prefix="../", index=index),
         og_type="article", current="news", published=published_at(day), modified=modified_value(day),
         trail=[(HOME_LABEL, "../../index.html"), (NEWS_LABEL, "../index.html"), (day_label(day), None)])
 

@@ -3,7 +3,7 @@
    규칙 1. 누를 수 있는 것은 청록색(--link)이다. 누를 수 없는 것은 그 색을 쓰지 않는다.
    규칙 2. 다른 페이지로 가는 목록은 같은 줄 모양(.rows)이고 오른쪽에 › 가 있다.
            같은 페이지 안으로 이동하는 줄(핵심 1분)은 오른쪽에 ↓ 가 있다.
-   규칙 3. 빨강과 파랑은 등락에만 쓰고 부호(+/−, ▲▼)와 함께 쓴다 (상승 빨강, 하락 파랑).
+   규칙 3. 빨강과 파랑은 등락에만 쓰고 부호(+/−, ▲▼)와 함께 쓴다 (상승 빨강, 하락 파랑). 맨 위 시장 지표의 흐름 선도 같다.
    규칙 4. 글자 크기: 14(보조) · 15(보조 강조) · 17(본문, 넓은 화면 18) · 20(구역 제목)
            · 21(기사 제목, 넓은 화면 23) · 23(대표 기사 제목, 넓은 화면 25) · 대표 제목(28~34, 넓은 화면 42).
    규칙 5. 굵은 선은 제호 아래 한 번만 쓴다. 큰 구역은 가는 먹색 선, 작은 구역은 여백과 연한 선으로 나눈다.
@@ -191,21 +191,37 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .rows a:hover .t { color: var(--link-strong); text-decoration: underline; text-underline-offset: 4px; }
 .rows .line { display: block; margin-top: 2px; font-size: var(--fs-m); line-height: 1.65; color: var(--ink-2); }
 
-/* ---- 시장: 주요 확인 수치만. 줄마다 기준과 근거 링크. 막대는 그리지 않는다 ---- */
-.market { font-variant-numeric: tabular-nums; }
-.mgroup { margin-top: 12px; }
-.mgroup h3 { padding-bottom: 4px; font-size: var(--fs-s); font-weight: 600; line-height: 1.5; color: var(--ink-3); border-bottom: 1px solid var(--line); }
-.mrows li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 12px; align-items: baseline;
-  padding: 9px 0; border-bottom: 1px solid var(--line);
+/* ---- 맨 위 시장 지표 12개: 이름 / 값 / 등락 / 작은 흐름 선 / 시각.
+   좁은 화면은 6개(3칸×2줄)씩 두 쪽을 옆으로 넘기고 다음 쪽이 조금 보인다. 768px부터는 12개가 한 번에 (6칸×2줄).
+   흐름 선의 점선은 전 거래일 종가다. 색은 등락 색만 쓴다. ---- */
+.ticker { max-width: var(--wrap); margin-inline: auto; padding: 8px var(--gutter) 0; font-variant-numeric: tabular-nums; }
+.tk-pages {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain; scrollbar-width: none;
 }
-.mrows .n { font-size: var(--fs-m); font-weight: 600; line-height: 1.4; color: var(--ink-2); }
-.mrows .v { font-size: 17px; font-weight: 700; color: var(--ink); }
-.mrows .c { min-width: 5.5em; font-size: var(--fs-m); font-weight: 700; text-align: right; white-space: nowrap; }
-.mrows .x { grid-column: 1 / -1; margin-top: 2px; font-size: var(--fs-s); line-height: 1.5; color: var(--ink-3); }
-.mrows .x a, .sched .d a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.market .note { margin-top: 10px; font-size: var(--fs-s); line-height: 1.6; color: var(--ink-3); }
-.market .src { margin-top: 2px; }
+.tk-pages::-webkit-scrollbar { display: none; }
+.tk-page { flex: 0 0 90%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 12px; scroll-snap-align: start; }
+.tk { display: flex; flex-direction: column; min-width: 0; padding: 8px 0 10px; border-bottom: 1px solid var(--line); }
+.tk-n { font-size: var(--fs-s); font-weight: 600; line-height: 1.35; color: var(--ink-2); }
+.tk-v { margin-top: 2px; font-size: clamp(15px, 4.4vw, 19px); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
+.tk-c { font-size: 13px; font-weight: 600; line-height: 1.4; }
+.tk-r { white-space: nowrap; }
+.tk.up .tk-c, .tk.up .tk-s { color: var(--up); }
+.tk.down .tk-c, .tk.down .tk-s { color: var(--down); }
+.tk.flat .tk-c, .tk.flat .tk-s { color: var(--ink-3); }
+.tk-s { display: block; width: 100%; height: 26px; margin-top: 6px; overflow: visible; }
+.tk-s polyline { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.tk-s line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
+.tk-t { margin-top: 4px; font-size: 13px; line-height: 1.4; color: var(--ink-3); white-space: nowrap; }
+.tk-src { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
+@media (min-width: 768px) {
+  .tk-pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; overflow: visible; }
+  .tk-page { flex: none; }
+  .tk-v { font-size: clamp(15px, 2.15vw, 20px); }
+}
+@media (min-width: 1080px) {
+  .ticker { padding-top: 14px; }
+}
 
 /* ---- 다음 일정, 부재 항목: 짧게 ---- */
 .asof { margin-top: 2px; font-size: var(--fs-s); color: var(--ink-3); }

@@ -99,7 +99,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 
 /* ---- 페이지 골격: 읽기 폭 한 칸. 시장·일정(rail)이 있는 브리핑은 1080px부터 오른쪽 보조 열을 쓴다 ---- */
 .page { max-width: var(--wrap); margin-inline: auto; padding: 16px var(--gutter) 0; }
-.lead, .rail, .jump, .body, .tail { max-width: var(--read); }
+.lead, .rail, .body, .tail { max-width: var(--read); }
 .rail { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--rule); }
 .tail { margin-top: 48px; }
 .tail > * + * { margin-top: 40px; }
@@ -109,7 +109,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
     display: grid; grid-template-columns: minmax(0, var(--read)) 300px; column-gap: 64px;
     justify-content: space-between; align-items: start;
   }
-  .has-rail > .lead, .has-rail > .jump, .has-rail > .body, .has-rail > .tail { grid-column: 1; }
+  .has-rail > .lead, .has-rail > .body, .has-rail > .tail { grid-column: 1; }
   .has-rail > .rail { grid-column: 2; grid-row: 1 / span 4; max-width: none; margin-top: 4px; }
 }
 .rail > section + section { margin-top: 32px; }
@@ -148,17 +148,9 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .quick li.top a { font-size: 17px; font-weight: 600; color: var(--ink); }
 .quick a:hover { color: var(--ink); background: var(--wash); text-decoration: underline; text-underline-offset: 4px; }
 
-/* ---- 분야 바로가기: 이 페이지 안의 분야 위치와 기사 수 ---- */
-.jump { margin-top: 28px; padding-top: 4px; border-top: 1px solid var(--rule); }
-.jump ul { display: flex; flex-wrap: wrap; column-gap: 20px; }
-.jump a { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: 16px; font-weight: 600; }
-.jump .n { font-size: var(--fs-s); font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.jump a:hover .n { color: var(--link-strong); }
-
 /* ---- 분야별 기사 전문 ---- */
 .sec { margin-top: 36px; }
 .sec > h2 { padding-top: 12px; border-top: 1px solid var(--rule); }
-.jump + .body > .sec:first-child { margin-top: 24px; }
 .item { padding: 16px 0 26px; }
 .item + .item { border-top: 1px solid var(--line); }
 .item h3 { font-size: var(--fs-title); font-weight: 700; line-height: 1.42; letter-spacing: -0.02em; text-wrap: pretty; }

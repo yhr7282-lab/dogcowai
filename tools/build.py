@@ -678,7 +678,7 @@ def load_pages(root):
 # 페이지는 네 가지다. 같은 정보는 한 곳에만 둔다.
 #   홈      제호 아래 한 줄 소개 + 최신 브리핑 (브리핑 페이지와 같은 구성)
 #   브리핑  맨 위 시장 지표 12개(제작 시점 값) → 날짜·판·기준 시각 → 대표 제목 → 짧은 의미
-#           → 주요 뉴스(줄마다 본문 기사로 이동) → 분야 바로가기
+#           → 주요 뉴스(줄마다 본문 기사로 이동)
 #           → 분야별 기사 전문(사실 문단 → 해설 → 전망 → 관련 기사 → 출처) → 이전 판에 실린 기사 → 바로잡습니다 → 이전·다음
 #   기사    분야·실린 판, 제목, 기준·수정 시각, 요약 한 줄, 진행·근거 표시, 본문, 관련 기사, 출처,
 #           바로잡습니다, 이 브리핑의 다른 기사, 브리핑으로 돌아가기
@@ -739,16 +739,6 @@ def render_quick(day):
                   for n, q in enumerate(items))
     return ('<section class="quick" aria-labelledby="quick-title">'
             '<h2 id="quick-title">주요 뉴스</h2><ol>%s</ol></section>' % lis)
-
-
-def render_jump(day):
-    """분야 바로가기: 이 페이지 안의 분야 위치(#분야id)와 기사 수. 기사가 있는 분야가 둘 이상일 때만 둔다."""
-    secs = visible_sections(day)
-    if len(secs) < 2:
-        return ""
-    links = "".join('<li><a href="#%s">%s<span class="n">%d<span class="sr">건</span></span></a></li>'
-                    % (esc(s["id"]), inline(s["title"]), len(s["items"])) for s in secs)
-    return '<nav class="jump" aria-label="분야 바로가기"><ul>%s</ul></nav>' % links
 
 
 def item_meta(item, day):
@@ -943,14 +933,14 @@ def render_hero(day):
 def render_briefing(day, older, newer, *, here, days_prefix, index):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
     문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스
-    → 분야 바로가기 → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음.
+    → 분야별 기사 → 이전 판에 실린 기사 → 정정 → 이전·다음. (분야 바로가기는 2026-10-24에 없앴다.)
     이번 판 부재 항목이 있으면 넓은 화면(1080px 이상)에서 오른쪽 열로 간다."""
     rail = render_side(day)
     tail = render_earlier(day, here) + render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
-    return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s</div>%s%s<div class="body">%s</div>%s</main>'
+    return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s</div>%s<div class="body">%s</div>%s</main>'
             % (" has-rail" if rail else "", render_hero(day), render_quick(day),
                '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
-               render_jump(day), render_sections(day, here, days_prefix, index),
+               render_sections(day, here, days_prefix, index),
                '<div class="tail">%s</div>' % tail if tail else ""))
 
 

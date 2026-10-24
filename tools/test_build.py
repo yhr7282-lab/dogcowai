@@ -285,7 +285,7 @@ class BuildOutputTests(SiteCase):
         page = self.day_page(day)
         order = [page.index(s) for s in (
             'class="dateline"', "17:02 기준", '<h1 id="top-title">', 'class="summary"',
-            'id="quick-title"', 'class="jump"', 'id="economy"', 'id="auto"',
+            'id="quick-title"', 'id="economy"', 'id="auto"',
             'id="h-corrections"', 'class="pager"')]
         self.assertEqual(order, sorted(order))
         self.assertIn("2026년 10월 13일 화요일 오후판", page)
@@ -1138,7 +1138,7 @@ class PublicInputTests(SiteCase):
 
 
 class NewsV2Tests(SiteCase):
-    """노션 v2 공개 구역에서 옮기는 항목: 허용 필드, 진행·근거 표시, 앞선 기사, 대표 기사, 분야 바로가기,
+    """노션 v2 공개 구역에서 옮기는 항목: 허용 필드, 진행·근거 표시, 앞선 기사, 대표 기사,
     정정 대상, 개인 문맥 규칙과 주의 단어."""
 
     def two_days(self):
@@ -1238,21 +1238,17 @@ class NewsV2Tests(SiteCase):
         day["quick"].append({"text": "2026-10-13 헤드라인", "ref": "a-one"})
         self.assert_rejected(day, "quick[1]")
 
-    # ---- 분야 바로가기
-    def test_section_shortcuts_list_only_sections_with_articles_and_their_counts(self):
+    # ---- 분야 바로가기는 2026-10-24부터 두지 않는다: 주요 뉴스 바로 뒤에 기사가 온다
+    def test_articles_follow_the_main_news_without_section_shortcuts(self):
         day = make_day()
-        day["sections"].append({"id": "empty", "title": "빈분야", "items": []})
         day["sections"].append({"id": "auto", "title": "자동차", "items": [
             {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "차 사실.",
              "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
         page = self.day_page(day)
-        jump = page[page.index('class="jump"'):page.index("</nav>", page.index('class="jump"'))]
-        self.assertIn('<a href="#economy">경제<span class="n">2<span class="sr">건</span></span></a>', jump)
-        self.assertIn('<a href="#auto">자동차<span class="n">1<span class="sr">건</span></span></a>', jump)
-        self.assertNotIn("빈분야", page)
-
-    def test_no_shortcuts_when_there_is_only_one_section(self):
-        self.assertNotIn('class="jump"', self.day_page(make_day()))
+        self.assertNotIn('class="jump"', page)
+        self.assertNotIn("분야 바로가기", page)
+        between = page[page.index('id="quick-title"'):page.index('id="economy"')]
+        self.assertNotIn("<nav", between)
 
     # ---- 정정: 대상 기사와 잇는다
     def test_correction_links_to_its_article_and_appears_on_it(self):

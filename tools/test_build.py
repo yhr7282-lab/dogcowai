@@ -83,6 +83,21 @@ class InlineTests(unittest.TestCase):
         self.assertEqual(build.first_sentence("지수가 5.46% 내렸다. 둘째 문장."), "지수가 5.46% 내렸다.")
 
 
+
+class StylesheetTests(unittest.TestCase):
+    """화면 배치는 브라우저 없이 시험할 수 없어서, 사고가 났던 규칙만 스타일 파일에서 직접 본다."""
+
+    def rule(self, selector):
+        css = (TOOLS.parent / "assets" / "style.css").read_text(encoding="utf-8")
+        m = re.search(r"(?m)^%s\s*\{([^}]*)\}" % re.escape(selector), css)
+        self.assertIsNotNone(m, selector)
+        return m.group(1)
+
+    def test_ticker_swipe_area_contains_its_hidden_labels(self):
+        # 지표 칸 안의 화면 낭독용 글자(.sr, position:absolute)는 위치 기준이 넘기는 칸이어야 그 칸 안에서 잘린다.
+        # 기준이 페이지면 화면 밖 둘째 쪽의 글자가 페이지 폭을 늘려 폰에서 페이지 전체가 옆으로 밀린다 (2026-10-24).
+        self.assertRegex(self.rule(".tk-pages"), r"position:\s*relative")
+
 class SiteCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

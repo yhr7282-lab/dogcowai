@@ -196,8 +196,10 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
    좁은 화면은 6개(3칸×2줄)씩 두 쪽을 옆으로 넘기고 다음 쪽이 조금 보인다. 768px부터는 12개가 한 번에 (6칸×2줄).
    흐름 선의 점선은 전 거래일 종가다. 색은 등락 색만 쓴다. ---- */
 .ticker { max-width: var(--wrap); margin-inline: auto; padding: 8px var(--gutter) 0; font-variant-numeric: tabular-nums; }
+/* position: relative — 칸 안의 화면 낭독용 글자(.sr)가 이 칸 안에서 잘리게 한다. 없으면 화면 밖 둘째 쪽의
+   글자가 페이지 폭을 늘려 폰에서 페이지 전체가 옆으로 밀린다. */
 .tk-pages {
-  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  position: relative; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain; scrollbar-width: none;
 }
 .tk-pages::-webkit-scrollbar { display: none; }

@@ -181,7 +181,8 @@
               "name": "TNW",
               "url": "https://thenextweb.com/news/moonshot-kimi-k3-1-pro-open-weight-cyber"
             }
-          ]
+          ],
+          "tip": "Mac mini 같은 개인용 컴퓨터에서 직접 실행할 수 있는지는 실제 공개되는 가중치의 하드웨어 요구 사양과 라이선스에 달렸다. 모델 발표만으로는 실행 가능 여부나 추가 구독이 필요한지 판단하기 어렵다."
         }
       ]
     }
@@ -1360,5 +1361,6 @@
         "base": 53
       }
     ]
-  }
+  },
+  "updated_at": "2026-10-24T21:13:00+09:00"
 }

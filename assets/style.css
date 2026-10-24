@@ -176,7 +176,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .item .meta-line + .part, .item h3 + .part { margin-top: 10px; }
 .part h2, .part h4 { margin-bottom: 2px; font-size: var(--fs-m); font-weight: 700; line-height: 1.5; color: var(--ink-3); }
 .part p { max-width: 38em; line-height: 1.8; text-wrap: pretty; }
-.part.why p, .part.recheck p { color: var(--ink-2); }
+.part.why p, .part.recheck p, .part.tip p { color: var(--ink-2); }
 .follows { margin-top: 12px; font-size: var(--fs-m); line-height: 1.6; color: var(--ink-3); }
 .follows a { font-weight: 600; }
 .src { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 14px; margin-top: 14px; font-size: var(--fs-s); color: var(--ink-3); }

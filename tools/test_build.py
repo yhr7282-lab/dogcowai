@@ -1402,6 +1402,21 @@ class NewsV2Tests(SiteCase):
         day["summary"] = "가상 요약은 나눠 볼 필요가 있다."
         self.assert_rejected(day, "summary", "훈계 말투")
 
+    def test_reader_checkpoint_is_shown_after_outlook_and_checked_for_style(self):
+        """노션 v3 의 생활·투자·커리어 체크포인트(tip): 기사 안에 '알아둘 점'으로 싣는다 (2026-10-24)."""
+        day = self.styled()
+        day["sections"][0]["items"][0]["tip"] = "가상 모델의 실행 여부는 공개된 하드웨어 요구 사양에 달렸다."
+        for page in (self.day_page(day), self.article_page(day, "a-one")):
+            body = page[page.index('id="a-one"') if 'id="a-one"' in page else 0:]
+            order = [body.index(t) for t in ("전망", "알아둘 점", "가상 모델의 실행 여부", "출처")]
+            self.assertEqual(order, sorted(order))
+        day = self.styled()
+        day["sections"][0]["items"][0]["tip"] = "독자는 사양을 먼저 확인해야 한다."
+        self.assert_rejected(day, "a-one.tip", "훈계 말투")
+        day = self.styled()
+        day["sections"][0]["items"][0]["tip"] = " "
+        self.assert_rejected(day, "tip")
+
     def test_quoted_obligation_is_not_lecturing(self):
         day = self.styled()
         day["sections"][0]["items"][0]["so"] = "가상 의원은 정부가 지원해야 한다고 말했다."

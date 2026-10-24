@@ -57,13 +57,13 @@ SUMMARY_MAX = 110                         # v2 판부터 summary(대표 제목�
 RELATED_MAX = 5                           # 기사 페이지의 '이 브리핑의 다른 기사' 줄 수 (같은 분야 먼저)
 # 기사체 점검 규칙: (이름, 정규식, 대상 칸). 제작 단계가 'AI 티'나 점검표·훈계 말투를 내지 않게 한다.
 STYLE_RULES = [
-    ("굵게 표시(**)", r"\*\*", ("headline", "summary", "quick", "title", "teaser", "facts", "so", "recheck")),
-    ("색 표시는 주요 뉴스 줄에만", r"\{\{(up|down):", ("headline", "summary", "title", "teaser", "facts", "so", "recheck")),
+    ("굵게 표시(**)", r"\*\*", ("headline", "summary", "quick", "title", "teaser", "facts", "so", "recheck", "tip")),
+    ("색 표시는 주요 뉴스 줄에만", r"\{\{(up|down):", ("headline", "summary", "title", "teaser", "facts", "so", "recheck", "tip")),
     ("주요 뉴스 색 표시 안의 부호(+/-)", r"\{\{(up|down):[+\-−]", ("quick",)),
-    ("점검표 말투(~확인한다/~본다)", r"(확인한다|본다)\.?\s*$", ("so", "recheck")),
+    ("점검표 말투(~확인한다/~본다)", r"(확인한다|본다)\.?\s*$", ("so", "recheck", "tip")),
     ("훈계 말투(~봐야/해야 한다, ~필요가 있다, ~서는 안 된다)", r"(봐야|해야|읽어야) 한다\.|필요가 있다\.|서는 안 된다\.",
-     ("summary", "teaser", "so", "recheck")),
-    ("편집 메모(기사 참고·일반적인 설명 등)", r"기사 참고\)|일반적인 설명\)|이번에 확인한 자료", ("summary", "teaser", "facts", "so", "recheck")),
+     ("summary", "teaser", "so", "recheck", "tip")),
+    ("편집 메모(기사 참고·일반적인 설명 등)", r"기사 참고\)|일반적인 설명\)|이번에 확인한 자료", ("summary", "teaser", "facts", "so", "recheck", "tip")),
 ]
 # 공개 입력(content/날짜.json)에 쓸 수 있는 항목. 여기에 없는 항목이 있으면 생성을 멈춘다.
 # 개인 원본의 다른 칸이나 제작용 운영 정보(판 상태·개정·내부 키 등)가 공개 파일에 섞여 들어오지 않게 하려는 것이다.
@@ -73,7 +73,7 @@ ALLOWED = {
     "indicators": {"as_of", "source", "rows"},
     "indicator_row": {"key", "name", "value", "change", "rate", "dir", "time", "spark", "base"},
     "section": {"id", "title", "items", "lede", "points"},
-    "item": {"id", "date", "featured", "title", "teaser", "facts", "so", "recheck", "sources",
+    "item": {"id", "date", "featured", "title", "teaser", "facts", "so", "recheck", "tip", "sources",
              "status", "basis", "follows"},
     "recheck": {"label", "text"},
     "source": {"name", "url"},
@@ -375,7 +375,7 @@ def style_problems(day):
         for sec in secs:
             for item in sec.get("items") or []:
                 iid = item.get("id", "?")
-                for key in ("title", "teaser", "facts", "so"):
+                for key in ("title", "teaser", "facts", "so", "tip"):
                     if item.get(key):
                         texts.append((key, "%s.%s" % (iid, key), item[key]))
                 recheck = item.get("recheck")
@@ -434,6 +434,8 @@ def _check_item(item, where, date, need_sources, ids):
         raise BuildError("%s: 기사 날짜가 브리핑 날짜보다 뒤입니다" % where)
     if "recheck" in item:
         _check_keys(item["recheck"], "recheck", where + ".recheck")
+    if "tip" in item and (not isinstance(item["tip"], str) or not item["tip"].strip()):
+        raise BuildError("%s: tip(알아둘 점)은 비어 있지 않은 문장이어야 합니다" % where)
     if "status" in item and item["status"] not in ITEM_STATUS:
         raise BuildError("%s: status 는 %s 중 하나여야 합니다" % (where, "·".join(ITEM_STATUS)))
     if "basis" in item:
@@ -811,6 +813,7 @@ def _part(cls, label, text, level):
 def article_body(item, level=2, before_sources=""):
     """기사 본문. 신문 기사처럼 사실 문단(facts)은 소제목 없이 맨 앞에 두고, 그다음 해설(so)과 전망(recheck)만
     작은 소제목을 단다. 입력의 recheck.label 은 쓰지 않는다 (소제목은 '전망'으로 통일).
+    tip(노션 v3 의 생활·투자·커리어 체크포인트)이 있으면 전망 다음에 '알아둘 점'으로 둔다.
     level: 소제목의 단계. 기사 페이지는 2, 브리핑 안에서는 기사 제목(h3) 아래라 4."""
     parts = ['<div class="part fact"><p>%s</p></div>' % inline(item["facts"])]
     recheck = item.get("recheck")
@@ -818,6 +821,8 @@ def article_body(item, level=2, before_sources=""):
         parts.append(_part("why", "해설", item["so"], level))
     if recheck and recheck.get("text"):
         parts.append(_part("recheck", "전망", recheck["text"], level))
+    if item.get("tip"):
+        parts.append(_part("tip", "알아둘 점", item["tip"], level))
     parts.append(before_sources)
     parts.append(render_sources(item.get("sources")))
     return "\n".join(p for p in parts if p)

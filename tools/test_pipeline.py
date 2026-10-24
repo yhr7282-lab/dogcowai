@@ -160,6 +160,35 @@ class EditionCheckTests(unittest.TestCase):
         self.day["edition"] = "저녁판"
         self.assert_problem("판 이름")
 
+    # ---- 노션 v3 (2026-10-24): 개인/공개 구분 없이 브리핑 시작~종료 전체가 게시 대상
+    def to_v3(self):
+        self.src["format"] = "v3"
+        self.src.pop("public_count", None)
+        self.src["article_count"] = 3
+        self.src["markers"] = {m: {"edition": self.ED, "revision": 2} for m in edition_check.MARKERS_V3}
+        self.src["markers"]["saved_line"]["article_count"] = 3
+
+    def test_v3_edition_with_real_estate_career_and_sk_on_passes(self):
+        self.to_v3()
+        for c, section in zip(self.src["candidates"], ("부동산", "커리어", "SK On")):
+            c["section"] = section
+        problems, summary = self.run_check()
+        self.assertEqual(problems, [])
+        self.assertEqual(summary["candidates"], 3)
+
+    def test_v3_needs_its_own_markers_and_article_count(self):
+        self.to_v3()
+        del self.src["markers"]["brief_start"]
+        self.assert_problem("표지 누락")
+        self.to_v3()
+        self.src["article_count"] = 4
+        self.assert_problem("article_count")
+
+    def test_unknown_section_is_still_refused_in_v3(self):
+        self.to_v3()
+        self.src["candidates"][0]["section"] = "가상 분야"
+        self.assert_problem("분야가 아닙니다")
+
     def test_earlier_edition_articles_count_as_present(self):
         self.day["sections"][0]["items"] = [{"id": "fake-one"}]
         self.day["earlier"] = [{"edition": "가상판", "sections": [{"id": "economy", "items": [{"id": "fake-two"}]}]}]

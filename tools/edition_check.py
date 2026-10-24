@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """한 회차의 공개 변환 결과를 게시 전에 맞춰 보는 검사기.
 
-노션 v2 원본의 공개 구역을 읽은 제작 단계가 두 파일을 남긴다 (공개 저장소 밖, 실행기의 회차 폴더):
-    source.json     판 정보(판 ID·형식·개정·상태·결과·공개 기사 수·표지들)와 공개 후보 목록
+노션 원본을 읽은 제작 단계가 두 파일을 남긴다 (공개 저장소 밖, 실행기의 회차 폴더):
+    source.json     판 정보(판 ID·형식·개정·상태·결과·기사 수·표지들)와 후보 목록
+형식은 두 가지다.
+    v3 (2026-10-24 저녁부터): 개인/공개 구분 없이 '브리핑 시작'~'브리핑 종료' 전체가 게시 대상.
+        표지 header·brief_start·brief_end·saved_line, 기사 수 article_count, 분야에 부동산·커리어·SK On 포함.
+    v2 (이전): '공개 시작'~'공개 종료'만 게시. 표지 header·public_start·public_end·saved_line, 수 public_count.
     decisions.json  후보마다 반영한 기사 id 또는 제외 사유
 이 검사기는 그 두 파일과 content/날짜.json 을 대조한다.
 
     python3 tools/edition_check.py --state 회차폴더 --edition 2026-10-25-AM [--root 저장소]
 
 확인하는 것
-- 판 ID·형식(v2)·상태(검증완료)와, 첫 줄·공개 시작·공개 종료·저장 완료 표지의 판 ID·개정이 모두 같은지
-- 저장 완료 줄의 공개 기사 수 = 후보 수
+- 판 ID·형식(v2/v3)·상태(검증완료)와, 첫 줄·시작·종료·저장 완료 표지의 판 ID·개정이 모두 같은지
+- 저장 완료 줄의 기사 수 = 후보 수
 - 후보 수 = 반영 수 + 이유 있는 제외 수 (후보마다 결정이 정확히 하나)
-- 후보의 분야가 공개 분야인지, 상태가 신규·진전·보완인지
+- 후보의 분야가 그 형식의 분야인지, 상태가 신규·진전·보완인지
 - 반영한 기사 id 가 그날 내용 파일(지금 판 또는 이전 판)에 실제로 있는지, 판 이름이 오전/저녁과 맞는지
 문제를 알릴 때는 파일·항목·키만 적고 원문 문장은 적지 않는다. 표준 라이브러리만 쓴다.
 """
@@ -27,9 +31,15 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 EDITION_ID = re.compile(r"^(\d{4}-\d{2}-\d{2})-(AM|PM)$")
 KEY = re.compile(r"^[a-z0-9][a-z0-9-]{0,79}$")
 PUBLIC_SECTIONS = ("경제", "주요 사건", "주식", "AI", "반도체", "배터리", "자동차")
+SECTIONS_V3 = PUBLIC_SECTIONS + ("부동산", "커리어", "SK On")
 STATUSES = ("신규", "진전", "보완")
 EDITION_NAME = {"AM": ("오전판",), "PM": ("저녁판", "오후판")}
 MARKERS = ("header", "public_start", "public_end", "saved_line")
+MARKERS_V3 = ("header", "brief_start", "brief_end", "saved_line")
+FORMATS = {  # 형식: (표지, 기사 수 항목, 분야)
+    "v2": (MARKERS, "public_count", PUBLIC_SECTIONS),
+    "v3": (MARKERS_V3, "article_count", SECTIONS_V3),
+}
 REASON_MAX = 200
 
 
@@ -67,8 +77,11 @@ def check(state_dir, edition, root=ROOT_DIR):
     # ---- 판 정보와 표지
     if src.get("edition") != edition:
         problems.append("source.json: edition 이 이번 판(%s)과 다릅니다" % edition)
-    if src.get("format") != "v2":
-        problems.append("source.json: format 이 v2 가 아닙니다")
+    fmt = src.get("format")
+    if fmt not in FORMATS:
+        problems.append("source.json: format 은 v2 또는 v3 이어야 합니다")
+        fmt = "v3"
+    marker_names, count_key, sections = FORMATS[fmt]
     if src.get("status") != "검증완료":
         problems.append("source.json: status 가 검증완료가 아닙니다 (미완성 판)")
     if src.get("result") not in ("UPDATED", "NO_CHANGE"):
@@ -77,7 +90,7 @@ def check(state_dir, edition, root=ROOT_DIR):
     if not isinstance(rev, int) or rev < 1:
         problems.append("source.json: revision 은 1 이상의 정수여야 합니다")
     markers = src.get("markers") if isinstance(src.get("markers"), dict) else {}
-    for name in MARKERS:
+    for name in marker_names:
         mk = markers.get(name)
         if not isinstance(mk, dict):
             problems.append("source.json: markers.%s 가 없습니다 (표지 누락)" % name)
@@ -89,10 +102,10 @@ def check(state_dir, edition, root=ROOT_DIR):
         problems.append("source.json: candidates 목록이 없습니다")
         cands = []
     saved = markers.get("saved_line") if isinstance(markers.get("saved_line"), dict) else {}
-    if src.get("public_count") != len(cands):
-        problems.append("source.json: public_count(%s)와 후보 수(%d)가 다릅니다" % (src.get("public_count"), len(cands)))
-    if saved and saved.get("public_count") != src.get("public_count"):
-        problems.append("source.json: 저장 완료 줄의 공개 기사 수와 public_count 가 다릅니다")
+    if src.get(count_key) != len(cands):
+        problems.append("source.json: %s(%s)와 후보 수(%d)가 다릅니다" % (count_key, src.get(count_key), len(cands)))
+    if saved and saved.get(count_key) != src.get(count_key):
+        problems.append("source.json: 저장 완료 줄의 기사 수와 %s 가 다릅니다" % count_key)
 
     # ---- 후보
     keys = []
@@ -108,8 +121,8 @@ def check(state_dir, edition, root=ROOT_DIR):
         if key in keys:
             problems.append("source.json: 키 '%s' 가 중복됩니다" % key)
         keys.append(key)
-        if c.get("section") not in PUBLIC_SECTIONS:
-            problems.append("source.json: %s(%s).section 이 공개 분야가 아닙니다" % (where, key))
+        if c.get("section") not in sections:
+            problems.append("source.json: %s(%s).section 이 %s 형식의 공개 분야가 아닙니다" % (where, key, fmt))
         if c.get("status") not in STATUSES:
             problems.append("source.json: %s(%s).status 는 신규·진전·보완 중 하나여야 합니다" % (where, key))
         try:

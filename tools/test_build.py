@@ -276,6 +276,35 @@ class BuildOutputTests(SiteCase):
             self.assertIn(part, home)
         self.assertNotIn("2026-10-12 헤드라인</h1>", home)
 
+    def _auto_day(self, date):
+        day = make_day(date)
+        day["sections"].append({"id": "auto", "title": "자동차", "items": [
+            {"id": "car-%s" % date, "date": date, "title": "자동차 기사 %s" % date, "facts": "차 사실.",
+             "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
+        return day
+
+    def test_home_keeps_the_latest_story_of_a_section_with_no_new_story(self):
+        self.write_day(self._auto_day("2026-10-12"))
+        today = make_day("2026-10-13")
+        today["sections"][0]["items"] = [dict(today["sections"][0]["items"][0], id="b-one")]
+        today["quick"] = [{"text": "새 기사", "ref": "b-one"}]
+        self.write_day(today)
+        self.build()
+        home = self.read("index.html")
+        self.assertIn('<h3><a href="news/2026-10-12/car-2026-10-12/index.html">자동차 기사 2026-10-12</a></h3>', home)
+        self.assertIn('<time datetime="2026-10-12">', home[home.index('id="car-2026-10-12"'):])
+        self.assertLess(home.index('id="economy"'), home.index('id="auto"'))
+        # 새 기사가 있는 분야(경제)는 앞선 날 기사를 남기지 않는다
+        self.assertNotIn("news/2026-10-12/a-one/index.html", home)
+        # 날짜별 브리핑은 그날 기사만 싣는다
+        self.assertNotIn("자동차 기사", self.read("news/2026-10-13/index.html"))
+
+    def test_home_does_not_keep_stories_older_than_a_week(self):
+        self.write_day(self._auto_day("2026-10-05"))
+        self.write_day(make_day("2026-10-13"))
+        self.build()
+        self.assertNotIn("자동차 기사", self.read("index.html"))
+
     # ---- 브리핑: 헤드라인, 주요 뉴스, 분야별 기사(내용 전부), 정정, 이전·다음
 
     def test_briefing_reads_in_one_fixed_order(self):

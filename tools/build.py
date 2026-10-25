@@ -837,10 +837,41 @@ def render_story(item, href, day, index, days_prefix, lead=False):
                article_body(item, level=4, before_sources=render_follows(item, index, days_prefix))))
 
 
-def render_sections(day, here, days_prefix, index):
+CARRY_DAYS = 7
+
+
+def carried_sections(days):
+    """홈 전용: 최신 브리핑에 새 기사가 없는 분야는 그 분야의 가장 최근 기사를 남겨 둔다 (2026-10-25 사용자 결정).
+    최신 날짜 앞의 날을 최근 순으로 보며, 분야마다 기사가 있는 가장 가까운 하루의 기사(이전 판 기사 포함)를 가져온다.
+    CARRY_DAYS 일보다 오래된 기사는 남기지 않는다. 반환: [(그 날, 분야 id, 분야 이름, [기사])], 원래 분야 순서."""
+    latest = days[0]
+    have = {s["id"] for s in visible_sections(latest)}
+    have |= {s["id"] for g in latest.get("earlier") or [] for s in g["sections"] if s["items"]}
+    taken = {it["id"] for _, it in all_items(latest)} | {it["id"] for _, _, it in earlier_items(latest)}
+    oldest = parse_date(latest["date"]) - datetime.timedelta(days=CARRY_DAYS)
+    out = []
+    for day in days[1:]:
+        if parse_date(day["date"]) < oldest:
+            break
+        found = {}
+        for sec in visible_sections(day) + [s for g in day.get("earlier") or [] for s in g["sections"]]:
+            if sec["id"] in have:
+                continue
+            for i in ordered_items(sec):
+                if i["id"] not in taken:
+                    found.setdefault(sec["id"], (sec["title"], []))[1].append(i)
+        for sid, (title, items) in found.items():
+            have.add(sid)
+            taken.update(i["id"] for i in items)
+            out.append((day, sid, title, items))
+    return out
+
+
+def render_sections(day, here, days_prefix, index, carried=()):
     """분야별 기사. 분야 이름(링크 아님) 아래에 기사마다 내용을 모두 펼쳐 둔다. 기사가 없는 분야는 내지 않는다.
     같은 날 이전 판에서 빠진 기사(earlier)도 따로 모으지 않고 같은 분야 안에 지금 판 기사 뒤로 전문을 싣는다
     (판 이름은 적지 않는다). 지금 판에 없는 분야는 지금 판 분야 뒤에 둔다.
+    carried: 홈에서만, 새 기사가 없는 분야에 남겨 두는 앞선 날 기사 (carried_sections). 그날 기사 페이지로 링크한다.
     here: 이 페이지에서 그날 브리핑 폴더까지의 상대 경로. days_prefix: news/ 폴더까지의 상대 경로.
     입력의 lede(분야 요약)와 points 는 화면에 내지 않는다."""
     order, titles, stories = [], {}, {}
@@ -859,6 +890,11 @@ def render_sections(day, here, days_prefix, index):
         for sec in group["sections"]:
             for i in ordered_items(sec):
                 add(sec, render_story(i, "%s%s/index.html" % (here, esc(i["id"])), day, index, days_prefix))
+    for prev, sid, title, items in carried:
+        for i in items:
+            add({"id": sid, "title": title},
+                render_story(i, "%s%s/%s/index.html" % (days_prefix, prev["date"], esc(i["id"])), day, index,
+                             days_prefix))
     return "\n".join('<section class="sec" id="%s" aria-labelledby="h-%s"><h2 id="h-%s">%s</h2>%s</section>'
                      % (esc(sid), esc(sid), esc(sid), inline(titles[sid]), "\n".join(stories[sid]))
                      for sid in order)
@@ -947,7 +983,7 @@ def render_date_picker(days, current, days_prefix):
             % "".join(opts))
 
 
-def render_briefing(day, older, newer, *, here, days_prefix, index, picker=""):
+def render_briefing(day, older, newer, *, here, days_prefix, index, picker="", carried=()):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
     문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스
     → 분야별 기사(이전 판 기사도 같은 분야 안에) → 정정 → 이전·다음. (분야 바로가기는 2026-10-24에 없앴다.)
@@ -958,7 +994,7 @@ def render_briefing(day, older, newer, *, here, days_prefix, index, picker=""):
     return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s%s</div>%s<div class="body">%s</div>%s</main>'
             % (" has-rail" if rail else "", picker, render_hero(day), render_quick(day),
                '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
-               render_sections(day, here, days_prefix, index),
+               render_sections(day, here, days_prefix, index, carried),
                '<div class="tail">%s</div>' % tail if tail else ""))
 
 
@@ -1080,7 +1116,7 @@ def render_home(days, site, pages, index):
     latest = days[0]
     content = render_ticker(latest) + render_briefing(latest, days[1] if len(days) > 1 else None, None,
                                                       here="news/%s/" % latest["date"], days_prefix="news/",
-                                                      index=index)
+                                                      index=index, carried=carried_sections(days))
     website = {"@type": "WebSite", "name": site["title"], "url": site["base_url"] + "/", "inLanguage": "ko-KR",
                "publisher": site_org(site)}
     if site.get("description"):

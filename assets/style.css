@@ -311,7 +311,7 @@ main:not(.show-read) .is-read { display: none; }
 .read-restore { margin: 32px 0 0; }
 .read-restore button { min-height: 44px; padding: 0 16px; font: inherit; font-size: var(--fs-m); color: var(--link); background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 
-/* 주요 뉴스 상세: 주요 뉴스가 가리키는 기사를 한 장씩 옆으로 넘긴다 (assets/slides.js 가 단추·높이를 맡는다). */
+/* 주요 뉴스 상세와 분야별 기사: 기사를 한 장씩 옆으로 넘긴다 (assets/slides.js 가 단추·높이를 맡는다). */
 .slides-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
 .slides-nav { display: flex; align-items: center; gap: 6px; flex: none; }
 .slides-nav[hidden] { display: none; }

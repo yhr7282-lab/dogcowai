@@ -883,10 +883,22 @@ def quick_articles(day):
     return out
 
 
+def slides_box(sid, title, cards):
+    """기사 카드를 한 장씩 옆으로 넘겨 보는 칸 (2026-10-25 사용자 결정: 주요 뉴스 상세와 분야별 기사 모두).
+    머리에 칸 이름(h2)과 이전·다음 단추, 'n / 전체' 표시를 두고 그 아래 카드를 가로로 늘어놓는다.
+    단추와 숫자는 assets/slides.js 가 켠다 (스크립트가 없으면 손으로 옆으로 밀어 본다). 카드가 한 장이면 단추를 감춘다."""
+    cards = [c.replace('<article class="item', '<article class="item slide', 1) for c in cards]
+    return ('<section class="sec slides" id="%s" aria-labelledby="h-%s">'
+            '<div class="slides-head"><h2 id="h-%s">%s</h2>'
+            '<p class="slides-nav" hidden><button type="button" class="prev" aria-label="이전 기사">‹</button>'
+            '<span class="slides-count" aria-live="polite"></span>'
+            '<button type="button" class="next" aria-label="다음 기사">›</button></p></div>'
+            '<div class="slides-track">%s</div></section>' % (sid, sid, sid, title, "\n".join(cards)))
+
+
 def render_slides(day, here, days_prefix, index):
     """주요 뉴스 상세: 주요 뉴스가 가리키는 기사 전문을 순위 순서로 한 장씩 옆으로 넘겨 본다 (2026-10-25 사용자 결정).
-    카드마다 맨 위에 '주요 뉴스 순위 · 분야'를 적는다. 넘김 단추와 'n / 전체' 표시는 assets/slides.js 가 켠다
-    (스크립트가 없으면 손으로 옆으로 밀어 본다). 여기 실린 기사는 아래 분야별 기사에 다시 싣지 않는다."""
+    카드마다 맨 위에 '주요 뉴스 순위 · 분야'를 적는다. 여기 실린 기사는 아래 분야별 기사에 다시 싣지 않는다."""
     cards = quick_articles(day)
     if not cards:
         return ""
@@ -896,18 +908,13 @@ def render_slides(day, here, days_prefix, index):
         story = render_story(item, "%s%s/index.html" % (here, esc(item["id"])), day, index, days_prefix,
                              lead=item["id"] == lead)
         rank = '<p class="rank">주요 뉴스 %s<span>%s</span></p>' % ("·".join(str(r) for r in ranks), inline(sec["title"]))
-        html.append(story.replace('<article class="item', '<article class="item slide', 1)
-                    .replace("<h3>", rank + "<h3>", 1))
-    return ('<section class="sec slides" id="quick-detail" aria-labelledby="h-quick-detail">'
-            '<div class="slides-head"><h2 id="h-quick-detail">주요 뉴스 상세</h2>'
-            '<p class="slides-nav" hidden><button type="button" class="prev" aria-label="이전 기사">‹</button>'
-            '<span class="slides-count" aria-live="polite"></span>'
-            '<button type="button" class="next" aria-label="다음 기사">›</button></p></div>'
-            '<div class="slides-track">%s</div></section>' % "\n".join(html))
+        html.append(story.replace("<h3>", rank + "<h3>", 1))
+    return slides_box("quick-detail", "주요 뉴스 상세", html)
 
 
 def render_sections(day, here, days_prefix, index, carried=()):
-    """분야별 기사. 분야 이름(링크 아님) 아래에 기사마다 내용을 모두 펼쳐 둔다. 기사가 없는 분야는 내지 않는다.
+    """분야별 기사. 분야마다 기사 전문을 카드로 한 장씩 옆으로 넘겨 본다 (slides_box, 2026-10-25 사용자 결정).
+    분야 이름은 링크가 아니다. 기사가 없는 분야는 내지 않는다.
     같은 날 이전 판에서 빠진 기사(earlier)도 따로 모으지 않고 같은 분야 안에 지금 판 기사 뒤로 전문을 싣는다
     (판 이름은 적지 않는다). 지금 판에 없는 분야는 지금 판 분야 뒤에 둔다.
     carried: 홈에서만, 새 기사가 없는 분야에 남겨 두는 앞선 날 기사 (carried_sections). 그날 기사 페이지로 링크한다.
@@ -937,9 +944,7 @@ def render_sections(day, here, days_prefix, index, carried=()):
             add({"id": sid, "title": title},
                 render_story(i, "%s%s/%s/index.html" % (days_prefix, prev["date"], esc(i["id"])), day, index,
                              days_prefix, key_date=prev["date"]))
-    return "\n".join('<section class="sec" id="%s" aria-labelledby="h-%s"><h2 id="h-%s">%s</h2>%s</section>'
-                     % (esc(sid), esc(sid), esc(sid), inline(titles[sid]), "\n".join(stories[sid]))
-                     for sid in order)
+    return "\n".join(slides_box(esc(sid), inline(titles[sid]), stories[sid]) for sid in order)
 
 
 def render_side(day):

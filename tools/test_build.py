@@ -349,7 +349,7 @@ class BuildOutputTests(SiteCase):
             self.assertIn(text, page)
         self.assertIn('<article class="item slide" id="a-one"><p class="rank">주요 뉴스 1<span>경제</span></p>'
                       '<h3><a href="a-one/index.html">기사 하나</a></h3>', page)
-        self.assertIn('<article class="item" id="a-two"><h3><a href="a-two/index.html">기사 둘</a></h3>', page)
+        self.assertIn('<article class="item slide" id="a-two"><h3><a href="a-two/index.html">기사 둘</a></h3>', page)
         self.assertNotIn('<span class="line">', page)
 
     def test_briefing_story_parts_sit_under_the_story_title(self):
@@ -409,6 +409,16 @@ class BuildOutputTests(SiteCase):
         self.assertNotIn('id="a-one"', rest)
         self.assertNotIn('id="auto"', rest)
         self.assertIn('id="a-two"', rest)
+
+    def test_every_section_scrolls_sideways_too(self):
+        # 2026-10-25 사용자 결정: 분야별 기사도 주요 뉴스 상세처럼 한 장씩 옆으로 넘긴다
+        page = self.day_page(self.two_sections())
+        body = page[page.index('<div class="body">'):]
+        self.assertEqual(body.count('<section class="sec"'), 0)
+        self.assertEqual(body.count('<section class="sec slides"'), body.count('<div class="slides-track">'))
+        self.assertIn('<section class="sec slides" id="economy" aria-labelledby="h-economy"><div class="slides-head">'
+                      '<h2 id="h-economy">경제</h2>', body)
+        self.assertEqual(body.count('<article class="item"'), 0)
 
     def test_quick_news_detail_scrolls_sideways_one_card_at_a_time(self):
         css = (TOOLS.parent / "assets" / "style.css").read_text(encoding="utf-8")
@@ -1339,7 +1349,7 @@ class NewsV2Tests(SiteCase):
     def test_lead_article_is_marked_and_must_exist(self):
         day = make_day(lead_ref="a-two")
         page = self.day_page(day)
-        self.assertIn('<article class="item lead" id="a-two">', page)
+        self.assertIn('<article class="item slide lead" id="a-two">', page)
         self.assertIn('<article class="item slide" id="a-one">', page)
         self.assert_rejected(make_day(lead_ref="nope"), "lead_ref")
 

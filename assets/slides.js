@@ -1,9 +1,8 @@
-/* 주요 뉴스 상세: 기사 카드를 한 장씩 옆으로 넘긴다 (2026-10-25 사용자 결정).
+/* 주요 뉴스 상세와 분야별 기사: 기사 카드를 한 장씩 옆으로 넘긴다 (2026-10-25 사용자 결정).
    넘김 자체는 CSS(scroll-snap)가 한다. 이 파일은 이전·다음 단추, 'n / 전체' 표시,
    그리고 칸 높이를 지금 보이는 카드에 맞추는 일만 한다. 스크립트가 없어도 손으로 밀어 볼 수 있다. */
 (function () {
-  var box = document.getElementById("quick-detail");
-  if (!box) return;
+function setup(box) {
   var track = box.querySelector(".slides-track");
   var nav = box.querySelector(".slides-nav");
   var count = nav.querySelector(".slides-count");
@@ -55,4 +54,6 @@
     Array.prototype.forEach.call(track.querySelectorAll(".slide"), function (c) { watch.observe(c); });
   }
   update();
+}
+Array.prototype.forEach.call(document.querySelectorAll("section.slides"), setup);
 })();

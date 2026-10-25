@@ -115,7 +115,7 @@ a:hover { color: var(--link-strong); text-decoration: underline; text-underline-
 .rail > section + section { margin-top: 32px; }
 
 /* ---- 구역 제목: 모두 같은 크기 ---- */
-.quick h2, .sec > h2, .market h2, .absent h2, .corrections h2, .others h2, .doc h2 {
+.quick h2, .sec > h2, .slides-head h2, .market h2, .absent h2, .corrections h2, .others h2, .doc h2 {
   font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: -0.02em;
 }
 
@@ -310,3 +310,21 @@ footer p + p { margin-top: 4px; }
 main:not(.show-read) .is-read { display: none; }
 .read-restore { margin: 32px 0 0; }
 .read-restore button { min-height: 44px; padding: 0 16px; font: inherit; font-size: var(--fs-m); color: var(--link); background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+
+/* 주요 뉴스 상세: 주요 뉴스가 가리키는 기사를 한 장씩 옆으로 넘긴다 (assets/slides.js 가 단추·높이를 맡는다). */
+.slides-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.slides-nav { display: flex; align-items: center; gap: 6px; flex: none; }
+.slides-nav[hidden] { display: none; }
+.slides-nav .slides-count { min-width: 44px; text-align: center; font-size: var(--fs-m); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.slides-nav button { width: 44px; height: 44px; font: inherit; font-size: 24px; line-height: 1; color: var(--link); background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.slides-nav button:disabled { color: var(--line); cursor: default; }
+.slides-track {
+  position: relative; display: flex; align-items: flex-start; gap: 32px;
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  scrollbar-width: none; transition: height .2s ease;
+}
+.slides-track::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.item.slide + .item.slide { border-top: 0; }
+.rank { margin-bottom: 4px; font-size: var(--fs-s); font-weight: 700; color: var(--ink); }
+.rank span { margin-left: 8px; font-weight: 400; color: var(--ink-3); }

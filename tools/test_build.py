@@ -226,7 +226,7 @@ class BuildOutputTests(SiteCase):
                 self.assertNotIn(absent, html, (rel, absent))
             scripts = re.findall(r"<script\b[^>]*>", html)
             # 예외는 읽음 체크 칸(assets/read.js, 2026-10-25 사용자 요청) 하나다
-            self.assertTrue(all('type="application/ld+json"' in s or s.endswith('assets/read.js" defer>')
+            self.assertTrue(all('type="application/ld+json"' in s or s.endswith(('assets/read.js" defer>', 'assets/slides.js" defer>'))
                                 for s in scripts), (rel, scripts))
 
     def test_footer_links_the_fixed_pages_and_the_feed_but_not_the_menu_again(self):
@@ -295,7 +295,7 @@ class BuildOutputTests(SiteCase):
         home = self.read("index.html")
         self.assertIn('<h3><a href="news/2026-10-12/car-2026-10-12/index.html">자동차 기사 2026-10-12</a></h3>', home)
         self.assertIn('<time datetime="2026-10-12">', home[home.index('id="car-2026-10-12"'):])
-        self.assertLess(home.index('id="economy"'), home.index('id="auto"'))
+        self.assertLess(home.index('id="quick-detail"'), home.index('id="auto"'))
         # 새 기사가 있는 분야(경제)는 앞선 날 기사를 남기지 않는다
         self.assertNotIn("news/2026-10-12/a-one/index.html", home)
         # 날짜별 브리핑은 그날 기사만 싣는다
@@ -347,7 +347,8 @@ class BuildOutputTests(SiteCase):
         for text in ("지수가 5.46% 내렸다. 둘째 문장 <strong>강조</strong>.", "의미 문장.", "조건 문장.",
                      "두 번째 사실.", 'href="https://example.com/a"', 'href="https://example.com/b"'):
             self.assertIn(text, page)
-        self.assertIn('<article class="item" id="a-one"><h3><a href="a-one/index.html">기사 하나</a></h3>', page)
+        self.assertIn('<article class="item slide" id="a-one"><p class="rank">주요 뉴스 1<span>경제</span></p>'
+                      '<h3><a href="a-one/index.html">기사 하나</a></h3>', page)
         self.assertIn('<article class="item" id="a-two"><h3><a href="a-two/index.html">기사 둘</a></h3>', page)
         self.assertNotIn('<span class="line">', page)
 
@@ -382,8 +383,37 @@ class BuildOutputTests(SiteCase):
         items = day["sections"][0]["items"]
         del items[0]["featured"]
         items[1]["featured"] = True
+        day["quick"] = [{"text": "다른 기사", "ref": "c-one"}]
+        day["sections"].append({"id": "auto", "title": "자동차", "items": [
+            {"id": "c-one", "date": day["date"], "title": "차 기사", "facts": "차 사실.",
+             "sources": [{"name": "AP", "url": "https://example.com/c"}]}]})
         page = self.day_page(day)
         self.assertLess(page.index('id="a-two"'), page.index('id="a-one"'))
+
+    def test_quick_news_detail_shows_the_ranked_articles_side_by_side(self):
+        """주요 뉴스가 가리키는 기사는 '주요 뉴스 상세'에 순위 순서로 한 장씩 싣고, 아래 분야에는 다시 싣지 않는다 (2026-10-25)."""
+        day = self.two_sections()
+        auto_id = day["sections"][1]["items"][0]["id"]
+        day["quick"] = [{"text": "자동차 줄", "ref": auto_id}, {"text": "지수 줄", "ref": "a-one"},
+                        {"text": "자동차 둘째 줄", "ref": auto_id}]
+        page = self.day_page(day)
+        self.assertNotIn("주요 사건", page)
+        box = page[page.index('<section class="sec slides" id="quick-detail"'):]
+        box = box[:box.index('</div></section>')]
+        self.assertIn('<h2 id="h-quick-detail">주요 뉴스 상세</h2>', box)
+        self.assertIn('<p class="rank">주요 뉴스 1·3<span>자동차</span></p>', box)
+        self.assertIn('<p class="rank">주요 뉴스 2<span>경제</span></p>', box)
+        self.assertLess(box.index('id="%s"' % auto_id), box.index('id="a-one"'))
+        self.assertEqual(box.count('<article class="item slide"'), 2)
+        rest = page[page.index('id="quick-detail"') + len(box):]
+        self.assertNotIn('id="a-one"', rest)
+        self.assertNotIn('id="auto"', rest)
+        self.assertIn('id="a-two"', rest)
+
+    def test_quick_news_detail_scrolls_sideways_one_card_at_a_time(self):
+        css = (TOOLS.parent / "assets" / "style.css").read_text(encoding="utf-8")
+        self.assertIn("scroll-snap-type: x mandatory", css[css.index(".slides-track {"):])
+        self.assertIn("scroll-snap-stop: always", css[css.index(".slide {"):])
 
     def test_section_heading_is_plain_text(self):
         page = self.day_page(self.two_sections())
@@ -681,8 +711,10 @@ class PublishedAddressTests(SiteCase):
             self.assertNotIn("실린 기사</h2>", page)
             sec = page[page.index('id="economy"'):]
             sec = sec[:sec.index("</section>")]
-            order = [sec.index(s) for s in ('id="a-one"', 'id="a-three"', 'id="a-two"')]
+            order = [sec.index(s) for s in ('id="a-three"', 'id="a-two"')]
             self.assertEqual(order, sorted(order))
+            # 주요 뉴스가 가리키는 a-one 은 위의 '주요 뉴스 상세'에 있다
+            self.assertLess(page.index('id="a-one"'), page.index('id="economy"'))
             two = sec[sec.index('id="a-two"'):]
             self.assertIn(href, two)
             self.assertIn("두 번째 사실.", two)
@@ -1308,7 +1340,7 @@ class NewsV2Tests(SiteCase):
         day = make_day(lead_ref="a-two")
         page = self.day_page(day)
         self.assertIn('<article class="item lead" id="a-two">', page)
-        self.assertIn('<article class="item" id="a-one">', page)
+        self.assertIn('<article class="item slide" id="a-one">', page)
         self.assert_rejected(make_day(lead_ref="nope"), "lead_ref")
 
     def test_v2_editions_need_a_lead_article_and_a_short_summary(self):

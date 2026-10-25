@@ -868,6 +868,44 @@ def carried_sections(days):
     return out
 
 
+def quick_articles(day):
+    """주요 뉴스가 가리키는 기사: [(분야, 기사, [순위])]. 처음 나온 순위 순서. 같은 기사를 가리키는 줄이 여럿이면 순위를 모은다."""
+    where = {i["id"]: (s, i) for s in visible_sections(day) for i in s["items"]}
+    out, seen = [], {}
+    for n, q in enumerate(day.get("quick") or [], 1):
+        if q["ref"] not in where:
+            continue
+        if q["ref"] in seen:
+            seen[q["ref"]].append(n)
+            continue
+        seen[q["ref"]] = [n]
+        out.append(where[q["ref"]] + (seen[q["ref"]],))
+    return out
+
+
+def render_slides(day, here, days_prefix, index):
+    """주요 뉴스 상세: 주요 뉴스가 가리키는 기사 전문을 순위 순서로 한 장씩 옆으로 넘겨 본다 (2026-10-25 사용자 결정).
+    카드마다 맨 위에 '주요 뉴스 순위 · 분야'를 적는다. 넘김 단추와 'n / 전체' 표시는 assets/slides.js 가 켠다
+    (스크립트가 없으면 손으로 옆으로 밀어 본다). 여기 실린 기사는 아래 분야별 기사에 다시 싣지 않는다."""
+    cards = quick_articles(day)
+    if not cards:
+        return ""
+    lead = day.get("lead_ref")
+    html = []
+    for sec, item, ranks in cards:
+        story = render_story(item, "%s%s/index.html" % (here, esc(item["id"])), day, index, days_prefix,
+                             lead=item["id"] == lead)
+        rank = '<p class="rank">주요 뉴스 %s<span>%s</span></p>' % ("·".join(str(r) for r in ranks), inline(sec["title"]))
+        html.append(story.replace('<article class="item', '<article class="item slide', 1)
+                    .replace("<h3>", rank + "<h3>", 1))
+    return ('<section class="sec slides" id="quick-detail" aria-labelledby="h-quick-detail">'
+            '<div class="slides-head"><h2 id="h-quick-detail">주요 뉴스 상세</h2>'
+            '<p class="slides-nav" hidden><button type="button" class="prev" aria-label="이전 기사">‹</button>'
+            '<span class="slides-count" aria-live="polite"></span>'
+            '<button type="button" class="next" aria-label="다음 기사">›</button></p></div>'
+            '<div class="slides-track">%s</div></section>' % "\n".join(html))
+
+
 def render_sections(day, here, days_prefix, index, carried=()):
     """분야별 기사. 분야 이름(링크 아님) 아래에 기사마다 내용을 모두 펼쳐 둔다. 기사가 없는 분야는 내지 않는다.
     같은 날 이전 판에서 빠진 기사(earlier)도 따로 모으지 않고 같은 분야 안에 지금 판 기사 뒤로 전문을 싣는다
@@ -883,8 +921,11 @@ def render_sections(day, here, days_prefix, index, carried=()):
             stories[sec["id"]] = []
         stories[sec["id"]].append(html)
     lead = day.get("lead_ref")
+    in_slides = {i["id"] for _, i, _ in quick_articles(day)}
     for sec in visible_sections(day):
         for i in ordered_items(sec):
+            if i["id"] in in_slides:
+                continue
             add(sec, render_story(i, "%s%s/index.html" % (here, esc(i["id"])), day, index, days_prefix,
                                   lead=i["id"] == lead))
     for group in day.get("earlier") or []:
@@ -995,7 +1036,7 @@ def render_briefing(day, older, newer, *, here, days_prefix, index, picker="", c
     return ('<main class="page briefing%s" id="brief"%s><div class="lead">%s%s%s</div>%s<div class="body">%s</div>%s</main>'
             % (" has-rail" if rail else "", " data-hide-read" if hide_read else "", picker, render_hero(day), render_quick(day),
                '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
-               render_sections(day, here, days_prefix, index, carried),
+               render_slides(day, here, days_prefix, index) + render_sections(day, here, days_prefix, index, carried),
                '<div class="tail">%s</div>' % tail if tail else ""))
 
 
@@ -1102,6 +1143,7 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
         "head": "\n".join(head),
         "css": prefix + "assets/style.css",
         "js": prefix + "assets/read.js",
+        "js2": prefix + "assets/slides.js",
         "home": prefix + "index.html",
         "brand": inline(site["brand"]),
         "toplinks": "".join(toplink(*m) for m in menu),

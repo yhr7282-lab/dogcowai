@@ -53,6 +53,7 @@
     restore.hidden = hidden === 0;
     restore.firstChild.textContent = main.classList.contains("show-read")
       ? "읽은 기사 다시 숨기기" : "읽은 기사 " + hidden + "건 다시 보기";
+    document.dispatchEvent(new Event("dogcowai:read"));
   }
 
   Array.prototype.forEach.call(boxes, function (box) {

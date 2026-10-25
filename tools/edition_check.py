@@ -16,7 +16,7 @@
 - 판 ID·형식(v2/v3)·상태(검증완료)와, 첫 줄·시작·종료·저장 완료 표지의 판 ID·개정이 모두 같은지
 - 저장 완료 줄의 기사 수 = 후보 수
 - 후보 수 = 반영 수 + 이유 있는 제외 수 (후보마다 결정이 정확히 하나)
-- 후보의 분야가 그 형식의 분야인지, 상태가 신규·진전·보완인지
+- 후보의 분야가 그 형식의 분야인지, 상태가 신규·진전·보완·유지인지
 - 반영한 기사 id 가 그날 내용 파일(지금 판 또는 이전 판)에 실제로 있는지, 판 이름이 오전/저녁과 맞는지
 문제를 알릴 때는 파일·항목·키만 적고 원문 문장은 적지 않는다. 표준 라이브러리만 쓴다.
 """
@@ -32,7 +32,7 @@ EDITION_ID = re.compile(r"^(\d{4}-\d{2}-\d{2})-(AM|PM)$")
 KEY = re.compile(r"^[a-z0-9][a-z0-9-]{0,79}$")
 PUBLIC_SECTIONS = ("경제", "주요 사건", "주식", "AI", "반도체", "배터리", "자동차")
 SECTIONS_V3 = PUBLIC_SECTIONS + ("부동산", "커리어", "SK On")
-STATUSES = ("신규", "진전", "보완")
+STATUSES = ("신규", "진전", "보완", "유지")   # 유지: 새 기사 없는 분야에 남긴 이전 기사 카드 (2026-10-25)
 EDITION_NAME = {"AM": ("오전판",), "PM": ("저녁판", "오후판")}
 MARKERS = ("header", "public_start", "public_end", "saved_line")
 MARKERS_V3 = ("header", "brief_start", "brief_end", "saved_line")
@@ -124,7 +124,7 @@ def check(state_dir, edition, root=ROOT_DIR):
         if c.get("section") not in sections:
             problems.append("source.json: %s(%s).section 이 %s 형식의 공개 분야가 아닙니다" % (where, key, fmt))
         if c.get("status") not in STATUSES:
-            problems.append("source.json: %s(%s).status 는 신규·진전·보완 중 하나여야 합니다" % (where, key))
+            problems.append("source.json: %s(%s).status 는 신규·진전·보완·유지 중 하나여야 합니다" % (where, key))
         try:
             if datetime.date.fromisoformat(c.get("event_date") or "") > datetime.date.fromisoformat(date):
                 problems.append("source.json: %s(%s).event_date 가 판 날짜보다 뒤입니다" % (where, key))

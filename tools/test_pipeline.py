@@ -176,6 +176,15 @@ class EditionCheckTests(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertEqual(summary["candidates"], 3)
 
+    def test_kept_earlier_article_card_is_a_valid_candidate(self):
+        # 노션 v3 '이전 기사 유지' 카드 (2026-10-25): 이미 실린 기사는 제외로, 처음 싣는 기사는 반영으로 적는다
+        self.to_v3()
+        self.src["candidates"][0]["status"] = "유지"
+        problems, _ = self.run_check()
+        self.assertEqual(problems, [])
+        self.src["candidates"][0]["status"] = "보류"
+        self.assert_problem("신규·진전·보완·유지")
+
     def test_v3_needs_its_own_markers_and_article_count(self):
         self.to_v3()
         del self.src["markers"]["brief_start"]

@@ -828,31 +828,32 @@ def article_body(item, level=2, before_sources=""):
     return "\n".join(p for p in parts if p)
 
 
-def render_story(item, href, day, index, days_prefix, lead=False):
+def readmark(key):
+    """기사 맨 아래 '읽음' 체크 칸. key 는 '날짜/기사id'. 체크 상태는 그 브라우저에만 저장되고(assets/read.js),
+    홈에서는 체크한 기사를 숨긴다 (2026-10-25 사용자 결정). 스크립트가 없으면 칸을 보이지 않는다(hidden)."""
+    return ('<p class="readmark" hidden><label><input type="checkbox" data-read="%s"> 읽음</label></p>' % esc(key))
+
+
+def render_story(item, href, day, index, days_prefix, lead=False, key_date=""):
     """브리핑 안의 기사 한 건: 제목, 진행·근거 표시, 본문, 관련 기사, 출처. 누르지 않아도 다 읽을 수 있다.
     제목은 기사 페이지(공유·검색용 주소)로 가는 링크다. 대표 기사(lead_ref)는 제목을 더 크게 쓴다 (class lead).
     목록용 한 줄(teaser)은 본문과 겹쳐서 넣지 않는다."""
-    return ('<article class="item%s" id="%s"><h3><a href="%s">%s</a></h3>%s%s</article>'
+    return ('<article class="item%s" id="%s"><h3><a href="%s">%s</a></h3>%s%s%s</article>'
             % (" lead" if lead else "", esc(item["id"]), href, inline(item["title"]), item_meta(item, day),
-               article_body(item, level=4, before_sources=render_follows(item, index, days_prefix))))
-
-
-CARRY_DAYS = 7
+               article_body(item, level=4, before_sources=render_follows(item, index, days_prefix)),
+               readmark("%s/%s" % (key_date or day["date"], item["id"]))))
 
 
 def carried_sections(days):
     """홈 전용: 최신 브리핑에 새 기사가 없는 분야는 그 분야의 가장 최근 기사를 남겨 둔다 (2026-10-25 사용자 결정).
     최신 날짜 앞의 날을 최근 순으로 보며, 분야마다 기사가 있는 가장 가까운 하루의 기사(이전 판 기사 포함)를 가져온다.
-    CARRY_DAYS 일보다 오래된 기사는 남기지 않는다. 반환: [(그 날, 분야 id, 분야 이름, [기사])], 원래 분야 순서."""
+    며칠이 지났든 남긴다 (읽은 기사는 화면에서 읽음 표시로 지운다, read.js). 반환: [(그 날, 분야 id, 분야 이름, [기사])], 원래 분야 순서."""
     latest = days[0]
     have = {s["id"] for s in visible_sections(latest)}
     have |= {s["id"] for g in latest.get("earlier") or [] for s in g["sections"] if s["items"]}
     taken = {it["id"] for _, it in all_items(latest)} | {it["id"] for _, _, it in earlier_items(latest)}
-    oldest = parse_date(latest["date"]) - datetime.timedelta(days=CARRY_DAYS)
     out = []
     for day in days[1:]:
-        if parse_date(day["date"]) < oldest:
-            break
         found = {}
         for sec in visible_sections(day) + [s for g in day.get("earlier") or [] for s in g["sections"]]:
             if sec["id"] in have:
@@ -894,7 +895,7 @@ def render_sections(day, here, days_prefix, index, carried=()):
         for i in items:
             add({"id": sid, "title": title},
                 render_story(i, "%s%s/%s/index.html" % (days_prefix, prev["date"], esc(i["id"])), day, index,
-                             days_prefix))
+                             days_prefix, key_date=prev["date"]))
     return "\n".join('<section class="sec" id="%s" aria-labelledby="h-%s"><h2 id="h-%s">%s</h2>%s</section>'
                      % (esc(sid), esc(sid), esc(sid), inline(titles[sid]), "\n".join(stories[sid]))
                      for sid in order)
@@ -983,7 +984,7 @@ def render_date_picker(days, current, days_prefix):
             % "".join(opts))
 
 
-def render_briefing(day, older, newer, *, here, days_prefix, index, picker="", carried=()):
+def render_briefing(day, older, newer, *, here, days_prefix, index, picker="", carried=(), hide_read=False):
     """브리핑 본문. 홈과 날짜 페이지가 함께 쓴다. 맨 위 시장 지표(render_ticker)는 이 앞에 따로 붙는다.
     문서 순서(좁은 화면에서 읽는 순서): 머리(날짜·판·기준 시각, 대표 제목, 짧은 의미) → 주요 뉴스
     → 분야별 기사(이전 판 기사도 같은 분야 안에) → 정정 → 이전·다음. (분야 바로가기는 2026-10-24에 없앴다.)
@@ -991,8 +992,8 @@ def render_briefing(day, older, newer, *, here, days_prefix, index, picker="", c
     이번 판 부재 항목이 있으면 넓은 화면(1080px 이상)에서 오른쪽 열로 간다."""
     rail = render_side(day)
     tail = render_corrections(day, days_prefix) + render_pager(older, newer, days_prefix)
-    return ('<main class="page briefing%s" id="brief"><div class="lead">%s%s%s</div>%s<div class="body">%s</div>%s</main>'
-            % (" has-rail" if rail else "", picker, render_hero(day), render_quick(day),
+    return ('<main class="page briefing%s" id="brief"%s><div class="lead">%s%s%s</div>%s<div class="body">%s</div>%s</main>'
+            % (" has-rail" if rail else "", " data-hide-read" if hide_read else "", picker, render_hero(day), render_quick(day),
                '<aside class="rail" aria-label="이번 판 부재 항목">%s</aside>' % rail if rail else "",
                render_sections(day, here, days_prefix, index, carried),
                '<div class="tail">%s</div>' % tail if tail else ""))
@@ -1100,6 +1101,7 @@ def wrap_page(site, pages, *, title, description, prefix, path, content,
         "title": esc(title),
         "head": "\n".join(head),
         "css": prefix + "assets/style.css",
+        "js": prefix + "assets/read.js",
         "home": prefix + "index.html",
         "brand": inline(site["brand"]),
         "toplinks": "".join(toplink(*m) for m in menu),
@@ -1116,7 +1118,7 @@ def render_home(days, site, pages, index):
     latest = days[0]
     content = render_ticker(latest) + render_briefing(latest, days[1] if len(days) > 1 else None, None,
                                                       here="news/%s/" % latest["date"], days_prefix="news/",
-                                                      index=index, carried=carried_sections(days))
+                                                      index=index, carried=carried_sections(days), hide_read=True)
     website = {"@type": "WebSite", "name": site["title"], "url": site["base_url"] + "/", "inLanguage": "ko-KR",
                "publisher": site_org(site)}
     if site.get("description"):
@@ -1167,9 +1169,10 @@ def render_article(day, sec, item, site, pages, index):
     description = plain(item["teaser"]) if item.get("teaser") else first_sentence(item["facts"])
     content = ('<main class="page article" id="brief"><div class="lead">'
                '<article class="story" aria-labelledby="top-title"><header class="hero">%s<h1 id="top-title">%s</h1>%s%s%s'
-               '</header>%s%s</article></div>%s<div class="tail">%s</div></main>'
+               '</header>%s%s%s</article></div>%s<div class="tail">%s</div></main>'
                % (top, inline(item["title"]), _stamps(day), deck, item_meta(item, day),
-                  article_body(item, before_sources=render_follows(item, index, "../../")), fix_html, others_html, back))
+                  article_body(item, before_sources=render_follows(item, index, "../../")), fix_html,
+                  readmark("%s/%s" % (day["date"], item["id"])), others_html, back))
     url = site["base_url"] + path
     news = {"@type": "NewsArticle", "headline": plain(item["title"]), "description": description,
             "url": url, "mainEntityOfPage": url, "datePublished": published_at(day), "inLanguage": "ko-KR",

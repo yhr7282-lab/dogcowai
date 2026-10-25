@@ -225,7 +225,9 @@ class BuildOutputTests(SiteCase):
             for absent in ('class="crumbs"', "<details", 'class="go"', 'class="hint"', "누르면"):
                 self.assertNotIn(absent, html, (rel, absent))
             scripts = re.findall(r"<script\b[^>]*>", html)
-            self.assertTrue(all('type="application/ld+json"' in s for s in scripts), (rel, scripts))
+            # 예외는 읽음 체크 칸(assets/read.js, 2026-10-25 사용자 요청) 하나다
+            self.assertTrue(all('type="application/ld+json"' in s or s.endswith('assets/read.js" defer>')
+                                for s in scripts), (rel, scripts))
 
     def test_footer_links_the_fixed_pages_and_the_feed_but_not_the_menu_again(self):
         self.write_page({"slug": "about", "title": "소개", "sections": [{"heading": "무엇인가", "paragraphs": ["문단"]}]})
@@ -299,11 +301,32 @@ class BuildOutputTests(SiteCase):
         # 날짜별 브리핑은 그날 기사만 싣는다
         self.assertNotIn("자동차 기사", self.read("news/2026-10-13/index.html"))
 
-    def test_home_does_not_keep_stories_older_than_a_week(self):
-        self.write_day(self._auto_day("2026-10-05"))
+    def test_home_keeps_the_latest_story_however_old_it_is(self):
+        self.write_day(self._auto_day("2026-09-01"))
+        self.write_day(self._auto_day("2026-09-05"))
         self.write_day(make_day("2026-10-13"))
         self.build()
-        self.assertNotIn("자동차 기사", self.read("index.html"))
+        home = self.read("index.html")
+        self.assertIn("자동차 기사 2026-09-05", home)
+        self.assertNotIn("자동차 기사 2026-09-01", home)
+
+    def test_every_story_ends_with_a_read_checkbox_keyed_by_its_briefing_date(self):
+        self.write_day(self._auto_day("2026-10-12"))
+        self.write_day(make_day("2026-10-13"))
+        self.build()
+        home = self.read("index.html")
+        mark = '<p class="readmark" hidden><label><input type="checkbox" data-read="%s"> 읽음</label></p></article>'
+        self.assertIn(mark % "2026-10-13/a-one", home)
+        self.assertIn(mark % "2026-10-12/car-2026-10-12", home)
+        self.assertIn('<main class="page briefing" id="brief" data-hide-read>', home)
+        day = self.read("news/2026-10-13/index.html")
+        self.assertIn(mark % "2026-10-13/a-two", day)
+        self.assertNotIn("data-hide-read", day)
+        article = self.read("news/2026-10-13/a-one/index.html")
+        self.assertIn('data-read="2026-10-13/a-one"', article)
+        for rel, prefix in (("index.html", ""), ("news/2026-10-13/index.html", "../../"),
+                            ("news/2026-10-13/a-one/index.html", "../../../")):
+            self.assertIn('<script src="%sassets/read.js" defer></script>' % prefix, self.read(rel), rel)
 
     # ---- 브리핑: 헤드라인, 주요 뉴스, 분야별 기사(내용 전부), 정정, 이전·다음
 

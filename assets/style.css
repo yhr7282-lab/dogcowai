@@ -302,3 +302,11 @@ footer p + p { margin-top: 4px; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* 기사 맨 아래 '읽음' 체크 칸 (assets/read.js). 홈에서는 체크한 기사를 숨긴다. */
+.readmark { margin: 16px 0 0; }
+.readmark label { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: var(--fs-m); color: var(--ink-3); cursor: pointer; }
+.readmark input { width: 22px; height: 22px; margin: 0; accent-color: var(--link); cursor: pointer; }
+main:not(.show-read) .is-read { display: none; }
+.read-restore { margin: 32px 0 0; }
+.read-restore button { min-height: 44px; padding: 0 16px; font: inherit; font-size: var(--fs-m); color: var(--link); background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }

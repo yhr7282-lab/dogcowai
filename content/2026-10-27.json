@@ -1,38 +1,30 @@
 {
   "date": "2026-10-27",
-  "edition": "오전판",
-  "checked_at": "07:44 KST",
-  "headline": "Anthropic, 미국 상장 신고서 공개…나스닥 'ANT' 상장 추진",
-  "summary": "비상장 AI 기업의 상장 계획이 규제 신고 단계로 넘어갔다. 공모 주식 수와 가격은 아직 정해지지 않았다.",
-  "lead_ref": "anthropic-us-ipo-filing-2026-oct",
+  "edition": "저녁판",
+  "checked_at": "17:05 KST",
+  "headline": "한국 3분기 성장률 1.0%…반도체 수출·투자가 끌어올려",
+  "summary": "시장 예상보다 높은 성장이지만 민간소비는 줄어 성장의 온기가 가계까지 고르게 퍼지지는 않았다.",
+  "lead_ref": "korea-q3-gdp-2026-advance",
   "quick": [
     {
-      "text": "삼성SDI, 미국 AOP에 ESS 1GWh 추가 공급…누적 1.5GWh",
-      "ref": "samsung-sdi-aop-ess-1gwh-2026-oct"
+      "text": "3분기 실질 GDP 전기 대비 1.0% 증가, 민간소비는 0.2% 감소",
+      "ref": "korea-q3-gdp-2026-advance"
     },
     {
-      "text": "기아 노사, 2029년 광명1공장서 카니발 수소차 생산 합의",
-      "ref": "kia-domestic-plant-realignment-fcev-2026-oct"
+      "text": "코스피 {{up:3.09%}} 오른 5,638.34, 코스닥 {{up:2.29%}} 오른 743.83 마감",
+      "ref": "korea-stocks-close-2026-10-27"
     },
     {
-      "text": "미국 아우디 Q4 e-tron 9,048대 리콜, SK 헝가리 배터리 모듈 명시",
-      "ref": "audi-q4-sk-battery-recall-26v698"
+      "text": "이스라엘 제26대 총선 투표 시작, 한국시간 28일 오전 5시 종료",
+      "ref": "israel-knesset-election-voting-2026"
     },
     {
-      "text": "경기도, 의왕 학의동 1,790㎡ 개발제한구역 해제안 의결",
-      "ref": "uiwang-hagui-greenbelt-release-2026-oct"
+      "text": "마이크로소프트, 미국 등 4개국 직원 약 6만 명에 자발적 퇴직 제안",
+      "ref": "microsoft-voluntary-buyouts-2026-oct"
     },
     {
-      "text": "뉴욕 S&P 500 {{up:0.70%}} 오른 7,676.77 마감",
-      "ref": "us-stocks-anthropic-rebound-2026-10-26"
-    },
-    {
-      "text": "Anthropic 상반기 영업손실 6억9,300만달러, 공모가는 미정",
-      "ref": "anthropic-us-ipo-filing-2026-oct"
-    },
-    {
-      "text": "독일 10월 ifo 기업환경지수 90.2로 상승, 현재상황지수는 88.8로 하락",
-      "ref": "germany-ifo-business-climate-2026-10"
+      "text": "어플라이드 머티어리얼즈, BESI 지분 9%에서 약 20%로 확대 계약",
+      "ref": "applied-materials-besi-stake-2026"
     }
   ],
   "sections": [
@@ -41,22 +33,26 @@
       "title": "경제",
       "items": [
         {
-          "id": "germany-ifo-business-climate-2026-10",
-          "date": "2026-10-26",
+          "id": "korea-q3-gdp-2026-advance",
+          "date": "2026-10-27",
           "featured": true,
           "status": "신규",
-          "basis": "설문 지표",
-          "title": "독일 ifo 기업환경지수 90.2로 상승…현재상황 평가는 하락",
-          "teaser": "기업의 기대는 좋아졌지만 현재 영업 여건 평가는 낮아졌다.",
-          "facts": "독일 ifo 경제연구소는 10월 기업환경지수가 90.2로 9월(89.9)보다 올랐다고 26일 발표했다. 기대지수는 90.4에서 91.6으로 상승했지만 현재상황지수는 89.5에서 88.8로 낮아졌다. 업종별로는 제조업과 건설이 개선됐고 서비스업은 후퇴했으며 유통은 보합이었다.",
-          "so": "ifo에 따르면 제조업은 현재상황과 기대가 3년여 만에 처음으로 함께 플러스로 돌아섰고 신규 주문도 늘었다. 이 지수는 약 9,000개 기업의 월간 응답을 바탕으로 한 심리 지표여서 실제 생산이나 국내총생산(GDP) 증가율과는 다르다.",
+          "basis": "속보치",
+          "title": "한국 3분기 GDP 1.0% 성장…수출·설비투자가 이끌어",
+          "teaser": "반도체 관련 수출과 투자가 늘었지만 민간소비는 줄었다.",
+          "facts": "한국은행은 2026년 3분기 실질 국내총생산(GDP) 속보치가 전기 대비 1.0%, 전년 동기 대비 3.4% 증가했다고 27일 발표했다. 같은 기간 실질 국내총소득(GDI)은 전기 대비 3.4% 늘었다. 이데일리에 따르면 수출은 2.3%, 설비투자는 4.1% 증가한 반면 민간소비는 0.2% 감소했다.",
+          "so": "이데일리는 반도체 제조용 기계 등 기계류가 설비투자 증가를 주도했고 반도체 수출 호조가 성장을 이끌었다고 전했다. 이 매체가 조사한 시장 전망치는 전기 대비 0.8%였고, 한국은행의 8월 전망치는 0.3%였다. 건설투자는 0.7%, 정부소비는 1.9% 늘었다.",
           "recheck": {
-            "text": "기대 개선이 현재 경기 평가와 신규 주문으로 이어질지는 독일 3분기 GDP와 11월 ifo 발표에서 드러난다."
+            "text": "속보치는 이후 한국은행의 잠정치 발표에서 수정될 수 있고, 민간소비가 4분기에 반등할지가 변수다."
           },
           "sources": [
             {
-              "name": "ifo 경제연구소",
-              "url": "https://www.ifo.de/en/facts/2026-10-26/ifo-business-climate-rises-october-2026"
+              "name": "한국은행",
+              "url": "https://www.bok.or.kr/portal/bbs/B0000501/view.do?depth=201263&depth2=200038&depth3=201263&menuNo=201264&nttId=11065944&oldMenuNo=201263&pageIndex=1&pageUnit=10&programType=newsData&searchCnd=1&searchKwd="
+            },
+            {
+              "name": "이데일리",
+              "url": "https://www1.edaily.co.kr/News/Read?mediaCodeNo=257&newsId=02738806645617184"
             }
           ]
         }
@@ -67,70 +63,22 @@
       "title": "주요 사건",
       "items": [
         {
-          "id": "korea-dmz-howitzers-un-letters-2026-oct",
-          "date": "2026-10-26",
+          "id": "israel-knesset-election-voting-2026",
+          "date": "2026-10-27",
           "featured": true,
-          "status": "보완",
-          "title": "북한 자주포 접경 노출…남북은 유엔에 지뢰 사건 상반된 서한",
-          "teaser": "9월 지뢰 폭발의 책임을 두고 남북이 안보리에 엇갈린 주장을 냈다.",
-          "facts": "로이터 취재진은 26일 경기 김포의 전망대에서 포신을 남쪽으로 향한 북한 장갑차 3대와 비무장지대(DMZ) 안에서 울타리 작업을 하는 북한군 약 20~30명을 관찰했다. 연합뉴스는 이 차량을 122㎜ 자주포로 식별했다. 북한 주유엔 대표부는 25일 유엔 안전보장이사회 의장에게 서한을 보내 9월 21일 지뢰 폭발을 한국의 자작극이라고 주장했다.",
-          "so": "앞서 차지훈 주유엔 대사는 22일 안보리 의장에게 서한을 보내 북한군이 매설한 지뢰의 폭발이 정전협정 위반이라며 사과와 책임 있는 조치를 요구했다. 유엔군사령부도 군사분계선을 넘어 매설된 북한 지뢰가 정전협정을 위반했다고 밝혔다. 북한은 서한에서 주권이 침해되면 자위권을 행사하겠다고 경고했다.",
+          "status": "신규",
+          "basis": "투표 진행 중",
+          "title": "이스라엘 총선 투표 시작…네타냐후·아이젠코트 진영 접전",
+          "teaser": "어느 진영도 과반 61석에 이르지 못할 것이라는 여론조사가 나왔다.",
+          "facts": "이스라엘 제26대 크네세트(의회) 선거 투표가 27일 오전 7시(현지시간) 시작됐다. JFeed에 따르면 유권자는 733만1,981명이며 36개 정당 명단이 120석을 놓고 경쟁한다. 대부분의 투표소는 오후 10시, 한국시간 28일 오전 5시에 닫힌다.",
+          "so": "선거는 베냐민 네타냐후 총리가 이끄는 우파 진영과 가디 아이젠코트 전 참모총장이 이끄는 야권 진영의 대결이다. JFeed가 인용한 마지막 여론조사에서 네타냐후 진영은 약 50석으로 집계됐고, 어느 진영도 과반인 61석에 이르지 못할 것으로 나타났다.",
           "recheck": {
-            "text": "자주포의 철수나 추가 배치 여부와 합동참모본부·유엔군사령부의 후속 발표가 긴장 수위를 가를 변수다."
+            "text": "첫 개표 결과는 투표 종료 뒤 밤사이 나오며, 61석 이상의 연정을 누가 꾸릴지가 다음 변수다."
           },
           "sources": [
             {
-              "name": "BusinessDay (로이터 기사 게재)",
-              "url": "https://www.businessday.co.za/world/2026-10-26-north-south-korea-tensions-high-as-letters-lodged-with-un-howitzers-spotted/"
-            },
-            {
-              "name": "한국경제",
-              "url": "https://www.hankyung.com/article/2026102640067"
-            }
-          ]
-        },
-        {
-          "id": "jordan-syria-strikes-2026-oct",
-          "date": "2026-10-26",
-          "status": "진전",
-          "basis": "요르단 발표 인용 단일 보도",
-          "follows": {
-            "date": "2026-10-25",
-            "id": "jordan-church-attack-toll-9-2026-oct"
-          },
-          "title": "요르단, 교회 총격 배후 지목하며 시리아 남부 공습",
-          "teaser": "9명이 숨진 교회 총격 사건이 국경 밖 군사행동으로 이어졌다.",
-          "facts": "로이터에 따르면 요르단 공군은 26일 시리아 남부의 무장세력 은신처라고 밝힌 곳을 공습했다. 요르단은 지난주 카라크 교회 총격 용의자들이 시리아 남부에서 활동하는 '테러 단체'와 연계됐다고 판단했다. 시리아 당국은 즉각 논평하지 않았고, 다마스쿠스와 사전 조율했는지는 알려지지 않았다.",
-          "so": "요르단 공안당국은 24일 교회 총격 사망자가 9명으로 늘었다고 발표했다. 공습의 표적과 피해 규모는 요르단 발표 외에 독립적으로 확인되지 않았다.",
-          "recheck": {
-            "text": "시리아 정부의 반응과 추가 공습 여부가 사태 확산의 변수다."
-          },
-          "sources": [
-            {
-              "name": "GV Wire (로이터 기사 게재)",
-              "url": "https://gvwire.com/2026/10/26/jordan-strikes-southern-syria-after-linking-church-attackers-to-terrorist-groups/"
-            },
-            {
-              "name": "페트라 통신",
-              "url": "https://petra.gov.jo/en/news/death-toll-in-karak-church-terrorist-attack-rises-to-9"
-            }
-          ]
-        },
-        {
-          "id": "china-fifth-plenum-2026-oct",
-          "date": "2026-10-26",
-          "status": "보완",
-          "title": "중국 공산당 5중전회 개막…당 기강 강화 결정 초안 논의",
-          "teaser": "29일까지 열리는 회의의 결과는 폐막 공보로 나온다.",
-          "facts": "중국 공산당 제20기 중앙위원회 제5차 전체회의(5중전회)가 26일 베이징에서 개막했다. 신화통신에 따르면 시진핑 총서기는 정치국을 대표해 업무를 보고하고 '전면적이고 엄격한 당 관리' 강화에 관한 결정 초안을 설명했다. 회의는 29일까지 나흘간 열린다.",
-          "so": "서울경제는 이번 회의가 내년 제21차 당대회를 준비하는 성격이라는 분석가들의 시각을 전했다. 시 총서기의 4연임과 지도부 개편은 당대회에서 다뤄질 사안이며 이번 회의에서 확정되는 것은 아니다.",
-          "recheck": {
-            "text": "확정된 결정 내용과 인사는 29일 폐막 공보에서 공개된다."
-          },
-          "sources": [
-            {
-              "name": "서울경제 (영문)",
-              "url": "https://en.sedaily.com/international/2026/10/26/chinas-communist-party-opens-plenum-focused-on-party"
+              "name": "JFeed",
+              "url": "https://www.jfeed.com/news/israel-election-polls-open-netanyahu-eisenkot"
             }
           ]
         }
@@ -141,25 +89,29 @@
       "title": "주식",
       "items": [
         {
-          "id": "us-stocks-anthropic-rebound-2026-10-26",
-          "date": "2026-10-26",
+          "id": "korea-stocks-close-2026-10-27",
+          "date": "2026-10-27",
           "featured": true,
           "status": "신규",
-          "title": "뉴욕증시 기술주 반등…S&P 500 0.70% 상승",
-          "teaser": "Anthropic 상장 신고가 AI 관련주 매수를 되살렸다.",
-          "facts": "26일 뉴욕증시에서 S&P 500은 53.09포인트(0.70%) 오른 7,676.77에 마감했다. 나스닥 종합지수는 약 214포인트 오른 26,169.38, 다우존스 산업평균지수는 0.28% 오른 52,361.58로 장을 마쳤다. Anthropic이 상장 신고서를 공개한 뒤 엔비디아·브로드컴·마이크론 등 반도체주가 올랐다.",
-          "so": "야후 파이낸스에 따르면 S&P 500과 나스닥은 직전 주까지 2주 연속 하락했다. 이날 상승은 AI 투자 회수에 대한 우려로 밀렸던 기술주가 일부 되돌린 것이다.",
+          "follows": {
+            "date": "2026-10-26",
+            "id": "korea-stocks-close-2026-10-26"
+          },
+          "title": "코스피 3.09% 오른 5,638.34 마감…하루 만에 반등",
+          "teaser": "전날 7개월 만의 최저치로 밀렸던 지수가 큰 폭으로 올랐다.",
+          "facts": "코스피 지수는 27일 전 거래일보다 168.87포인트(3.09%) 오른 5,638.34로 마감했다. 코스닥 지수는 16.62포인트(2.29%) 오른 743.83에 거래를 마쳤다. 서울 외환시장에서 원·달러 환율은 0.60원 오른 1,323.70원에 주간 거래를 마감했다.",
+          "so": "코스피는 전날 1.46% 내린 5,469.47로 마감해 종가 기준 약 7개월 만의 최저치를 기록했다. 이날 상승으로 그 하락분을 하루 만에 넘어섰다.",
           "recheck": {
-            "text": "알파벳·마이크로소프트 실적은 28일 장 마감 뒤 발표되고, 같은 날 연방공개시장위원회(FOMC) 결정이 나온다."
+            "text": "SK하이닉스는 28일 오전 3분기 실적을 발표하고 오전 9시 콘퍼런스콜을 연다."
           },
           "sources": [
             {
-              "name": "아시아경제 (영문)",
-              "url": "https://www.asiae.co.kr/en/article/2026102705501694707"
+              "name": "뉴스핌",
+              "url": "https://www.newspim.com/news/view/20261027001219"
             },
             {
-              "name": "야후 파이낸스",
-              "url": "https://finance.yahoo.com/markets/live/stock-market-today-dow-sp-500-nasdaq-rally-as-investors-parse-anthropic-ipo-filing-busy-week-of-tech-earnings-153428995.html"
+              "name": "SK하이닉스 뉴스룸",
+              "url": "https://news.skhynix.com/en/q3-2026-earnings-conference-call-invitation/"
             }
           ]
         }
@@ -170,21 +122,21 @@
       "title": "AI",
       "items": [
         {
-          "id": "anthropic-us-ipo-filing-2026-oct",
+          "id": "microsoft-voluntary-buyouts-2026-oct",
           "date": "2026-10-26",
           "featured": true,
-          "status": "신규",
-          "title": "Anthropic, 미국 상장 신고서 공개…나스닥 'ANT' 상장 추진",
-          "teaser": "공모 주식 수와 가격 범위는 신고서에 아직 비어 있다.",
-          "facts": "Anthropic은 26일 미국 증권거래위원회(SEC)에 증권신고서(S-1)를 공개 제출하고 나스닥 글로벌 셀렉트 마켓에 'ANT' 종목코드로 상장을 신청했다고 밝혔다. 신고서의 공모가 범위와 주식 수는 비어 있다. 2026년 상반기 매출은 163억달러로 전년 같은 기간 12억달러에서 늘었다.",
-          "so": "신고서에 따르면 상반기 영업손실은 6억9,300만달러였고, 주식보상비용 등을 뺀 조정 영업이익은 16억1,800만달러였다. 같은 기간 순손실은 807억달러로, 전환사채·파생부채 등의 공정가치 변동 손실 약 724억달러가 대부분을 차지했다.",
+          "status": "보완",
+          "title": "마이크로소프트, 직원 약 6만 명에 자발적 퇴직 제안",
+          "teaser": "전체 인력의 약 27%가 대상이지만 실제 퇴직 인원은 아직 알 수 없다.",
+          "facts": "마이크로소프트는 26일 미국·캐나다·영국·인도에서 레벨 70 이하 직원 약 6만 명을 대상으로 자발적 퇴직 제안을 내놨다. 야후 파이낸스에 따르면 대상자는 회사 전체 인력의 약 27%다. 에이미 콜먼 최고인사책임자는 사내 메모에서 이번 제안이 회사 밖의 미래를 고민하는 직원에게 새 선택지를 준다고 밝혔다.",
+          "so": "마이크로소프트는 4월에도 미국 직원의 약 7%를 대상으로 자발적 퇴직 프로그램을 시행했고, 당시 대상자의 약 30%가 이를 받아들였다. 이번 6만 명은 제안 대상자 수이며 확정된 감원 인원은 아니다.",
           "recheck": {
-            "text": "공모 주식 수와 가격 범위는 SEC 심사 뒤 수정 신고서에서 정해진다."
+            "text": "마이크로소프트의 분기 실적은 28일(현지시간) 발표되며, 퇴직 비용 반영 여부가 변수다."
           },
           "sources": [
             {
-              "name": "미국 SEC 증권신고서(S-1)",
-              "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm"
+              "name": "야후 파이낸스",
+              "url": "https://finance.yahoo.com/markets/stocks/articles/microsoft-offers-voluntary-buyout-60-001519292.html"
             }
           ]
         }
@@ -195,154 +147,346 @@
       "title": "반도체",
       "items": [
         {
-          "id": "cadence-maestro-chip-design-ai-2026-oct",
+          "id": "applied-materials-besi-stake-2026",
           "date": "2026-10-26",
           "featured": true,
-          "status": "신규",
-          "basis": "회사 초기 결과",
-          "title": "Cadence, 칩 설계 특화 AI 모델 'Maestro' 공개",
-          "teaser": "고객 사내 서버에서도 돌릴 수 있는 설계 전용 AI 모델이다.",
-          "facts": "미국 반도체 설계 소프트웨어(EDA) 기업 Cadence는 26일 칩·시스템 설계에 특화한 AI 모델군 'Maestro'를 공개했다. 엔비디아의 Nemotron 등을 바탕으로 한 모델로, Cadence 클라우드나 고객이 관리하는 온프레미스 환경에서 쓸 수 있다. 첫 모델은 2026년 4분기 일부 고객에게 조기 제공된다.",
-          "so": "Cadence는 초기 결과에서 범용 모델보다 설계 품질이 최대 30% 좋아지고 토큰 효율은 최대 5배 높았다고 밝혔다. 이는 회사가 제시한 수치이며 독립 검증을 거친 결과는 아니다. 고객은 자사 설계 데이터로 모델을 추가 학습시킬 수 있다.",
+          "status": "보완",
+          "basis": "규제 심사 전",
+          "title": "어플라이드 머티어리얼즈, BESI 지분 약 20%로 확대 계약",
+          "teaser": "하이브리드 본딩 협력사의 지분을 늘리지만 미국 반독점 심사가 남았다.",
+          "facts": "미국 반도체 장비업체 어플라이드 머티어리얼즈는 26일 네덜란드 장비업체 BESI의 지분을 발행주식의 약 20%로 늘리는 가속 주식매입 계약을 맺었다고 밝혔다. 주식 인도는 미국 하트-스콧-로디노(HSR) 반독점법에 따른 대기 기간이 끝나야 이뤄진다. 매입 가격은 공개하지 않았다.",
+          "so": "어플라이드는 2025년 4월 BESI 지분 약 9%를 처음 확보했다. 회사는 약 20%를 넘어 지분을 늘릴 계획이 없고 BESI 이사회 의석도 요구하지 않겠다고 밝혔다. 두 회사는 2020년부터 AI 칩용 하이브리드 본딩 장비를 함께 개발해 왔다.",
           "recheck": {
-            "text": "조기 제공 고객의 실제 설계 기간 단축 효과와 정식 출시 범위가 다음 변수다."
+            "text": "미국 반독점 심사 대기 기간이 끝나면 주식 인도와 최종 지분율이 정해진다."
           },
           "sources": [
             {
-              "name": "Cadence",
-              "url": "https://www.cadence.com/en_US/home/company/newsroom/press-releases/pr/2026/cadence-introduces-maestro-a-domain-specialized-ai-model.html"
+              "name": "어플라이드 머티어리얼즈 보도자료(SEC 8-K)",
+              "url": "https://www.sec.gov/Archives/edgar/data/0000006951/000162828026067303/ex991prforprojectbasil.htm"
             },
             {
-              "name": "EMSNow (보도자료 게재)",
-              "url": "https://www.emsnow.com/cadence-introduces-maestro-a-domain-specialised-ai-model-portfolio-to-revolutionise-agentic-chip-and-system-design/"
-            }
-          ]
-        },
-        {
-          "id": "volkswagen-nxp-s32k5-sdv-partnership-2026-oct",
-          "date": "2026-10-26",
-          "status": "신규",
-          "title": "폭스바겐, 차세대 차량 공통 MCU에 NXP S32K5 채택",
-          "teaser": "구역 제어기에 쓰일 칩으로, 첫 적용 차량은 2027년에 나온다.",
-          "facts": "폭스바겐그룹과 NXP는 26일 전략적 반도체 협력을 발표했다. NXP의 S32K5 마이크로컨트롤러(MCU)는 폭스바겐과 리비안의 합작사 RV Tech가 개발한 구역형(zonal) 소프트웨어 정의 차량 구조에서 구역 제어기의 핵심 프로세서로 쓰인다. 이 구조를 적용한 첫 차량은 2027년에 나올 계획이다.",
-          "so": "S32K5는 그룹 전 브랜드와 차급에 공통 부품으로 쓰이며 조명·차체·편의·섀시·안전 기능을 관리한다. 계약 금액과 공급 물량은 공개되지 않았다.",
-          "recheck": {
-            "text": "첫 적용 차종과 양산 시점이 협력의 실제 규모를 가늠할 지표다."
-          },
-          "sources": [
-            {
-              "name": "야후 파이낸스 (폭스바겐·NXP 공동 보도자료 게재)",
-              "url": "https://finance.yahoo.com/technology/articles/volkswagen-group-strengthens-strategic-semiconductor-090000292.html"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "battery",
-      "title": "배터리",
-      "items": [
-        {
-          "id": "samsung-sdi-aop-ess-1gwh-2026-oct",
-          "date": "2026-10-26",
-          "featured": true,
-          "status": "보완",
-          "title": "삼성SDI, 미국 AOP에 ESS 1GWh 추가 공급…누적 1.5GWh",
-          "teaser": "셀과 모듈은 미국 인디애나주 합작 공장에서 만든다.",
-          "facts": "삼성SDI는 미국 법인 SDIA가 에너지 저장 사업자 Alpha Omega Power(AOP)와 에너지저장장치(ESS) 1GWh 공급 계약을 맺었다고 26일 밝혔다. 2025년 말 맺은 첫 계약을 합한 AOP 공급 물량은 1.5GWh다. 공급 제품은 하이니켈 NCA 각형 배터리를 쓰는 일체형 ESS 'SBB 1.7'이다.",
-          "so": "셀과 모듈은 모두 인디애나주 코코모의 StarPlus Energy(SPE) 공장에서 생산해 2026년 말까지 납품할 계획이다. 회사에 따르면 SBB 1.7은 같은 20피트 크기에서 이전 SBB 1.5보다 에너지 밀도가 17% 높다. 1.5GWh 전체가 이번 신규 계약분은 아니다.",
-          "recheck": {
-            "text": "AOP의 ESS 사업은 서부(WECC)와 텍사스(ERCOT) 전력시장에서 2027년 착공될 예정이다."
-          },
-          "sources": [
-            {
-              "name": "삼성SDI",
-              "url": "https://news.samsungsdi.com/global/articleView?seq=468"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "auto",
-      "title": "자동차",
-      "items": [
-        {
-          "id": "kia-domestic-plant-realignment-fcev-2026-oct",
-          "date": "2026-10-26",
-          "featured": true,
-          "status": "보완",
-          "basis": "노조 설명 인용 보도",
-          "title": "기아 노사, 카니발 수소차·국내 공장 차종 재편 합의",
-          "teaser": "기아가 처음으로 수소연료전지차를 생산하기로 했다.",
-          "facts": "연합뉴스는 26일 전국금속노동조합 기아차지부를 인용해 기아 노사가 최근 고용안정위원회에서 카니발 후속 차종에 수소연료전지차를 추가하기로 합의했다고 보도했다. 카니발 수소차는 2029년부터 광명1공장에서 생산할 예정이다. 광주3공장에는 2029년 신규 전기 SUV를 투입하고, 화성1공장은 2028년 쏘렌토 후속 모델을 생산한다.",
-          "so": "보도에 따르면 노사는 총 1조원 규모의 투자와 신규 인력 915명 채용도 추진하기로 했다. 버스를 만들던 하남공장은 군수차량 전문공장으로 바뀐다. 노조는 일부 공장의 생산물량 부족을 이유로 미국에서 생산 중인 텔루라이드의 국내 생산 등 추가 배정을 요구했지만 회사가 받아들이지 않았다고 밝혔다.",
-          "recheck": {
-            "text": "회사의 공식 투자 일정과 실제 채용 공고는 아직 나오지 않았다."
-          },
-          "sources": [
-            {
-              "name": "연합뉴스",
-              "url": "https://www.yna.co.kr/amp/view/AKR20261026060100003"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "realestate",
-      "title": "부동산",
-      "items": [
-        {
-          "id": "uiwang-hagui-greenbelt-release-2026-oct",
-          "date": "2026-10-23",
-          "featured": true,
-          "status": "보완",
-          "title": "의왕 학의동 1,790㎡ 개발제한구역 해제안 의결",
-          "teaser": "도로 등으로 떨어져 나간 단절토지의 규제를 푸는 절차다.",
-          "facts": "경기도 도시계획위원회는 23일 의왕시 학의동 390-5번지 일원 1,790㎡의 개발제한구역 해제를 위한 도시관리계획 변경안을 의결했다. 산업일보가 26일 전한 경기도 발표에 따르면 대상지는 도로 등으로 주변 개발제한구역과 분리된 단절토지다.",
-          "so": "단절토지는 도로·철도·하천 등으로 나뉜 3만㎡ 미만의 땅으로, 관리 필요성이 낮아진 뒤에도 규제가 남아 토지 이용에 불편이 생길 수 있다. 이번 의결로 해제가 끝난 것은 아니며, 주변 아파트 가격과의 연관성은 발표에 나오지 않았다.",
-          "recheck": {
-            "text": "해제는 심의에서 제시된 조건 이행 등 후속 절차를 마친 뒤 확정된다."
-          },
-          "sources": [
-            {
-              "name": "산업일보",
-              "url": "https://kidd.co.kr/news/247867"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "sk-on",
-      "title": "SK On",
-      "items": [
-        {
-          "id": "audi-q4-sk-battery-recall-26v698",
-          "date": "2026-10-21",
-          "featured": true,
-          "status": "보완",
-          "basis": "원인 조사 중",
-          "title": "아우디 Q4 e-tron 9,048대 미국 리콜…SK 헝가리 배터리 모듈 명시",
-          "teaser": "80% 넘게 충전하면 배터리 열 확산 위험이 있다는 리콜이다.",
-          "facts": "폭스바겐그룹 미국법인(아우디)은 21일 미국 도로교통안전국(NHTSA)에 2024~2025년형 Q4 e-tron 7,040대와 Q4 Sportback e-tron 2,008대 등 9,048대의 리콜 보고서(26V698)를 제출했다. 보고서는 고전압 배터리 모듈 공급사로 헝가리 코마롬의 SK Battery Manufacturing Kft.를 적었다. 특정 충전 조건에서 충전량이 80%를 넘으면 배터리 내부에서 열 확산이 일어나 화재로 이어질 수 있다.",
-          "so": "보고서에 따르면 근본 원인은 아직 조사 중이며, 아우디는 같은 배터리를 단 다른 폭스바겐그룹 차량의 열 사고를 검토한 뒤 10월 14일 자발적 리콜을 결정했다. 아우디는 이 결함과 관련한 사고·화재·부상을 알지 못한다고 밝혔다. 회사가 추정한 결함 비율은 0.1%이며, 리콜 비용 부담 주체는 보고서에 나오지 않는다.",
-          "recheck": {
-            "text": "최종 수리 방안은 원인 조사가 끝난 뒤 나오며, 소유자 대상 임시 안내문은 12월 18일까지 발송될 예정이다."
-          },
-          "tip": "보고서에 따르면 배터리 데이터가 없거나 추가 평가가 필요한 차량은 충전을 80%로 제한하고 아우디 공식 딜러에서 배터리 진단을 받는다. 리콜 대상 차대번호(VIN)는 10월 23일부터 NHTSA 누리집에서 조회할 수 있다.",
-          "sources": [
-            {
-              "name": "미국 NHTSA 리콜 보고서(26V698)",
-              "url": "https://static.nhtsa.gov/odi/rcl/2026/RCLRPT-26V698-3069.pdf"
+              "name": "eeNews Europe",
+              "url": "https://www.eenewseurope.com/en/applied-materials-takes-stake-in-dutch-firm-besi"
             }
           ]
         }
       ]
     }
   ],
-  "updated_at": "2026-10-27T08:10:00+09:00",
+  "earlier": [
+    {
+      "edition": "오전판",
+      "checked_at": "07:44 KST",
+      "sections": [
+        {
+          "id": "economy",
+          "title": "경제",
+          "items": [
+            {
+              "id": "germany-ifo-business-climate-2026-10",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "신규",
+              "basis": "설문 지표",
+              "title": "독일 ifo 기업환경지수 90.2로 상승…현재상황 평가는 하락",
+              "teaser": "기업의 기대는 좋아졌지만 현재 영업 여건 평가는 낮아졌다.",
+              "facts": "독일 ifo 경제연구소는 10월 기업환경지수가 90.2로 9월(89.9)보다 올랐다고 26일 발표했다. 기대지수는 90.4에서 91.6으로 상승했지만 현재상황지수는 89.5에서 88.8로 낮아졌다. 업종별로는 제조업과 건설이 개선됐고 서비스업은 후퇴했으며 유통은 보합이었다.",
+              "so": "ifo에 따르면 제조업은 현재상황과 기대가 3년여 만에 처음으로 함께 플러스로 돌아섰고 신규 주문도 늘었다. 이 지수는 약 9,000개 기업의 월간 응답을 바탕으로 한 심리 지표여서 실제 생산이나 국내총생산(GDP) 증가율과는 다르다.",
+              "recheck": {
+                "text": "기대 개선이 현재 경기 평가와 신규 주문으로 이어질지는 독일 3분기 GDP와 11월 ifo 발표에서 드러난다."
+              },
+              "sources": [
+                {
+                  "name": "ifo 경제연구소",
+                  "url": "https://www.ifo.de/en/facts/2026-10-26/ifo-business-climate-rises-october-2026"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "events",
+          "title": "주요 사건",
+          "items": [
+            {
+              "id": "korea-dmz-howitzers-un-letters-2026-oct",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "보완",
+              "title": "북한 자주포 접경 노출…남북은 유엔에 지뢰 사건 상반된 서한",
+              "teaser": "9월 지뢰 폭발의 책임을 두고 남북이 안보리에 엇갈린 주장을 냈다.",
+              "facts": "로이터 취재진은 26일 경기 김포의 전망대에서 포신을 남쪽으로 향한 북한 장갑차 3대와 비무장지대(DMZ) 안에서 울타리 작업을 하는 북한군 약 20~30명을 관찰했다. 연합뉴스는 이 차량을 122㎜ 자주포로 식별했다. 북한 주유엔 대표부는 25일 유엔 안전보장이사회 의장에게 서한을 보내 9월 21일 지뢰 폭발을 한국의 자작극이라고 주장했다.",
+              "so": "앞서 차지훈 주유엔 대사는 22일 안보리 의장에게 서한을 보내 북한군이 매설한 지뢰의 폭발이 정전협정 위반이라며 사과와 책임 있는 조치를 요구했다. 유엔군사령부도 군사분계선을 넘어 매설된 북한 지뢰가 정전협정을 위반했다고 밝혔다. 북한은 서한에서 주권이 침해되면 자위권을 행사하겠다고 경고했다.",
+              "recheck": {
+                "text": "자주포의 철수나 추가 배치 여부와 합동참모본부·유엔군사령부의 후속 발표가 긴장 수위를 가를 변수다."
+              },
+              "sources": [
+                {
+                  "name": "BusinessDay (로이터 기사 게재)",
+                  "url": "https://www.businessday.co.za/world/2026-10-26-north-south-korea-tensions-high-as-letters-lodged-with-un-howitzers-spotted/"
+                },
+                {
+                  "name": "한국경제",
+                  "url": "https://www.hankyung.com/article/2026102640067"
+                }
+              ]
+            },
+            {
+              "id": "jordan-syria-strikes-2026-oct",
+              "date": "2026-10-26",
+              "status": "진전",
+              "basis": "요르단 발표 인용 단일 보도",
+              "follows": {
+                "date": "2026-10-25",
+                "id": "jordan-church-attack-toll-9-2026-oct"
+              },
+              "title": "요르단, 교회 총격 배후 지목하며 시리아 남부 공습",
+              "teaser": "9명이 숨진 교회 총격 사건이 국경 밖 군사행동으로 이어졌다.",
+              "facts": "로이터에 따르면 요르단 공군은 26일 시리아 남부의 무장세력 은신처라고 밝힌 곳을 공습했다. 요르단은 지난주 카라크 교회 총격 용의자들이 시리아 남부에서 활동하는 '테러 단체'와 연계됐다고 판단했다. 시리아 당국은 즉각 논평하지 않았고, 다마스쿠스와 사전 조율했는지는 알려지지 않았다.",
+              "so": "요르단 공안당국은 24일 교회 총격 사망자가 9명으로 늘었다고 발표했다. 공습의 표적과 피해 규모는 요르단 발표 외에 독립적으로 확인되지 않았다.",
+              "recheck": {
+                "text": "시리아 정부의 반응과 추가 공습 여부가 사태 확산의 변수다."
+              },
+              "sources": [
+                {
+                  "name": "GV Wire (로이터 기사 게재)",
+                  "url": "https://gvwire.com/2026/10/26/jordan-strikes-southern-syria-after-linking-church-attackers-to-terrorist-groups/"
+                },
+                {
+                  "name": "페트라 통신",
+                  "url": "https://petra.gov.jo/en/news/death-toll-in-karak-church-terrorist-attack-rises-to-9"
+                }
+              ]
+            },
+            {
+              "id": "china-fifth-plenum-2026-oct",
+              "date": "2026-10-26",
+              "status": "보완",
+              "title": "중국 공산당 5중전회 개막…당 기강 강화 결정 초안 논의",
+              "teaser": "29일까지 열리는 회의의 결과는 폐막 공보로 나온다.",
+              "facts": "중국 공산당 제20기 중앙위원회 제5차 전체회의(5중전회)가 26일 베이징에서 개막했다. 신화통신에 따르면 시진핑 총서기는 정치국을 대표해 업무를 보고하고 '전면적이고 엄격한 당 관리' 강화에 관한 결정 초안을 설명했다. 회의는 29일까지 나흘간 열린다.",
+              "so": "서울경제는 이번 회의가 내년 제21차 당대회를 준비하는 성격이라는 분석가들의 시각을 전했다. 시 총서기의 4연임과 지도부 개편은 당대회에서 다뤄질 사안이며 이번 회의에서 확정되는 것은 아니다.",
+              "recheck": {
+                "text": "확정된 결정 내용과 인사는 29일 폐막 공보에서 공개된다."
+              },
+              "sources": [
+                {
+                  "name": "서울경제 (영문)",
+                  "url": "https://en.sedaily.com/international/2026/10/26/chinas-communist-party-opens-plenum-focused-on-party"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stock",
+          "title": "주식",
+          "items": [
+            {
+              "id": "us-stocks-anthropic-rebound-2026-10-26",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "신규",
+              "title": "뉴욕증시 기술주 반등…S&P 500 0.70% 상승",
+              "teaser": "Anthropic 상장 신고가 AI 관련주 매수를 되살렸다.",
+              "facts": "26일 뉴욕증시에서 S&P 500은 53.09포인트(0.70%) 오른 7,676.77에 마감했다. 나스닥 종합지수는 약 214포인트 오른 26,169.38, 다우존스 산업평균지수는 0.28% 오른 52,361.58로 장을 마쳤다. Anthropic이 상장 신고서를 공개한 뒤 엔비디아·브로드컴·마이크론 등 반도체주가 올랐다.",
+              "so": "야후 파이낸스에 따르면 S&P 500과 나스닥은 직전 주까지 2주 연속 하락했다. 이날 상승은 AI 투자 회수에 대한 우려로 밀렸던 기술주가 일부 되돌린 것이다.",
+              "recheck": {
+                "text": "알파벳·마이크로소프트 실적은 28일 장 마감 뒤 발표되고, 같은 날 연방공개시장위원회(FOMC) 결정이 나온다."
+              },
+              "sources": [
+                {
+                  "name": "아시아경제 (영문)",
+                  "url": "https://www.asiae.co.kr/en/article/2026102705501694707"
+                },
+                {
+                  "name": "야후 파이낸스",
+                  "url": "https://finance.yahoo.com/markets/live/stock-market-today-dow-sp-500-nasdaq-rally-as-investors-parse-anthropic-ipo-filing-busy-week-of-tech-earnings-153428995.html"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ai",
+          "title": "AI",
+          "items": [
+            {
+              "id": "anthropic-us-ipo-filing-2026-oct",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "신규",
+              "title": "Anthropic, 미국 상장 신고서 공개…나스닥 'ANT' 상장 추진",
+              "teaser": "공모 주식 수와 가격 범위는 신고서에 아직 비어 있다.",
+              "facts": "Anthropic은 26일 미국 증권거래위원회(SEC)에 증권신고서(S-1)를 공개 제출하고 나스닥 글로벌 셀렉트 마켓에 'ANT' 종목코드로 상장을 신청했다고 밝혔다. 신고서의 공모가 범위와 주식 수는 비어 있다. 2026년 상반기 매출은 163억달러로 전년 같은 기간 12억달러에서 늘었다.",
+              "so": "신고서에 따르면 상반기 영업손실은 6억9,300만달러였고, 주식보상비용 등을 뺀 조정 영업이익은 16억1,800만달러였다. 같은 기간 순손실은 807억달러로, 전환사채·파생부채 등의 공정가치 변동 손실 약 724억달러가 대부분을 차지했다.",
+              "recheck": {
+                "text": "공모 주식 수와 가격 범위는 SEC 심사 뒤 수정 신고서에서 정해진다."
+              },
+              "sources": [
+                {
+                  "name": "미국 SEC 증권신고서(S-1)",
+                  "url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "semi",
+          "title": "반도체",
+          "items": [
+            {
+              "id": "cadence-maestro-chip-design-ai-2026-oct",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "신규",
+              "basis": "회사 초기 결과",
+              "title": "Cadence, 칩 설계 특화 AI 모델 'Maestro' 공개",
+              "teaser": "고객 사내 서버에서도 돌릴 수 있는 설계 전용 AI 모델이다.",
+              "facts": "미국 반도체 설계 소프트웨어(EDA) 기업 Cadence는 26일 칩·시스템 설계에 특화한 AI 모델군 'Maestro'를 공개했다. 엔비디아의 Nemotron 등을 바탕으로 한 모델로, Cadence 클라우드나 고객이 관리하는 온프레미스 환경에서 쓸 수 있다. 첫 모델은 2026년 4분기 일부 고객에게 조기 제공된다.",
+              "so": "Cadence는 초기 결과에서 범용 모델보다 설계 품질이 최대 30% 좋아지고 토큰 효율은 최대 5배 높았다고 밝혔다. 이는 회사가 제시한 수치이며 독립 검증을 거친 결과는 아니다. 고객은 자사 설계 데이터로 모델을 추가 학습시킬 수 있다.",
+              "recheck": {
+                "text": "조기 제공 고객의 실제 설계 기간 단축 효과와 정식 출시 범위가 다음 변수다."
+              },
+              "sources": [
+                {
+                  "name": "Cadence",
+                  "url": "https://www.cadence.com/en_US/home/company/newsroom/press-releases/pr/2026/cadence-introduces-maestro-a-domain-specialized-ai-model.html"
+                },
+                {
+                  "name": "EMSNow (보도자료 게재)",
+                  "url": "https://www.emsnow.com/cadence-introduces-maestro-a-domain-specialised-ai-model-portfolio-to-revolutionise-agentic-chip-and-system-design/"
+                }
+              ]
+            },
+            {
+              "id": "volkswagen-nxp-s32k5-sdv-partnership-2026-oct",
+              "date": "2026-10-26",
+              "status": "신규",
+              "title": "폭스바겐, 차세대 차량 공통 MCU에 NXP S32K5 채택",
+              "teaser": "구역 제어기에 쓰일 칩으로, 첫 적용 차량은 2027년에 나온다.",
+              "facts": "폭스바겐그룹과 NXP는 26일 전략적 반도체 협력을 발표했다. NXP의 S32K5 마이크로컨트롤러(MCU)는 폭스바겐과 리비안의 합작사 RV Tech가 개발한 구역형(zonal) 소프트웨어 정의 차량 구조에서 구역 제어기의 핵심 프로세서로 쓰인다. 이 구조를 적용한 첫 차량은 2027년에 나올 계획이다.",
+              "so": "S32K5는 그룹 전 브랜드와 차급에 공통 부품으로 쓰이며 조명·차체·편의·섀시·안전 기능을 관리한다. 계약 금액과 공급 물량은 공개되지 않았다.",
+              "recheck": {
+                "text": "첫 적용 차종과 양산 시점이 협력의 실제 규모를 가늠할 지표다."
+              },
+              "sources": [
+                {
+                  "name": "야후 파이낸스 (폭스바겐·NXP 공동 보도자료 게재)",
+                  "url": "https://finance.yahoo.com/technology/articles/volkswagen-group-strengthens-strategic-semiconductor-090000292.html"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "battery",
+          "title": "배터리",
+          "items": [
+            {
+              "id": "samsung-sdi-aop-ess-1gwh-2026-oct",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "보완",
+              "title": "삼성SDI, 미국 AOP에 ESS 1GWh 추가 공급…누적 1.5GWh",
+              "teaser": "셀과 모듈은 미국 인디애나주 합작 공장에서 만든다.",
+              "facts": "삼성SDI는 미국 법인 SDIA가 에너지 저장 사업자 Alpha Omega Power(AOP)와 에너지저장장치(ESS) 1GWh 공급 계약을 맺었다고 26일 밝혔다. 2025년 말 맺은 첫 계약을 합한 AOP 공급 물량은 1.5GWh다. 공급 제품은 하이니켈 NCA 각형 배터리를 쓰는 일체형 ESS 'SBB 1.7'이다.",
+              "so": "셀과 모듈은 모두 인디애나주 코코모의 StarPlus Energy(SPE) 공장에서 생산해 2026년 말까지 납품할 계획이다. 회사에 따르면 SBB 1.7은 같은 20피트 크기에서 이전 SBB 1.5보다 에너지 밀도가 17% 높다. 1.5GWh 전체가 이번 신규 계약분은 아니다.",
+              "recheck": {
+                "text": "AOP의 ESS 사업은 서부(WECC)와 텍사스(ERCOT) 전력시장에서 2027년 착공될 예정이다."
+              },
+              "sources": [
+                {
+                  "name": "삼성SDI",
+                  "url": "https://news.samsungsdi.com/global/articleView?seq=468"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "auto",
+          "title": "자동차",
+          "items": [
+            {
+              "id": "kia-domestic-plant-realignment-fcev-2026-oct",
+              "date": "2026-10-26",
+              "featured": true,
+              "status": "보완",
+              "basis": "노조 설명 인용 보도",
+              "title": "기아 노사, 카니발 수소차·국내 공장 차종 재편 합의",
+              "teaser": "기아가 처음으로 수소연료전지차를 생산하기로 했다.",
+              "facts": "연합뉴스는 26일 전국금속노동조합 기아차지부를 인용해 기아 노사가 최근 고용안정위원회에서 카니발 후속 차종에 수소연료전지차를 추가하기로 합의했다고 보도했다. 카니발 수소차는 2029년부터 광명1공장에서 생산할 예정이다. 광주3공장에는 2029년 신규 전기 SUV를 투입하고, 화성1공장은 2028년 쏘렌토 후속 모델을 생산한다.",
+              "so": "보도에 따르면 노사는 총 1조원 규모의 투자와 신규 인력 915명 채용도 추진하기로 했다. 버스를 만들던 하남공장은 군수차량 전문공장으로 바뀐다. 노조는 일부 공장의 생산물량 부족을 이유로 미국에서 생산 중인 텔루라이드의 국내 생산 등 추가 배정을 요구했지만 회사가 받아들이지 않았다고 밝혔다.",
+              "recheck": {
+                "text": "회사의 공식 투자 일정과 실제 채용 공고는 아직 나오지 않았다."
+              },
+              "sources": [
+                {
+                  "name": "연합뉴스",
+                  "url": "https://www.yna.co.kr/amp/view/AKR20261026060100003"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "realestate",
+          "title": "부동산",
+          "items": [
+            {
+              "id": "uiwang-hagui-greenbelt-release-2026-oct",
+              "date": "2026-10-23",
+              "featured": true,
+              "status": "보완",
+              "title": "의왕 학의동 1,790㎡ 개발제한구역 해제안 의결",
+              "teaser": "도로 등으로 떨어져 나간 단절토지의 규제를 푸는 절차다.",
+              "facts": "경기도 도시계획위원회는 23일 의왕시 학의동 390-5번지 일원 1,790㎡의 개발제한구역 해제를 위한 도시관리계획 변경안을 의결했다. 산업일보가 26일 전한 경기도 발표에 따르면 대상지는 도로 등으로 주변 개발제한구역과 분리된 단절토지다.",
+              "so": "단절토지는 도로·철도·하천 등으로 나뉜 3만㎡ 미만의 땅으로, 관리 필요성이 낮아진 뒤에도 규제가 남아 토지 이용에 불편이 생길 수 있다. 이번 의결로 해제가 끝난 것은 아니며, 주변 아파트 가격과의 연관성은 발표에 나오지 않았다.",
+              "recheck": {
+                "text": "해제는 심의에서 제시된 조건 이행 등 후속 절차를 마친 뒤 확정된다."
+              },
+              "sources": [
+                {
+                  "name": "산업일보",
+                  "url": "https://kidd.co.kr/news/247867"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sk-on",
+          "title": "SK On",
+          "items": [
+            {
+              "id": "audi-q4-sk-battery-recall-26v698",
+              "date": "2026-10-21",
+              "featured": true,
+              "status": "보완",
+              "basis": "원인 조사 중",
+              "title": "아우디 Q4 e-tron 9,048대 미국 리콜…SK 헝가리 배터리 모듈 명시",
+              "teaser": "80% 넘게 충전하면 배터리 열 확산 위험이 있다는 리콜이다.",
+              "facts": "폭스바겐그룹 미국법인(아우디)은 21일 미국 도로교통안전국(NHTSA)에 2024~2025년형 Q4 e-tron 7,040대와 Q4 Sportback e-tron 2,008대 등 9,048대의 리콜 보고서(26V698)를 제출했다. 보고서는 고전압 배터리 모듈 공급사로 헝가리 코마롬의 SK Battery Manufacturing Kft.를 적었다. 특정 충전 조건에서 충전량이 80%를 넘으면 배터리 내부에서 열 확산이 일어나 화재로 이어질 수 있다.",
+              "so": "보고서에 따르면 근본 원인은 아직 조사 중이며, 아우디는 같은 배터리를 단 다른 폭스바겐그룹 차량의 열 사고를 검토한 뒤 10월 14일 자발적 리콜을 결정했다. 아우디는 이 결함과 관련한 사고·화재·부상을 알지 못한다고 밝혔다. 회사가 추정한 결함 비율은 0.1%이며, 리콜 비용 부담 주체는 보고서에 나오지 않는다.",
+              "recheck": {
+                "text": "최종 수리 방안은 원인 조사가 끝난 뒤 나오며, 소유자 대상 임시 안내문은 12월 18일까지 발송될 예정이다."
+              },
+              "tip": "보고서에 따르면 배터리 데이터가 없거나 추가 평가가 필요한 차량은 충전을 80%로 제한하고 아우디 공식 딜러에서 배터리 진단을 받는다. 리콜 대상 차대번호(VIN)는 10월 23일부터 NHTSA 누리집에서 조회할 수 있다.",
+              "sources": [
+                {
+                  "name": "미국 NHTSA 리콜 보고서(26V698)",
+                  "url": "https://static.nhtsa.gov/odi/rcl/2026/RCLRPT-26V698-3069.pdf"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "updated_at": "2026-10-27T17:30:00+09:00",
   "corrections": [
     {
       "date": "2026-10-27",
@@ -351,30 +495,152 @@
     }
   ],
   "indicators": {
-    "as_of": "2026-10-27T08:08:44+09:00",
+    "as_of": "2026-10-27T17:24:46+09:00",
     "source": "네이버페이 증권·업비트",
     "rows": [
       {
         "key": "kospi",
         "name": "코스피",
-        "value": "5,469.47",
-        "change": "0.00",
-        "rate": "0.00%",
-        "dir": "flat",
+        "value": "5,638.34",
+        "change": "+168.87",
+        "rate": "+3.09%",
+        "dir": "up",
         "time": "10.27 장마감",
-        "spark": [],
-        "base": null
+        "spark": [
+          74,
+          78,
+          79,
+          87,
+          85,
+          78,
+          78,
+          84,
+          86,
+          77,
+          83,
+          89,
+          88,
+          85,
+          89,
+          96,
+          100,
+          90,
+          90,
+          83,
+          81,
+          81,
+          81,
+          83,
+          71,
+          71,
+          75,
+          68,
+          71,
+          70,
+          67,
+          70,
+          72,
+          74,
+          73,
+          75,
+          76,
+          77,
+          77,
+          77,
+          74,
+          73,
+          69,
+          66,
+          75,
+          75,
+          79,
+          82,
+          74,
+          71,
+          66,
+          63,
+          55,
+          67,
+          68,
+          73,
+          68,
+          56,
+          59,
+          63
+        ],
+        "base": 0
       },
       {
         "key": "kosdaq",
         "name": "코스닥",
-        "value": "727.21",
-        "change": "0.00",
-        "rate": "0.00%",
-        "dir": "flat",
+        "value": "743.83",
+        "change": "+16.62",
+        "rate": "+2.29%",
+        "dir": "up",
         "time": "10.27 장마감",
-        "spark": [],
-        "base": null
+        "spark": [
+          49,
+          68,
+          67,
+          77,
+          72,
+          76,
+          78,
+          81,
+          94,
+          80,
+          95,
+          95,
+          94,
+          92,
+          98,
+          100,
+          99,
+          94,
+          94,
+          86,
+          81,
+          77,
+          74,
+          73,
+          63,
+          67,
+          72,
+          61,
+          65,
+          63,
+          61,
+          62,
+          64,
+          65,
+          64,
+          67,
+          63,
+          61,
+          62,
+          62,
+          58,
+          54,
+          52,
+          50,
+          59,
+          59,
+          64,
+          64,
+          59,
+          53,
+          47,
+          46,
+          40,
+          51,
+          53,
+          55,
+          54,
+          45,
+          48,
+          51
+        ],
+        "base": 0
       },
       {
         "key": "sp500",
@@ -595,435 +861,472 @@
       {
         "key": "usd",
         "name": "미국 USD",
-        "value": "1,327.00",
-        "change": "+1.00",
-        "rate": "+0.08%",
+        "value": "1,327.20",
+        "change": "+0.20",
+        "rate": "+0.02%",
         "dir": "up",
-        "time": "10.27 07:51",
+        "time": "10.27 17:23",
         "spark": [
-          43,
-          23,
-          39,
-          10,
-          28,
-          38,
-          3,
-          2,
-          39,
-          57,
-          39,
-          36,
-          26,
-          5,
-          5,
           0,
-          5,
-          2,
-          0,
-          5,
-          25,
-          20,
-          20,
-          23,
-          48,
-          43,
-          43,
+          71,
           46,
+          42,
+          40,
+          31,
+          13,
+          23,
+          33,
+          56,
+          60,
+          52,
+          33,
+          42,
+          38,
+          52,
+          73,
+          52,
+          50,
+          27,
+          17,
+          19,
+          15,
+          15,
+          27,
+          19,
+          19,
+          44,
+          50,
+          54,
+          56,
+          71,
+          60,
+          56,
+          38,
+          38,
+          46,
+          29,
+          31,
+          42,
+          50,
+          21,
+          33,
+          25,
+          25,
+          27,
+          33,
+          23,
+          27,
+          35,
+          52,
+          44,
+          38,
+          44,
           48,
-          64,
-          74,
-          89,
-          90,
-          93,
-          92,
-          100,
-          92,
-          82,
-          74,
-          72,
-          72,
-          72,
-          69,
-          72,
-          74,
-          75,
-          74,
-          87,
-          80,
-          82,
-          74,
-          80,
-          79,
-          79,
-          80,
-          80,
-          79,
-          79,
-          75,
-          87
+          52,
+          56,
+          83,
+          77,
+          100
         ],
-        "base": 70
+        "base": 92
       },
       {
         "key": "eur",
         "name": "유럽 EUR",
-        "value": "1,482.92",
-        "change": "-3.19",
-        "rate": "-0.21%",
+        "value": "1,480.69",
+        "change": "-2.23",
+        "rate": "-0.15%",
         "dir": "down",
-        "time": "10.27 07:51",
+        "time": "10.27 17:23",
         "spark": [
-          32,
+          5,
+          80,
+          53,
           50,
-          58,
-          20,
           49,
+          41,
+          21,
+          27,
+          38,
           60,
-          7,
-          17,
-          75,
-          100,
-          72,
-          77,
-          61,
-          25,
-          31,
-          17,
-          25,
-          20,
-          14,
-          17,
-          39,
-          37,
-          39,
-          4,
-          45,
-          37,
-          58,
-          22,
-          17,
-          26,
-          9,
-          37,
-          40,
-          42,
-          36,
-          40,
-          44,
+          60,
           52,
-          40,
           35,
+          42,
+          21,
+          37,
+          59,
+          45,
+          51,
+          33,
+          13,
+          12,
+          10,
+          11,
+          31,
+          18,
+          24,
+          46,
+          49,
+          52,
+          60,
+          75,
+          54,
+          54,
+          37,
+          34,
+          45,
           30,
-          24,
-          19,
-          15,
-          20,
-          20,
-          14,
-          27,
-          15,
-          18,
-          5,
-          15,
+          29,
+          26,
+          29,
+          0,
+          17,
+          8,
           16,
-          19,
-          18,
-          18,
+          26,
+          20,
           7,
-          5,
-          0,
-          12
-        ],
-        "base": 85
-      },
-      {
-        "key": "wti",
-        "name": "WTI (26.12)",
-        "value": "101.36",
-        "change": "-0.40",
-        "rate": "-0.39%",
-        "dir": "down",
-        "time": "10.27 07:58",
-        "spark": [
-          0,
-          14,
-          29,
-          12,
-          20,
-          27,
-          18,
-          16,
-          20,
-          18,
-          14,
-          16,
-          18,
-          14,
-          16,
-          18,
-          14,
-          16,
-          18,
-          14,
-          27,
-          29,
-          20,
-          20,
-          20,
-          16,
-          16,
-          18,
-          18,
-          20,
-          16,
-          14,
-          12,
-          18,
-          16,
-          18,
-          29,
-          27,
-          22,
-          29,
+          7,
           24,
+          24,
+          24,
+          10,
+          4,
+          21,
           27,
-          20,
-          20,
-          22,
-          8,
-          6,
-          8,
-          14,
-          18,
-          20
+          41,
+          56,
+          47,
+          58
         ],
         "base": 100
       },
       {
-        "key": "gold",
-        "name": "국제 금 (26.12)",
-        "value": "4,026.10",
-        "change": "-12.30",
-        "rate": "-0.30%",
-        "dir": "down",
-        "time": "10.27 07:58",
+        "key": "wti",
+        "name": "WTI (26.12)",
+        "value": "102.37",
+        "change": "+0.61",
+        "rate": "+0.60%",
+        "dir": "up",
+        "time": "10.27 17:14",
         "spark": [
-          55,
-          43,
           37,
-          34,
-          32,
-          32,
-          34,
-          37,
-          38,
-          34,
-          36,
-          35,
-          33,
-          34,
-          31,
-          31,
-          29,
-          32,
-          27,
-          27,
-          37,
+          41,
+          45,
+          41,
+          44,
+          41,
+          40,
+          45,
+          47,
+          48,
+          53,
           39,
-          32,
-          32,
-          25,
-          31,
-          19,
-          26,
-          25,
-          22,
-          20,
-          22,
+          37,
+          29,
+          27,
+          33,
+          30,
+          23,
+          21,
+          28,
+          17,
           18,
-          19,
-          17,
-          17,
+          15,
+          12,
+          16,
+          12,
+          15,
+          12,
+          15,
+          6,
+          7,
           15,
           14,
-          12,
-          4,
-          3,
+          21,
+          10,
           11,
-          14,
-          18,
-          18,
-          23,
+          15,
+          3,
           8,
-          8,
+          10,
+          3,
           5,
+          11,
           0,
           15,
-          20,
-          12,
+          16,
+          18,
+          16,
+          30,
+          33,
+          53,
+          59,
+          73,
+          77,
+          80,
+          71,
+          85,
+          94,
+          87,
+          100
+        ],
+        "base": 64
+      },
+      {
+        "key": "gold",
+        "name": "국제 금 (26.12)",
+        "value": "4,010.40",
+        "change": "-28.00",
+        "rate": "-0.69%",
+        "dir": "down",
+        "time": "10.27 17:14",
+        "spark": [
+          79,
+          70,
+          72,
+          64,
+          60,
+          59,
+          53,
+          48,
+          53,
+          58,
+          46,
+          34,
+          35,
+          70,
+          54,
+          47,
+          56,
+          43,
+          43,
+          42,
+          43,
+          71,
+          64,
+          49,
+          51,
+          69,
+          63,
+          58,
+          47,
+          38,
+          35,
+          32,
+          58,
+          81,
+          66,
+          74,
+          88,
+          92,
+          84,
+          59,
+          48,
+          45,
+          32,
+          33,
+          40,
+          31,
+          44,
+          43,
+          23,
+          19,
           7,
-          10,
-          9,
-          3,
+          0,
+          6,
+          15,
+          27,
+          25,
+          24,
+          20,
           2,
-          6
+          2
         ],
         "base": 100
       },
       {
         "key": "us10y",
         "name": "미국채 10년",
-        "value": "4.9900",
-        "change": "+0.0024",
-        "rate": "+0.05%",
+        "value": "4.9930",
+        "change": "+0.0066",
+        "rate": "+0.13%",
         "dir": "up",
-        "time": "10.27 06:05",
+        "time": "10.27 17:19",
         "spark": [
-          5,
-          10,
-          5,
-          10,
+          15,
+          7,
+          7,
+          15,
+          7,
           0,
-          10,
-          10,
-          10,
-          0,
-          10,
-          20,
-          29,
-          34,
-          39,
-          63,
-          59,
-          49,
-          71,
-          59,
-          59,
-          59,
-          71,
-          59,
-          71,
-          49,
-          49,
-          63,
-          76,
-          100,
-          76,
-          59,
+          7,
+          15,
+          15,
+          7,
+          15,
+          7,
+          7,
+          22,
+          30,
           44,
-          59,
-          34,
-          29,
-          0,
-          0,
-          0,
-          29,
-          39,
-          59,
-          29,
-          34,
-          34,
-          24,
-          39,
-          39,
-          29,
-          49,
-          34,
-          39,
-          49,
-          49,
-          63,
-          76,
-          54,
-          49,
-          54,
-          59,
-          59
+          44,
+          44,
+          52,
+          52,
+          44,
+          74,
+          74,
+          89,
+          89,
+          100
         ],
-        "base": 54
+        "base": 74
       },
       {
         "key": "dxy",
         "name": "달러인덱스",
-        "value": "101.96",
-        "change": "0.00",
-        "rate": "0.00%",
-        "dir": "flat",
-        "time": "10.27 07:58",
-        "spark": [],
-        "base": null
+        "value": "102.16",
+        "change": "+0.20",
+        "rate": "+0.20%",
+        "dir": "up",
+        "time": "10.27 17:14",
+        "spark": [
+          31,
+          28,
+          21,
+          16,
+          21,
+          26,
+          28,
+          32,
+          33,
+          45,
+          58,
+          53,
+          35,
+          29,
+          55,
+          52,
+          40,
+          28,
+          35,
+          32,
+          29,
+          39,
+          39,
+          40,
+          33,
+          37,
+          43,
+          32,
+          28,
+          29,
+          33,
+          35,
+          31,
+          32,
+          37,
+          39,
+          42,
+          42,
+          52,
+          55,
+          59,
+          51,
+          56,
+          58,
+          60,
+          52,
+          54,
+          64,
+          62,
+          77,
+          74,
+          100,
+          84,
+          74,
+          67,
+          81,
+          74,
+          83,
+          90,
+          91
+        ],
+        "base": 0
       },
       {
         "key": "btc",
         "name": "비트코인",
-        "value": "106,600,000",
-        "change": "-610,000",
-        "rate": "-0.57%",
+        "value": "106,530,000",
+        "change": "-381,000",
+        "rate": "-0.36%",
         "dir": "down",
-        "time": "10.27 08:08",
+        "time": "10.27 17:24",
         "spark": [
-          93,
-          91,
-          71,
-          77,
-          65,
-          45,
-          21,
-          39,
-          18,
-          10,
-          9,
-          0,
-          21,
-          44,
-          48,
-          52,
-          55,
-          37,
-          39,
-          37,
-          35,
-          38,
-          9,
-          53,
-          48,
-          77,
-          82,
-          70,
-          70,
-          62,
           59,
+          54,
+          83,
+          89,
+          75,
+          77,
           63,
           65,
-          68,
-          63,
-          27,
-          14,
-          51,
-          32,
-          74,
-          93,
-          100,
-          60,
-          40,
-          83,
-          68,
-          52,
-          62,
-          56,
-          42,
-          37,
+          69,
+          71,
+          75,
+          57,
+          33,
+          16,
+          57,
           38,
-          35,
-          32,
-          39,
+          80,
+          100,
+          86,
+          66,
+          45,
+          90,
+          74,
+          74,
+          69,
+          57,
+          48,
           43,
-          53,
-          42,
-          40,
-          28
+          44,
+          41,
+          35,
+          44,
+          60,
+          59,
+          48,
+          46,
+          34,
+          56,
+          56,
+          63,
+          64,
+          65,
+          57,
+          39,
+          35,
+          30,
+          7,
+          26,
+          12,
+          13,
+          7,
+          16,
+          17,
+          32,
+          6,
+          2,
+          0,
+          12,
+          22,
+          29
         ],
-        "base": 71
+        "base": 56
       }
     ]
   }
